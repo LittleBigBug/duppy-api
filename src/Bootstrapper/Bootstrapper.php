@@ -12,7 +12,7 @@ final class Bootstrapper
      *
      * @var App|null
      */
-    public App $app;
+    public static App $app;
 
     /**
      * Boots the application and loads any global dependencies
@@ -22,7 +22,7 @@ final class Bootstrapper
     public function boot(): void
     {
         // Create the slim instance
-        $this->app = AppFactory::create();
+        static::$app = AppFactory::create();
 
         // Load our .env file for configuration
         (Dotenv::createImmutable(__DIR__ . '/../..'))->load();
@@ -36,15 +36,25 @@ final class Bootstrapper
      */
     public function configure(): void
     {
-        $this->app->addRoutingMiddleware();
+        static::$app->addRoutingMiddleware();
 
         // Make sure to update DUPPY_DEVELOPMENT in .env file when we move into prod
-        $this->app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
+        static::$app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
         $this->buildRoutes();
     }
 
     public function buildRoutes(): void
     {
-        $this->app->run();
+        static::$app->run();
+    }
+
+    /**
+     * App getter
+     *
+     * @return App
+     */
+    public static function getApp(): App
+    {
+        return static::$app;
     }
 }
