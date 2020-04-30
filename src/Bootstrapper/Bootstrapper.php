@@ -43,8 +43,12 @@ final class Bootstrapper
         $this->buildRoutes();
     }
 
+    /**
+     * Build routes within Slim
+     */
     public function buildRoutes(): void
     {
+        (new Router)->build();
         static::$app->run();
     }
 
