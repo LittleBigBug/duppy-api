@@ -96,6 +96,8 @@ final class Router
      */
     private function resolveUri(string $path): string
     {
+        // TODO: try and do this is one regex
+
         $path = substr($path, 9);
         $uri = str_replace('\\', '/', $path);
 
