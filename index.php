@@ -1,23 +1,22 @@
 <?php
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Factory\AppFactory;
+use Duppy\Bootstrapper\Bootstrapper;
 
 /**
- * Require composers autoloader.
+ * Duppy - API for the Dreamin.gg website
+ *
+ * @package Duppy
  */
+
+define('DUPPY_START', microtime(true));
+
+/**
+ * Register auto loader.
+ */
+
 require __DIR__ . '/vendor/autoload.php';
 
-$app = AppFactory::create();
+/**
+ * Bootstrap application
+ */
 
-$app->addRoutingMiddleware();
-
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-
-$app->get('/hello/{name}', function (Request $request, Response $response, $args) {
-    $name = $args['name'];
-    $response->getBody()->write("Hello, $name");
-    return $response;
-});
-
-$app->run();
+(new Bootstrapper)->boot();
