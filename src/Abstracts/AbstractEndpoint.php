@@ -21,7 +21,7 @@ abstract class AbstractEndpoint
      * @param array $args
      * @return Response
      */
-    abstract public function respond(Request $request, Response $response, array $args = []): Response;
+    abstract public function __invoke(Request $request, Response $response, array $args = []): Response;
 
     /**
      * Returns type of request

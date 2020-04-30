@@ -22,7 +22,7 @@ class ExampleEndpoint extends AbstractEndpoint
      * @param array $args
      * @return Response
      */
-    final public function respond(Request $request, Response $response, array $args = []): Response
+    final public function __invoke(Request $request, Response $response, array $args = []): Response
     {
         $response->getBody()->write('Test');
         return $response;

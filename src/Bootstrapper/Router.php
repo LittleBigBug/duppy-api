@@ -1,6 +1,7 @@
 <?php
 namespace Duppy\Bootstrapper;
 
+use Duppy\Endpoints\ExampleEndpoint;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use RecursiveIteratorIterator;
@@ -47,10 +48,7 @@ final class Router
             $class = new $endpoint['class'];
             $type = $class->getType();
 
-
-            $this->app->$type($endpoint['uri'], function (Request $request, Response $response, array $args) use ($class) {
-                return $class->respond($request, $response, $args);
-            });
+            $this->app->$type($endpoint['uri'], $endpoint['class']);
         });
     }
 
