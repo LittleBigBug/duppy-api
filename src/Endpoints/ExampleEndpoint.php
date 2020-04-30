@@ -12,7 +12,7 @@ class ExampleEndpoint extends AbstractEndpoint
      *
      * @var string
      */
-    public string $type = 'get';
+    public static string $type = 'get';
 
     /**
      * Handles the response

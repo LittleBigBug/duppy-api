@@ -45,9 +45,7 @@ final class Router
     public function build(): void
     {
         $this->loop(function (array $endpoint) {
-            $class = new $endpoint['class'];
-            $type = $class->getType();
-
+            $type = $endpoint['class']::getType();
             $this->app->$type($endpoint['uri'], $endpoint['class']);
         });
     }

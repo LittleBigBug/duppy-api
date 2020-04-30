@@ -11,7 +11,7 @@ abstract class AbstractEndpoint
      *
      * @var string
      */
-    public string $type;
+    public static string $type;
 
     /**
      * Handles the response
@@ -28,8 +28,8 @@ abstract class AbstractEndpoint
      *
      * @return string
      */
-    final public function getType(): string
+    final public static function getType(): string
     {
-        return $this->type;
+        return static::$type;
     }
 }
