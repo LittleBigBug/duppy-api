@@ -1,24 +1,23 @@
 <?php
-
-/*
-
-  Duppy
-
-*/
-
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 
-require("vendor/autoload.php");
+/**
+ * Require composers autoloader.
+ */
+require __DIR__ . '/vendor/autoload.php';
 
-$AppStart = time();
-
-// Slim Framework Application
 $app = AppFactory::create();
 
-$group->get("", function($req, $resp, $args) {
-  die("");
+$app->addRoutingMiddleware();
+
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+
+$app->get('/hello/{name}', function (Request $request, Response $response, $args) {
+    $name = $args['name'];
+    $response->getBody()->write("Hello, $name");
+    return $response;
 });
 
 $app->run();
-
-?>
