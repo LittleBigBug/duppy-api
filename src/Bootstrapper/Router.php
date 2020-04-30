@@ -47,8 +47,9 @@ final class Router
             $class = new $endpoint['class'];
             $type = $class->getType();
 
-            $this->app->$type($endpoint['uri'], function (Request $request, Response $response, array $args) {
-                // TODO: make class respond
+
+            $this->app->$type($endpoint['uri'], function (Request $request, Response $response, array $args) use ($class) {
+                return $class->respond($request, $response, $args);
             });
         });
     }
