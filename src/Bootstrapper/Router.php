@@ -57,7 +57,6 @@ final class Router
      */
     private function loop(callable $fn): void
     {
-        // TODO: Test nested endpoints
         // TODO: Implement logic for arguments in uri
 
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__ . '/../Endpoints'));
