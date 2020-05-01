@@ -104,7 +104,7 @@ final class Router
         $uri = str_replace('\\', '/', $path);
 
         // Add dashes between words
-        $uri = preg_replace('/\B((?:_)[A-Z])/', '-$1', $uri);
+        $uri = preg_replace('/(?<![_])\B([A-Z])/', '-$1', $uri);
 
         return strtolower($uri);
     }
