@@ -14,6 +14,13 @@ abstract class AbstractEndpoint
     public static string $type;
 
     /**
+     * Route middleware storage
+     *
+     * @var array
+     */
+    public static array $middleware;
+
+    /**
      * Handles the response
      *
      * @param Request $request
@@ -31,5 +38,15 @@ abstract class AbstractEndpoint
     final public static function getType(): string
     {
         return static::$type;
+    }
+
+    /**
+     * Returns the middleware for the endpoint
+     *
+     * @return array
+     */
+    final public static function getMiddleware(): array
+    {
+        return static::$middleware;
     }
 }

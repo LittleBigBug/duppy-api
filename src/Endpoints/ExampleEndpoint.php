@@ -15,6 +15,14 @@ class ExampleEndpoint extends AbstractEndpoint
     public static string $type = 'get';
 
     /**
+     * Route middleware
+     *
+     * @var array
+     */
+    public static array $middleware = [
+    ];
+
+    /**
      * Handles the response
      *
      * @param Request $request

@@ -1,11 +1,12 @@
 <?php
 namespace Duppy\Bootstrapper;
 
-use Duppy\Endpoints\ExampleEndpoint;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use RecursiveIteratorIterator;
+use Duppy\Middleware\TestMiddleware;
+use Duppy\Endpoints\ExampleEndpoint;
 use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Slim\App;
 
 final class Router
@@ -31,12 +32,6 @@ final class Router
     {
         // Get slim instance
         $this->app = Bootstrapper::getApp();
-
-        $this->app->get('/hello/{name}', function (Request $request, Response $response, $args) {
-            $name = $args['name'];
-            $response->getBody()->write("Hello, $name");
-            return $response;
-        });
     }
 
     /**
@@ -47,7 +42,7 @@ final class Router
         $this->loop(function (array $endpoint) {
             $class = $endpoint['class'];
             $type = $class::getType();
-            $this->app->$type($endpoint['uri'], $class);
+            $this->app->$type($endpoint['uri'], $class)->add(new TestMiddleware);
         });
     }
 
