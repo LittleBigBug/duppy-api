@@ -47,8 +47,6 @@ final class Router
         $this->loop(function (array $endpoint) {
             $class = $endpoint['class'];
             $type = $class::getType();
-            echo $endpoint['uri'];
-            echo '<br>';
             $this->app->$type($endpoint['uri'], $class);
         });
     }
@@ -98,14 +96,32 @@ final class Router
      */
     private function resolveUri(string $path): string
     {
-        // TODO: try and do this is one regex
-
+        // TODO: clean up this function, it's a mess lol.
         $path = substr($path, 9);
         $uri = str_replace('\\', '/', $path);
 
         // Add dashes between words
         $uri = preg_replace('/(?<![_])\B([A-Z])/', '-$1', $uri);
 
-        return strtolower($uri);
+        return strtolower($this->parseVariables($uri));
+    }
+
+    private function parseVariables(string $uri): string
+    {
+        $exploded = explode('/', $uri);
+        $imploded = [];
+
+        foreach ($exploded as $string) {
+            if (strpos($string, '_') === 0) {
+                // Remove underscore
+                $sub = substr($string, 1);
+                $imploded[] = '{'. $sub .'}';
+                continue;
+            }
+            // If no variables return default
+            $imploded[] = $string;
+        }
+
+        return implode('/', $imploded);
     }
 }

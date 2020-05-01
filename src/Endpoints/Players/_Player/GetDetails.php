@@ -24,8 +24,7 @@ class GetDetails extends AbstractEndpoint
      */
     final public function __invoke(Request $request, Response $response, array $args = []): Response
     {
-        $response->getBody()->write('Name:');
-        echo 'lol';
+        $response->getBody()->write('Name: ' . $args['player']);
         return $response;
     }
 }
