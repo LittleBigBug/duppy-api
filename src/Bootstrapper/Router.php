@@ -45,8 +45,11 @@ final class Router
     public function build(): void
     {
         $this->loop(function (array $endpoint) {
-            $type = $endpoint['class']::getType();
-            $this->app->$type($endpoint['uri'], $endpoint['class']);
+            $class = $endpoint['class'];
+            $type = $class::getType();
+            echo $endpoint['uri'];
+            echo '<br>';
+            $this->app->$type($endpoint['uri'], $class);
         });
     }
 
@@ -101,7 +104,7 @@ final class Router
         $uri = str_replace('\\', '/', $path);
 
         // Add dashes between words
-        $uri = preg_replace('/\B([A-Z])/', '-$1', $uri);
+        $uri = preg_replace('/\B((?:_)[A-Z])/', '-$1', $uri);
 
         return strtolower($uri);
     }
