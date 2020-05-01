@@ -106,6 +106,12 @@ final class Router
         return strtolower($this->parseVariables($uri));
     }
 
+    /**
+     * Parses route variables in the URI
+     *
+     * @param string $uri
+     * @return string
+     */
     private function parseVariables(string $uri): string
     {
         $exploded = explode('/', $uri);
