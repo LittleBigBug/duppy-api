@@ -1,10 +1,6 @@
 <?php
 namespace Duppy\Bootstrapper;
 
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
-use Duppy\Middleware\TestMiddleware;
-use Duppy\Endpoints\ExampleEndpoint;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Slim\App;
@@ -59,8 +55,6 @@ final class Router
      */
     private function loop(callable $fn): void
     {
-        // TODO: Implement logic for arguments in uri
-
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__ . '/../Endpoints'));
 
         foreach ($iterator as $file) {
