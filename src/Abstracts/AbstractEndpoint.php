@@ -18,7 +18,7 @@ abstract class AbstractEndpoint
      *
      * @var array
      */
-    public static array $middleware;
+    public static array $middleware = [];
 
     /**
      * Handles the response
