@@ -42,7 +42,13 @@ final class Router
         $this->loop(function (array $endpoint) {
             $class = $endpoint['class'];
             $type = $class::getType();
-            $this->app->$type($endpoint['uri'], $class)->add(new TestMiddleware);
+            $middleware = $class::getMiddleware();
+
+            $route = $this->app->$type($endpoint['uri'], $class);
+
+            foreach ($middleware as $ware) {
+                $route->add(new $ware);
+            }
         });
     }
 

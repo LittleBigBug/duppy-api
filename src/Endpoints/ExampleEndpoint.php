@@ -1,6 +1,7 @@
 <?php
 namespace Duppy\Endpoints;
 
+use Duppy\Middleware\TestMiddleware;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Duppy\Abstracts\AbstractEndpoint;
@@ -20,6 +21,7 @@ class ExampleEndpoint extends AbstractEndpoint
      * @var array
      */
     public static array $middleware = [
+        TestMiddleware::class,
     ];
 
     /**
