@@ -1,7 +1,8 @@
 <?php
 namespace Duppy\Bootstrapper;
 
-use Illuminate\Database\Capsule\Manager as Capsule;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Tools\Setup;
 use Slim\Factory\AppFactory;
 use Dotenv\Dotenv;
 use DI\Container;
@@ -17,11 +18,18 @@ final class Bootstrapper
     public static App $app;
 
     /**
-     * Slim instance
+     * Container instance
      *
-     * @var App|null
+     * @var Container|null
      */
     public static Container $container;
+
+    /**
+     * Doctrine entity manager instance
+     *
+     * @var EntityManager|null
+     */
+    public static EntityManager $manager;
 
     /**
      * Boots the application and loads any global dependencies
@@ -64,8 +72,32 @@ final class Bootstrapper
     public function buildDependencies(): void
     {
         //self::getContainer()->set('database', fn () => $this->configureDatabase());
+        $this->configureDatabase();
 
         $this->buildRoutes();
+    }
+
+    private function configureDatabase(): void
+    {
+        // Enable doctrine annotations
+        $config = Setup::createAnnotationMetadataConfiguration(
+            [__DIR__ . '../'],
+            getenv('DUPPY_DEVELOPMENT'),
+            null,
+            null,
+            false
+        );
+
+        // Connection array
+        $conn = [
+            'dbname' => getenv('DB_HOST'),
+            'user' => getenv('DB_USER'),
+            'password' => getenv('DB_PASSWORD'),
+            'host' => getenv('DB_HOST'),
+            'driver' => 'pdo_mysql'
+        ];
+
+        self::$manager = EntityManager::create($conn, $config);
     }
 
     /**
@@ -90,10 +122,20 @@ final class Bootstrapper
     /**
      * Container getter
      *
-     * @return App
+     * @return Container
      */
     public static function getContainer(): Container
     {
         return static::$container;
+    }
+
+    /**
+     * Container getter
+     *
+     * @return EntityManager
+     */
+    public static function getManager(): EntityManager
+    {
+        return static::$manager;
     }
 }
