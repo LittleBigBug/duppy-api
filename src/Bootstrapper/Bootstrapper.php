@@ -1,9 +1,10 @@
 <?php
 namespace Duppy\Bootstrapper;
 
+use Illuminate\Database\Capsule\Manager as Capsule;
 use Slim\Factory\AppFactory;
-use DI\Container;
 use Dotenv\Dotenv;
+use DI\Container;
 use Slim\App;
 
 final class Bootstrapper
@@ -57,8 +58,13 @@ final class Bootstrapper
         $this->buildDependencies();
     }
 
+    /**
+     * Build dependencies into DI
+     */
     public function buildDependencies(): void
     {
+        //self::getContainer()->set('database', fn () => $this->configureDatabase());
+
         $this->buildRoutes();
     }
 
