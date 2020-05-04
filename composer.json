@@ -3,7 +3,9 @@
         "propel/propel": "~2.0-dev",
         "slim/slim": "^4.5",
         "slim/psr7": "^1.0",
-        "vlucas/phpdotenv": "^4.1"
+        "vlucas/phpdotenv": "^4.1",
+        "illuminate/database": "^7.9",
+        "php-di/php-di": "^6.1"
     },
     "autoload": {
         "psr-4": {

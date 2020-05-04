@@ -2,6 +2,7 @@
 namespace Duppy\Bootstrapper;
 
 use Slim\Factory\AppFactory;
+use DI\Container;
 use Dotenv\Dotenv;
 use Slim\App;
 
@@ -15,12 +16,25 @@ final class Bootstrapper
     public static App $app;
 
     /**
+     * Slim instance
+     *
+     * @var App|null
+     */
+    public static Container $container;
+
+    /**
      * Boots the application and loads any global dependencies
      *
      * @return void
      */
     public function boot(): void
     {
+        // Create Container using PHP-DI
+        static::$container = new Container;
+
+        // Set container for app
+        AppFactory::setContainer(self::getContainer());
+
         // Create the slim instance
         static::$app = AppFactory::create();
 
@@ -36,10 +50,15 @@ final class Bootstrapper
      */
     public function configure(): void
     {
-        static::$app->addRoutingMiddleware();
+        $app = self::getApp();
+        $app->addRoutingMiddleware();
+        $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
 
-        // Make sure to update DUPPY_DEVELOPMENT in .env file when we move into prod
-        static::$app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
+        $this->buildDependencies();
+    }
+
+    public function buildDependencies(): void
+    {
         $this->buildRoutes();
     }
 
@@ -49,7 +68,7 @@ final class Bootstrapper
     public function buildRoutes(): void
     {
         (new Router)->build();
-        static::$app->run();
+        self::getApp()->run();
     }
 
     /**
@@ -60,5 +79,15 @@ final class Bootstrapper
     public static function getApp(): App
     {
         return static::$app;
+    }
+
+    /**
+     * Container getter
+     *
+     * @return App
+     */
+    public static function getContainer(): Container
+    {
+        return static::$container;
     }
 }

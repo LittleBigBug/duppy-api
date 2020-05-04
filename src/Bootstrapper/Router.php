@@ -31,7 +31,7 @@ final class Router
     }
 
     /**
-     * Builds all the routes for Slim
+     * Build slim routes
      */
     public function build(): void
     {
