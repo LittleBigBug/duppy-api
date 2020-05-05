@@ -72,32 +72,34 @@ final class Bootstrapper
     public function buildDependencies(): void
     {
         //self::getContainer()->set('database', fn () => $this->configureDatabase());
-        $this->configureDatabase();
+        self::configureDatabase();
 
         $this->buildRoutes();
     }
 
-    private function configureDatabase(): void
+    public static function configureDatabase(): void
     {
-        // Enable doctrine annotations
-        $config = Setup::createAnnotationMetadataConfiguration(
-            [__DIR__ . '../'],
-            getenv('DUPPY_DEVELOPMENT'),
-            null,
-            null,
-            false
-        );
+        if (!isset(self::$manager)) {
+            // Enable doctrine annotations
+            $config = Setup::createAnnotationMetadataConfiguration(
+                [__DIR__ . '/../'],
+                getenv('DUPPY_DEVELOPMENT'),
+                null,
+                null,
+                false
+            );
 
-        // Connection array
-        $conn = [
-            'dbname' => getenv('DB_HOST'),
-            'user' => getenv('DB_USER'),
-            'password' => getenv('DB_PASSWORD'),
-            'host' => getenv('DB_HOST'),
-            'driver' => 'pdo_mysql'
-        ];
+            // Connection array
+            $conn = [
+                'dbname' => getenv('DB_HOST'),
+                'user' => getenv('DB_USER'),
+                'password' => getenv('DB_PASSWORD'),
+                'host' => getenv('DB_HOST'),
+                'driver' => 'pdo_mysql'
+            ];
 
-        self::$manager = EntityManager::create($conn, $config);
+            self::$manager = EntityManager::create($conn, $config);
+        }
     }
 
     /**
