@@ -15,22 +15,22 @@ class WebUser
      * @ORM\Id
      * @ORM\Column(type="string", length=17)
      */
-    protected $steamid64;
+    protected string $steamid64;
 
     /**
      * @ORM\Column(type="string")
      */
-    protected $username;
+    protected string $username;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    protected $bio;
+    protected string $bio;
 
     /**
      * @ORM\Column(type="string")
      */
-    protected $email;
+    protected string $email;
 
     /**
      * Returns steamid64

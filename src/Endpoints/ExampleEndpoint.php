@@ -35,6 +35,7 @@ class ExampleEndpoint extends AbstractEndpoint
      */
     final public function __invoke(Request $request, Response $response, array $args = []): Response
     {
+        // TODO: can probably clean this up if I extend Slim app
         $database = self::getContainer()->get('database');
 
         $user = new WebUser;

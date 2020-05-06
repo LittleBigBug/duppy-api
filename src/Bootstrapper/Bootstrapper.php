@@ -2,7 +2,6 @@
 namespace Duppy\Bootstrapper;
 
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Tools\Setup;
 use Slim\Factory\AppFactory;
 use Dotenv\Dotenv;
