@@ -41,7 +41,7 @@ class ExampleEndpoint extends AbstractEndpoint
         $database = self::getContainer()->get('database');
 
         $user = new Webuser([
-            'steamid64' => '123',
+            'steamid64' => random_int(0, 999),
             'username' => 'havasu',
             'bio' => 'Hello world',
             'email' => 'havasuited@gmail.com'

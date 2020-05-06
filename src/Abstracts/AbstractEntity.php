@@ -1,8 +1,15 @@
 <?php
 namespace Duppy\Abstracts;
 
+use Doctrine\ORM\Mapping as ORM;
+
 abstract class AbstractEntity
 {
+    /**
+     * @ORM\Column(type="datetime", columnDefinition="TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+     */
+    protected \DateTime $created_at;
+
     /**
      * AbstractEntity constructor.
      *
