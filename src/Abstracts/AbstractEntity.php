@@ -14,4 +14,15 @@ abstract class AbstractEntity
             $this->$property = $value;
         }
     }
+
+    /**
+     * Return a property
+     *
+     * @param string $property
+     * @return mixed
+     */
+    final public function get(string $property)
+    {
+        return $this->$property;
+    }
 }
