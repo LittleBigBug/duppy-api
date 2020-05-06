@@ -85,11 +85,16 @@ final class Bootstrapper
     }
 
     /**
-     * Build dependencies into DI
+     * Build dependencies into DI and other services
      */
     public function buildDependencies(): void
     {
-        self::setManager(self::configureDatabase());
+        $container = self::getContainer();
+
+        // Doctrine setup
+        $manager = self::configureDatabase();
+        $container->set('database', fn () => $manager);
+        self::setManager($manager);
 
         $this->buildRoutes();
     }

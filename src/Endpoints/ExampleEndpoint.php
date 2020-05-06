@@ -1,10 +1,11 @@
 <?php
 namespace Duppy\Endpoints;
 
-use Duppy\Middleware\TestMiddleware;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Duppy\Abstracts\AbstractEndpoint;
+use Duppy\Middleware\TestMiddleware;
+use Duppy\Entities\WebUser;
 
 class ExampleEndpoint extends AbstractEndpoint
 {
@@ -34,6 +35,17 @@ class ExampleEndpoint extends AbstractEndpoint
      */
     final public function __invoke(Request $request, Response $response, array $args = []): Response
     {
+        $database = self::getContainer()->get('database');
+
+        $user = new WebUser;
+        $user->setSteamid64('76561198316387873');
+        $user->setUsername('havasu');
+        $user->setBio('Hello world');
+        $user->setEmail('havasuited@gmail.com');
+
+        $database->persist($user);
+        $database->flush();
+
         $response->getBody()->write('Test');
         return $response;
     }

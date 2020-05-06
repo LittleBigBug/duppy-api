@@ -3,6 +3,8 @@ namespace Duppy\Abstracts;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Duppy\Bootstrapper\Bootstrapper;
+use DI\Container;
 
 abstract class AbstractEndpoint
 {
@@ -48,5 +50,15 @@ abstract class AbstractEndpoint
     final public static function getMiddleware(): array
     {
         return static::$middleware;
+    }
+
+    /**
+     * Returns dependency container instance
+     *
+     * @return Container
+     */
+    final public static function getContainer(): Container
+    {
+        return Bootstrapper::getContainer();
     }
 }

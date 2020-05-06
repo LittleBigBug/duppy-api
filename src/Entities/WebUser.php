@@ -13,7 +13,7 @@ class WebUser
 {
     /**
      * @ORM\Id
-     * @ORM\Column(type="string", length="17")
+     * @ORM\Column(type="string", length=17)
      */
     protected $steamid64;
 
@@ -23,7 +23,7 @@ class WebUser
     protected $username;
 
     /**
-     * @ORM\Column(type="string", nullable="true")
+     * @ORM\Column(type="string", nullable=true)
      */
     protected $bio;
 
