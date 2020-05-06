@@ -5,7 +5,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Middleware\TestMiddleware;
-use Duppy\Entities\WebUser;
+use Duppy\Entities\Post;
 
 class ExampleEndpoint extends AbstractEndpoint
 {
@@ -40,14 +40,11 @@ class ExampleEndpoint extends AbstractEndpoint
         // TODO: can probably clean this up if I extend Slim app
         $database = self::getContainer()->get('database');
 
-        $user = new Webuser([
-            'steamid64' => random_int(0, 999),
-            'username' => 'havasu',
-            'bio' => 'Hello world',
-            'email' => 'havasuited@gmail.com'
+        $post = new Post([
+            'content' => 'Hello',
         ]);
 
-        $database->persist($user);
+        $database->persist($post);
         $database->flush();
 
         $response->getBody()->write('Test');

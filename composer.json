@@ -4,7 +4,8 @@
         "slim/psr7": "^1.0",
         "vlucas/phpdotenv": "^4.1",
         "php-di/php-di": "^6.1",
-        "doctrine/orm": "^2.7"
+        "doctrine/orm": "^2.7",
+        "ramsey/uuid-doctrine": "^1.6"
     },
     "autoload": {
         "psr-4": {

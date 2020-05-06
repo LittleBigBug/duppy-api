@@ -2,14 +2,13 @@
 namespace Duppy\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-
 use Duppy\Abstracts\AbstractEntity;
 
 /**
  * WebUser Entity
  *
  * @ORM\Entity
- * @ORM\Table(name="web_user")
+ * @ORM\Table(name="web_users")
  */
 class WebUser extends AbstractEntity
 {
@@ -33,6 +32,4 @@ class WebUser extends AbstractEntity
      * @ORM\Column(type="string")
      */
     protected string $email;
-
-    // TODO: add other models + workout uuids
 }

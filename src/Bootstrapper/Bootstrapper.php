@@ -1,8 +1,10 @@
 <?php
 namespace Duppy\Bootstrapper;
 
+use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
+use Doctrine\DBAL\Types\Type;
 use Slim\Factory\AppFactory;
 use Dotenv\Dotenv;
 use DI\Container;
@@ -106,6 +108,8 @@ final class Bootstrapper
      */
     public static function configureDatabase(): EntityManager
     {
+        Type::addType('uuid', UuidType::class);
+
         if (!isset(self::$manager)) {
             // Enable doctrine annotations
             $config = Setup::createAnnotationMetadataConfiguration(
