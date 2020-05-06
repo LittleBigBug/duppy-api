@@ -32,17 +32,20 @@ class ExampleEndpoint extends AbstractEndpoint
      * @param Response $response
      * @param array $args
      * @return Response
+     * @throws \DI\DependencyException
+     * @throws \DI\NotFoundException
      */
     final public function __invoke(Request $request, Response $response, array $args = []): Response
     {
         // TODO: can probably clean this up if I extend Slim app
         $database = self::getContainer()->get('database');
 
-        $user = new WebUser;
-        $user->setSteamid64('76561198316387873');
-        $user->setUsername('havasu');
-        $user->setBio('Hello world');
-        $user->setEmail('havasuited@gmail.com');
+        $user = new Webuser([
+            'steamid64' => '123',
+            'username' => 'havasu',
+            'bio' => 'Hello world',
+            'email' => 'havasuited@gmail.com'
+        ]);
 
         $database->persist($user);
         $database->flush();

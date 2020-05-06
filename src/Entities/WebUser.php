@@ -1,6 +1,7 @@
 <?php
 namespace Duppy\Entities;
 
+use Duppy\Abstracts\AbstractEntity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -9,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\Table(name="web_user")
  */
-class WebUser
+class WebUser extends AbstractEntity
 {
     /**
      * @ORM\Id
