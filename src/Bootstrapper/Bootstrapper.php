@@ -2,6 +2,7 @@
 namespace Duppy\Bootstrapper;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Tools\Setup;
 use Slim\Factory\AppFactory;
 use Dotenv\Dotenv;
@@ -32,6 +33,15 @@ final class Bootstrapper
     public static EntityManager $manager;
 
     /**
+     * Bootstrapper constructor.
+     */
+    public function __construct()
+    {
+        // Load .env file for config
+        (Dotenv::createImmutable(__DIR__ . '/../..'))->load();
+    }
+
+    /**
      * Boots the application and loads any global dependencies
      *
      * @return void
@@ -40,16 +50,24 @@ final class Bootstrapper
     {
         // Create Container using PHP-DI
         static::$container = new Container;
-
-        // Set container for app
         AppFactory::setContainer(self::getContainer());
 
-        // Create the slim instance
+        // Boot Slim instance
         static::$app = AppFactory::create();
 
-        // Load our .env file for configuration
-        (Dotenv::createImmutable(__DIR__ . '/../..'))->load();
         $this->configure();
+    }
+
+    /**
+     * Boots smaller app for Doctrine CLI
+     *
+     * @return EntityManager
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public function cli(): EntityManager
+    {
+        self::setManager(self::configureDatabase());
+        return self::getManager();
     }
 
     /**
@@ -71,13 +89,18 @@ final class Bootstrapper
      */
     public function buildDependencies(): void
     {
-        //self::getContainer()->set('database', fn () => $this->configureDatabase());
-        self::configureDatabase();
+        self::setManager(self::configureDatabase());
 
         $this->buildRoutes();
     }
 
-    public static function configureDatabase(): void
+    /**
+     * Configures the database
+     *
+     * @return EntityManager
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function configureDatabase(): EntityManager
     {
         if (!isset(self::$manager)) {
             // Enable doctrine annotations
@@ -91,19 +114,20 @@ final class Bootstrapper
 
             // Connection array
             $conn = [
-                'dbname' => getenv('DB_HOST'),
+                'dbname' => getenv('DB_DATABASE'),
                 'user' => getenv('DB_USER'),
                 'password' => getenv('DB_PASSWORD'),
                 'host' => getenv('DB_HOST'),
                 'driver' => 'pdo_mysql'
             ];
 
-            self::$manager = EntityManager::create($conn, $config);
+            return EntityManager::create($conn, $config);
         }
+        return self::$manager;
     }
 
     /**
-     * Build routes within Slim
+     * Build routes within Slim and run the app
      */
     public function buildRoutes(): void
     {
@@ -132,12 +156,20 @@ final class Bootstrapper
     }
 
     /**
-     * Container getter
+     * EntityManager getter
      *
      * @return EntityManager
      */
     public static function getManager(): EntityManager
     {
         return static::$manager;
+    }
+
+    /**
+     * EntityManager setter
+     */
+    public static function setManager(EntityManager $manager): void
+    {
+        static::$manager = $manager;
     }
 }

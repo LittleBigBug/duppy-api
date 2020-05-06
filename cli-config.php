@@ -12,5 +12,4 @@ require __DIR__ . '/vendor/autoload.php';
  * Configure doctrine CLI
  */
 
-Bootstrapper::configureDatabase();
-return ConsoleRunner::createHelperSet(Bootstrapper::getManager());
+return ConsoleRunner::createHelperSet((new Bootstrapper)->cli());
