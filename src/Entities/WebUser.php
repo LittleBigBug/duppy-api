@@ -32,4 +32,7 @@ class WebUser extends AbstractEntity
      * @ORM\Column(type="string")
      */
     protected string $email;
+
+    // TODO: workout datetimes
+    // TODO: add other models + workout uuids
 }
