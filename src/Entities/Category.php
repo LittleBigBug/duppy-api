@@ -27,7 +27,6 @@ class Category extends AbstractEntity
      */
     protected string $slug;
 
-
     /**
      * @ORM\Column(type="smallint")
      */

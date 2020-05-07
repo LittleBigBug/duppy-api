@@ -33,15 +33,15 @@ class Post extends AbstractEntity
     protected int $thread_id;
 
     /**
+     * @ORM\Column(type="string", length=17)
+     */
+    protected string $author_id;
+
+    /**
      * @ORM\ManyToOne(targetEntity="Thread", inversedBy="posts")
      * @ORM\JoinColumn(name="thread_id", referencedColumnName="id")
      */
     protected $thread;
-
-    /**
-     * @ORM\Column(type="string", length=17)
-     */
-    protected string $author_id;
 
     /**
      * @ORM\ManyToOne(targetEntity="WebUser", inversedBy="posts")

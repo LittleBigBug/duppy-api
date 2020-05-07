@@ -31,10 +31,9 @@ class Thread extends AbstractEntity
     protected UuidInterface $category_uuid;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Category", inversedBy="threads")
-     * @ORM\JoinColumn(name="category_uuid", referencedColumnName="uuid")
+     * @ORM\Column(type="string", length=17)
      */
-    protected $category;
+    protected string $author_id;
 
     /**
      * @ORM\OneToMany(targetEntity="Post", mappedBy="thread")
@@ -42,9 +41,10 @@ class Thread extends AbstractEntity
     protected $posts;
 
     /**
-     * @ORM\Column(type="string", length=17)
+     * @ORM\ManyToOne(targetEntity="Category", inversedBy="threads")
+     * @ORM\JoinColumn(name="category_uuid", referencedColumnName="uuid")
      */
-    protected string $author_id;
+    protected $category;
 
     /**
      * @ORM\ManyToOne(targetEntity="WebUser", inversedBy="threads")
