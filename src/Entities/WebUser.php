@@ -32,4 +32,14 @@ class WebUser extends AbstractEntity
      * @ORM\Column(type="string")
      */
     protected string $email;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Post", mappedBy="webuser")
+     */
+    protected $posts;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Thread", mappedBy="webuser")
+     */
+    protected $threads;
 }

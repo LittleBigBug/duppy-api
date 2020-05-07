@@ -26,4 +26,26 @@ class Post extends AbstractEntity
      * @ORM\Column(type="string")
      */
     protected string $content;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    protected int $thread_id;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Thread", inversedBy="posts")
+     * @ORM\JoinColumn(name="thread_id", referencedColumnName="id")
+     */
+    protected $thread;
+
+    /**
+     * @ORM\Column(type="string", length=17)
+     */
+    protected string $author_id;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="WebUser", inversedBy="posts")
+     * @ORM\JoinColumn(name="author_id", referencedColumnName="steamid64")
+     */
+    protected $webuser;
 }

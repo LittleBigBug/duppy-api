@@ -1,1 +1,1 @@
-``C:\Users\Nicholas\Storage\Web\Projects\Dreamin.gg\duppy-api\vendor\bin\doctrine.bat orm:schema-tool --force --dump-sql``
+``C:\Users\Nicholas\Storage\Web\Projects\Dreamin.gg\duppy-api\vendor\bin\doctrine.bat orm:schema-tool:update --force --dump-sql``

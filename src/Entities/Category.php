@@ -27,13 +27,19 @@ class Category extends AbstractEntity
      */
     protected string $slug;
 
+
     /**
      * @ORM\Column(type="smallint")
      */
-    protected int $order;
+    protected int $order_num;
 
     /**
      * @ORM\Column(type="string", length=32)
      */
     protected string $title;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Thread", mappedBy="category")
+     */
+    protected $threads;
 }
