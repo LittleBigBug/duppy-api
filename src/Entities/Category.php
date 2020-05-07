@@ -4,6 +4,7 @@ namespace Duppy\Entities;
 use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Duppy\Abstracts\AbstractEntity;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\UuidInterface;
 
 /**
  * Category Entity
@@ -19,7 +20,7 @@ class Category extends AbstractEntity
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class=UuidGenerator::class)
      */
-    protected $uuid;
+    protected UuidInterface $uuid;
 
     /**
      * @ORM\Column(type="string", length=16)
