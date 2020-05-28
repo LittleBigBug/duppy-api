@@ -1,0 +1,8 @@
+[mod]
+name='Forums'
+class='Duppy\Mods\Forums\ForumsMod'
+version='1.0.0'
+
+[info]
+description='Bulletin Board Mod for Duppy'
+author='Havasu, LittleBigBug'

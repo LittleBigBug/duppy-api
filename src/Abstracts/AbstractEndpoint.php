@@ -13,7 +13,14 @@ abstract class AbstractEndpoint
      *
      * @var string
      */
-    public static string $type;
+    public static string $type = 'get';
+
+    /**
+     * Endpoint URI (defaults to path)
+     *
+     * @var string|null
+     */
+    public static string $uri;
 
     /**
      * Route middleware storage
@@ -40,6 +47,16 @@ abstract class AbstractEndpoint
     final public static function getType(): string
     {
         return static::$type;
+    }
+
+    /**
+     * Returns uri
+     *
+     * @return string|null
+     */
+    final public static function getUri(): string
+    {
+        return static::$uri ?? '';
     }
 
     /**

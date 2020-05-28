@@ -1,6 +1,8 @@
 <?php
 namespace Duppy\Endpoints;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Duppy\Abstracts\AbstractEndpoint;
@@ -35,8 +37,8 @@ class ExampleEndpoint extends AbstractEndpoint
      * @param Response $response
      * @param array $args
      * @return Response
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     final public function __invoke(Request $request, Response $response, array $args = []): Response
     {

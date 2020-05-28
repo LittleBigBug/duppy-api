@@ -1,18 +1,12 @@
 <?php
 namespace Duppy\Bootstrapper;
 
+use Duppy\Util;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use Slim\App;
 
 final class Router
 {
-    /**
-     * Slim instance
-     *
-     * @var App|null
-     */
-    public App $app;
 
     /**
      * Map of routes
@@ -22,12 +16,28 @@ final class Router
     public array $routes = [];
 
     /**
-     * Router constructor.
+     * Path of endpoint sources
+     *
+     * @var string
      */
-    public function __construct()
+    public string $endpointsSrc;
+
+    /**
+     * Prefix to put before all URIs in this Router
+     *
+     * @var string
+     */
+    public string $uriPrefix = '';
+
+    /**
+     * Router constructor.
+     *
+     * @param string $uriPrefix
+     */
+    public function __construct(string $uriPrefix = '')
     {
-        // Get slim instance
-        $this->app = Bootstrapper::getApp();
+        $this->endpointsSrc = 'Endpoints';
+        $this->uriPrefix = $uriPrefix;
     }
 
     /**
@@ -40,7 +50,7 @@ final class Router
             $type = $class::getType();
             $middleware = $class::getMiddleware();
 
-            $route = $this->app->$type($endpoint['uri'], $class);
+            $route = Bootstrapper::getApp()->$type($endpoint['uri'], $class);
 
             foreach ($middleware as $ware) {
                 $route->add(new $ware);
@@ -55,7 +65,8 @@ final class Router
      */
     private function loop(callable $fn): void
     {
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(__DIR__ . '/../Endpoints'));
+        $searchPath = Util::combinePaths(array(DUPPY_PATH, "src", $this->endpointsSrc));
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($searchPath));
 
         foreach ($iterator as $file) {
             // Check if file is a valid file
@@ -73,12 +84,18 @@ final class Router
 
             // Resolve class
             $path = str_replace('.php', '', $path);
-            $path = explode('src' . DIRECTORY_SEPARATOR, $path);
-            $class = 'Duppy\\' . $path[1];
+            $path = substr(Util::toProjectPath($path), strlen('src/'));
+            $class = 'Duppy\\' . $path;
+
+            $uri = $class::getUri() ?: $this->resolveUri($path);
+
+            if ($uri !== $class::getUri()) {
+                $class::$uri = $uri;
+            }
 
             $fn([
                 'class' => $class,
-                'uri' => $this->resolveUri($path[1]),
+                'uri' => $uri,
             ]);
         }
     }
@@ -91,8 +108,7 @@ final class Router
      */
     private function resolveUri(string $path): string
     {
-        // TODO: clean up this function, it's a mess lol.
-        $path = substr($path, 9);
+        $path = substr($path, strlen($this->endpointsSrc));
         $uri = str_replace('\\', '/', $path);
 
         // Add dashes between words
@@ -119,6 +135,7 @@ final class Router
                 $imploded[] = '{'. $sub .'}';
                 continue;
             }
+
             // If no variables return default
             $imploded[] = $string;
         }

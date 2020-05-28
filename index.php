@@ -8,6 +8,7 @@ use Duppy\Bootstrapper\Bootstrapper;
  */
 
 define('DUPPY_START', microtime(true));
+define('DUPPY_PATH', __DIR__);
 
 /**
  * Register auto loader.
@@ -19,4 +20,4 @@ require __DIR__ . '/vendor/autoload.php';
  * Bootstrap application
  */
 
-(new Bootstrapper)->boot();
+Bootstrapper::boot();

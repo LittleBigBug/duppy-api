@@ -1,6 +1,8 @@
 <?php
 namespace Duppy\Bootstrapper;
 
+use Doctrine\DBAL\DBALException;
+use Doctrine\ORM\ORMException;
 use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
@@ -34,6 +36,13 @@ final class Bootstrapper
     public static EntityManager $manager;
 
     /**
+     * Duppy Router instance
+     *
+     * @var Router|null
+     */
+    public static Router $router;
+
+    /**
      * Bootstrapper constructor.
      */
     public function __construct()
@@ -47,25 +56,25 @@ final class Bootstrapper
      *
      * @return void
      */
-    public function boot(): void
+    public static function boot(): void
     {
         // Create Container using PHP-DI
-        static::$container = new Container;
+        self::$container = new Container;
         AppFactory::setContainer(self::getContainer());
 
         // Boot Slim instance
-        static::$app = AppFactory::create();
+        self::$app = AppFactory::create();
 
-        $this->configure();
+        self::configure();
     }
 
     /**
      * Boots smaller app for Doctrine CLI
      *
      * @return EntityManager
-     * @throws \Doctrine\ORM\ORMException
+     * @throws ORMException|DBALException
      */
-    public function cli(): EntityManager
+    public static function cli(): EntityManager
     {
         self::setManager(self::configureDatabase());
         return self::getManager();
@@ -76,19 +85,19 @@ final class Bootstrapper
      *
      * @return void
      */
-    public function configure(): void
+    public static function configure(): void
     {
         $app = self::getApp();
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
 
-        $this->buildDependencies();
+        self::buildDependencies();
     }
 
     /**
      * Build dependencies into DI and other services
      */
-    public function buildDependencies(): void
+    public static function buildDependencies(): void
     {
         $container = self::getContainer();
 
@@ -97,14 +106,15 @@ final class Bootstrapper
         $container->set('database', fn () => $manager);
         self::setManager($manager);
 
-        $this->buildRoutes();
+        ModLoader::build();
+        self::buildRoutes();
     }
 
     /**
      * Configures the database
      *
      * @return EntityManager
-     * @throws \Doctrine\ORM\ORMException
+     * @throws ORMException|DBALException
      */
     public static function configureDatabase(): EntityManager
     {
@@ -131,15 +141,18 @@ final class Bootstrapper
 
             return EntityManager::create($conn, $config);
         }
+
         return self::$manager;
     }
 
     /**
      * Build routes within Slim and run the app
      */
-    public function buildRoutes(): void
+    public static function buildRoutes(): void
     {
-        (new Router)->build();
+        self::$router = new Router;
+        self::$router->build();
+
         self::getApp()->run();
     }
 
@@ -175,6 +188,8 @@ final class Bootstrapper
 
     /**
      * EntityManager setter
+     *
+     * @param EntityManager $manager
      */
     public static function setManager(EntityManager $manager): void
     {
