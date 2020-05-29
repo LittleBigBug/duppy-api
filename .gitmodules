@@ -1,3 +1,6 @@
 [submodule "src/Mods/Forums"]
 	path = src/Mods/Forums
 	url = https://github.com/dreamingg/duppy-forums/
+[submodule "duppy-forums"]
+	path = src/Mods/Forums
+	url = https://github.com/dreamingg/duppy-forums.git
