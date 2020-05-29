@@ -39,7 +39,7 @@ class Util
             $pathJoined .= $sl;
         }
 
-        $firstChar = substr($firstPath, 1);
+        $firstChar = substr($firstPath, 0, 1);
 
         if ($firstChar == $sl || $firstChar == "/") {
             $pathJoined = $sl . $pathJoined;
