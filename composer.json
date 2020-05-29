@@ -6,7 +6,8 @@
         "php-di/php-di": "^6.1",
         "doctrine/orm": "^2.7",
         "ramsey/uuid-doctrine": "^1.6",
-        "yosymfony/toml": "^1.0"
+        "yosymfony/toml": "^1.0",
+        "hybridauth/hybridauth": "^3.3"
     },
     "autoload": {
         "psr-4": {

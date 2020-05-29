@@ -41,15 +41,14 @@ abstract class AbstractRouteMiddleware
         self::$response = $handler->handle($request);
 
         $this->handle();
-        return self::getResponse();
+
+        return self::$response;
     }
 
     /**
      * Handles the middleware
-     *
-     * @return Response
      */
-    abstract public function handle(): Response;
+    abstract public function handle();
 
     /**
      * Get request obj

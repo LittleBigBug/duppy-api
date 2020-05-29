@@ -7,14 +7,17 @@ use Duppy\Bootstrapper\Bootstrapper;
  * @package Duppy
  */
 
+$protocol = ($_SERVER["HTTPS"] == 'on' ? 'https://' : 'http://');
+
 define('DUPPY_START', microtime(true));
 define('DUPPY_PATH', __DIR__);
+define('DUPPY_URI', $protocol . $_SERVER["HTTP_HOST"] . dirname($_SERVER['SCRIPT_NAME']));
 
 /**
  * Register auto loader.
  */
 
-require __DIR__ . '/vendor/autoload.php';
+require DUPPY_PATH . '/vendor/autoload.php';
 
 /**
  * Bootstrap application

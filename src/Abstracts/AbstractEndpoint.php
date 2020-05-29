@@ -9,11 +9,11 @@ use DI\Container;
 abstract class AbstractEndpoint
 {
     /**
-     * Type of request
+     * Type(s) of requests accepted
      *
-     * @var string
+     * @var array
      */
-    public static string $type = 'get';
+    public static array $types = [ 'get' ];
 
     /**
      * Endpoint URI (defaults to path)
@@ -40,13 +40,13 @@ abstract class AbstractEndpoint
     abstract public function __invoke(Request $request, Response $response, array $args = []): Response;
 
     /**
-     * Returns type of request
+     * Returns type(s) of requests accepted
      *
-     * @return string
+     * @return array
      */
-    final public static function getType(): string
+    final public static function getTypes(): array
     {
-        return static::$type;
+        return static::$types;
     }
 
     /**

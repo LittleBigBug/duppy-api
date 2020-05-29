@@ -1,8 +1,11 @@
 <?php
-
-
 namespace Duppy\Mods\Forums;
 
+/**
+ * Duppy Forums - API for the Duppy forums module
+ *
+ * @package Duppy Forums
+ */
 
 use Duppy\Abstracts\AbstractMod;
 

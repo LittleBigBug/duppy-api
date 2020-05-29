@@ -3,6 +3,7 @@ namespace Duppy\Bootstrapper;
 
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
+use Duppy\Middleware\SteamMiddleware;
 use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
@@ -43,21 +44,15 @@ final class Bootstrapper
     public static Router $router;
 
     /**
-     * Bootstrapper constructor.
-     */
-    public function __construct()
-    {
-        // Load .env file for config
-        (Dotenv::createImmutable(__DIR__ . '/../..'))->load();
-    }
-
-    /**
      * Boots the application and loads any global dependencies
      *
      * @return void
      */
     public static function boot(): void
     {
+        // Load .env file for config
+        (Dotenv::createImmutable(DUPPY_PATH))->load();
+
         // Create Container using PHP-DI
         self::$container = new Container;
         AppFactory::setContainer(self::getContainer());
@@ -90,6 +85,8 @@ final class Bootstrapper
         $app = self::getApp();
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
+
+        $app->add(new SteamMiddleware);
 
         self::buildDependencies();
     }

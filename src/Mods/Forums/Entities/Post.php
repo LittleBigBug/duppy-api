@@ -1,5 +1,5 @@
 <?php
-namespace Duppy\Entities;
+namespace Duppy\Mods\Forums\Entities;
 
 use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Duppy\Abstracts\AbstractEntity;

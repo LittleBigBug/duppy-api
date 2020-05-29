@@ -1,5 +1,5 @@
 <?php
-namespace Duppy\Entities;
+namespace Duppy\Mods\Forums\Entities;
 
 use Duppy\Abstracts\AbstractEntity;
 use Doctrine\ORM\Mapping as ORM;

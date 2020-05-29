@@ -47,10 +47,10 @@ final class Router
     {
         $this->loop(function (array $endpoint) {
             $class = $endpoint['class'];
-            $type = $class::getType();
+            $types = $class::getTypes();
             $middleware = $class::getMiddleware();
 
-            $route = Bootstrapper::getApp()->$type($endpoint['uri'], $class);
+            $route = Bootstrapper::getApp()->map($types, $endpoint['uri'], $class);
 
             foreach ($middleware as $ware) {
                 $route->add(new $ware);

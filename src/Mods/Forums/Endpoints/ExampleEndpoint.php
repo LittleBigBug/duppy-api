@@ -1,34 +1,31 @@
 <?php
-namespace Duppy\Endpoints;
+namespace Duppy\Mods\Forums\Endpoints;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Mods\Forums\Entities\Category;
+use Duppy\Mods\Forums\Entities\Post;
+use Duppy\Mods\Forums\Entities\Thread;
+use Duppy\Mods\Forums\Entities\WebUser;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Duppy\Abstracts\AbstractEndpoint;
-use Duppy\Middleware\TestMiddleware;
-use Duppy\Entities\Category;
-use Duppy\Entities\WebUser;
-use Duppy\Entities\Thread;
-use Duppy\Entities\Post;
 
 class ExampleEndpoint extends AbstractEndpoint
 {
     /**
-     * Type of request
+     * Types of requests accepted
      *
-     * @var string
+     * @var array
      */
-    public static string $type = 'get';
+    public static array $types = [ 'get' ];
 
     /**
      * Route middleware
      *
      * @var array
      */
-    public static array $middleware = [
-        TestMiddleware::class,
-    ];
+    public static array $middleware = [];
 
     /**
      * Handles the response
