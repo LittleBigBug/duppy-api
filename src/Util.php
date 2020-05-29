@@ -28,7 +28,7 @@ class Util
 
         $firstPath = $paths[0];
 
-        for ($i = 0; $i < count($paths); ++$i) {
+        for ($i = 0; $i < count($paths); $i++) {
             $path = str_replace('/', $sl, $paths[$i]);
             $paths[$i] = trim($path, $sl);
         }

@@ -18,9 +18,12 @@ class Home extends AbstractEndpoint
     public function __invoke(Request $request, Response $response, array $args = []): Response
     {
         $client = getenv('CLIENT_URL');
-        header("Location: $client");
 
-        return $response;
+        if ($client == "/") {
+            return $response;
+        }
+
+        return $response->withAddedHeader('Location', $client);
     }
 
 }

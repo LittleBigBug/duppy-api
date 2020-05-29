@@ -50,6 +50,10 @@ final class Router
             $types = $class::getTypes();
             $middleware = $class::getMiddleware();
 
+            for ($i = 0; $i < count($types); $i++) {
+                $types[$i] = strtoupper($types[$i]);
+            }
+
             $route = Bootstrapper::getApp()->map($types, $endpoint['uri'], $class);
 
             foreach ($middleware as $ware) {
@@ -85,7 +89,7 @@ final class Router
             // Resolve class
             $path = str_replace('.php', '', $path);
             $path = substr(Util::toProjectPath($path), strlen('src/'));
-            $class = 'Duppy\\' . $path;
+            $class = 'Duppy\\' . str_replace("/", "\\", $path);
 
             $uri = $class::getUri() ?: $this->resolveUri($path);
 
@@ -142,4 +146,5 @@ final class Router
 
         return implode('/', $imploded);
     }
+
 }
