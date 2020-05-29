@@ -1,0 +1,3 @@
+[submodule "src/Mods/duppy-forums"]
+	path = src/Mods/duppy-forums
+	url = https://github.com/dreamingg/duppy-forums/
