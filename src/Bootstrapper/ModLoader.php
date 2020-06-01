@@ -13,7 +13,7 @@ final class ModLoader
 
     public static function build(): void
     {
-        $iterator = new DirectoryIterator(Util::combinePaths(array(DUPPY_PATH, "src", "Mods"), true));
+        $iterator = new DirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", "Mods"], true));
 
         foreach ($iterator as $file) {
             // Check if file is a directory
@@ -46,7 +46,7 @@ final class ModLoader
                 $author = $modInfo['info']['author'];
             }
 
-            if (!is_subclass_of($class, 'Duppy\\Abstracts\\AbstractMod')) {
+            if (!is_subclass_of($class, 'Duppy\Abstracts\AbstractMod')) {
                 error_log('AbstractMod info specified an invalid class name', 0);
                 continue;
             }

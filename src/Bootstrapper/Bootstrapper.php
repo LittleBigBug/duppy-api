@@ -20,28 +20,28 @@ final class Bootstrapper
      *
      * @var App|null
      */
-    public static App $app;
+    public static ?App $app;
 
     /**
      * Container instance
      *
      * @var Container|null
      */
-    public static Container $container;
+    public static ?Container $container;
 
     /**
      * Doctrine entity manager instance
      *
      * @var EntityManager|null
      */
-    public static EntityManager $manager;
+    public static ?EntityManager $manager;
 
     /**
      * Duppy Router instance
      *
      * @var Router|null
      */
-    public static Router $router;
+    public static ?Router $router;
 
     /**
      * Boots the application and loads any global dependencies

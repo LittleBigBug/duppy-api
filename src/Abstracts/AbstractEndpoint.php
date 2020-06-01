@@ -11,23 +11,64 @@ abstract class AbstractEndpoint
     /**
      * Type(s) of requests accepted
      *
-     * @var array
+     * @var string[]
      */
     public static array $types = [ 'get' ];
 
     /**
-     * Endpoint URI (defaults to path)
+     * Endpoint URI(s) (defaults to path)
      *
-     * @var string|null
+     * @var string[]|null
      */
-    public static string $uri;
+    public static ?array $uri = null;
 
     /**
-     * Route middleware storage
+     * Endpoint URI function names map (not needed if $uri contains < 2)
+     * Keys of $uri must match
+     *
+     * Please use PascalCase. The function will be turned into camelCase appropriately
+     *
+     * @var string[]|null
+     */
+    public static ?array $uriFuncNames = null;
+
+    /**
+     * Endpoint URI redirect map
+     * Keys of $uri must match. Not needed.
+     *
+     * Can be an array of strings (where to redirect)
+     * or an array, with the first key is where to redirect and the second is the HTTP Code
+     * (by default, 302)
+     *
+     * @var array|null
+     */
+    public static ?array $uriRedirect = null;
+
+    /**
+     * Either a boolean or an array of booleans (where keys match with $uri)
+     * Specifies if seperate functions for $types should be called instead.
+     * This doesn't apply if $types only has one member.
+     *
+     * https://stitcher.io/blog/new-in-php-8#union-types-rfc
+     * @var array|boolean
+     */
+    public static $uriMapTypes = null;
+
+    /**
+     * Route middleware
      *
      * @var array
      */
     public static array $middleware = [];
+
+    /**
+     * Endpoint's group parent
+     * All $uri s will be relative to parent(s)
+     * Classname of a class that inherits the abstract class AbstractEndpointGroup
+     *
+     * @var string|null
+     */
+    public static ?string $parentGroup = null;
 
     /**
      * Handles the response
@@ -37,7 +78,10 @@ abstract class AbstractEndpoint
      * @param array $args
      * @return Response
      */
-    abstract public function __invoke(Request $request, Response $response, array $args = []): Response;
+    public function __invoke(Request $request, Response $response, array $args = []): Response
+    {
+        return $response;
+    }
 
     /**
      * Returns type(s) of requests accepted
@@ -50,13 +94,43 @@ abstract class AbstractEndpoint
     }
 
     /**
-     * Returns uri
+     * Returns uri(s)
      *
-     * @return string|null
+     * @return array|null
      */
-    final public static function getUri(): string
+    final public static function getUri(): ?array
     {
-        return static::$uri ?? '';
+        return static::$uri;
+    }
+
+    /**
+     * Returns the uri function name map
+     *
+     * @return array|null
+     */
+    final public static function getUriFuncMap(): ?array
+    {
+        return static::$uriFuncNames;
+    }
+
+    /**
+     * Returns the uri redirect map
+     *
+     * @return array|null
+     */
+    final public static function getUriRedirectMap(): ?array
+    {
+        return static::$uriRedirect;
+    }
+
+    /**
+     * Returns the uri map types
+     *
+     * @return array|boolean|null
+     */
+    final public static function getUriMapTypes()
+    {
+        return static::$uriMapTypes;
     }
 
     /**
@@ -67,6 +141,16 @@ abstract class AbstractEndpoint
     final public static function getMiddleware(): array
     {
         return static::$middleware;
+    }
+
+    /**
+     * Returns the endpoint parent group class name (AbstractEndpointGroup)
+     *
+     * @return string|null
+     */
+    final public static function getParentGroupEndpoint(): ?string
+    {
+        return static::$parentGroup;
     }
 
     /**

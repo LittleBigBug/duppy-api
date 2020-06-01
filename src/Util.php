@@ -13,7 +13,7 @@ class Util
      * @return string
      */
     public static function combinePath(string $basePath, string $combPath, bool $trailingSlash = false): string {
-        return self::combinePaths(array($basePath, $combPath), $trailingSlash);
+        return self::combinePaths([$basePath, $combPath], $trailingSlash);
     }
 
     /**

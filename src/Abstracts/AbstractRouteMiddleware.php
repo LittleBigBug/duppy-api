@@ -36,13 +36,13 @@ abstract class AbstractRouteMiddleware
      * @return Response
      */
     final public function __invoke(Request $request, RequestHandler $handler): Response {
-        self::$request = $request;
-        self::$handler = $handler;
-        self::$response = $handler->handle($request);
+        static::$request = $request;
+        static::$handler = $handler;
+        static::$response = $handler->handle($request);
 
         $this->handle();
 
-        return self::$response;
+        return static::$response;
     }
 
     /**
@@ -57,7 +57,7 @@ abstract class AbstractRouteMiddleware
      */
     final protected static function getRequest(): Request
     {
-        return self::$request;
+        return static::$request;
     }
 
     /**
@@ -67,7 +67,7 @@ abstract class AbstractRouteMiddleware
      */
     final protected static function getHandler(): RequestHandler
     {
-        return self::$handler;
+        return static::$handler;
     }
 
     /**
@@ -77,6 +77,6 @@ abstract class AbstractRouteMiddleware
      */
     final protected static function getResponse(): Response
     {
-        return self::$response;
+        return static::$response;
     }
 }

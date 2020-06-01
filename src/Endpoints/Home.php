@@ -11,19 +11,10 @@ class Home extends AbstractEndpoint
     /**
      * Set the URI to /
      *
-     * @var string
+     * @var array
      */
-    public static string $uri = "/";
+    public static ?array $uri = [ '/' ];
 
-    public function __invoke(Request $request, Response $response, array $args = []): Response
-    {
-        $client = getenv('CLIENT_URL');
-
-        if ($client == "/") {
-            return $response;
-        }
-
-        return $response->withAddedHeader('Location', $client);
-    }
+    public static ?array $uriRedirect = [ ["%env:CLIENT_URL", 302] ];
 
 }

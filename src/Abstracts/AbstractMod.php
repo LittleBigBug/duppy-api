@@ -20,7 +20,7 @@ abstract class AbstractMod
      *
      * @var Router|null
      */
-    public static Router $router;
+    public static ?Router $router = null;
 
     /**
      * Called when the plugin is loaded / started
@@ -35,11 +35,11 @@ abstract class AbstractMod
      * @return Router
      */
     protected static function createRouter(string $rootAppUri, string $endpointsFolder = 'Endpoints'): Router {
-        self::$router = new Router($rootAppUri);
-        self::$router->endpointsSrc = Util::combinePath(self::$modInfo->srcPath, $endpointsFolder);
-        self::$router->build();
+        static::$router = new Router('/' . $rootAppUri);
+        static::$router->endpointsSrc = Util::combinePath(static::$modInfo->srcPath, $endpointsFolder);
+        static::$router->build();
 
-        return self::$router;
+        return static::$router;
     }
 
 }
