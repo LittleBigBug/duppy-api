@@ -12,6 +12,6 @@ class SteamAuthSecret extends AbstractSetting {
 
     public static string $required = "notnull|string";
 
-    public static $default = "";
+    public static $defaultValue = "";
 
 }

@@ -12,6 +12,6 @@ class PasswordAuth extends AbstractSetting {
 
     public static string $required = "notnull|boolean";
 
-    public static $default = false;
+    public static $defaultValue = false;
 
 }

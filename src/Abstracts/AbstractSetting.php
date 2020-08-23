@@ -32,6 +32,6 @@ abstract class AbstractSetting {
     /**
      * Default fallback value
      */
-    public static $default;
+    public static $defaultValue;
 
 }
