@@ -2,18 +2,26 @@
 namespace Duppy\Middleware;
 
 use Duppy\Abstracts\AbstractRouteMiddleware;
-use Hybridauth\Provider\Steam;
+use Duppy\Bootstrapper\Settings;
+use Hybridauth\Exception\InvalidArgumentException;
+use Hybridauth\Hybridauth;
 
 class AuthMiddleware extends AbstractRouteMiddleware {
 
     /**
      * Steam account authentication
+     * @throws InvalidArgumentException
      */
     final public function handle() {
         $config = [
             'callback' => DUPPY_URI,
-            'keys' => [
-                'secret' => getenv('STEAM_API_KEY'),
+            'providers' => [
+                'Steam' => [
+                    'enabled' => Settings::getSetting("auth.steam.enabled"),
+                    'keys' => [
+                        'secret' => Settings::getSetting("auth.steam.secret"),
+                    ],
+                ],
             ],
         ];
 
@@ -24,8 +32,8 @@ class AuthMiddleware extends AbstractRouteMiddleware {
          * $adapter->isConnected();
          */
 
-        $adapter = new Steam($config);
-        self::$request = self::$request->withAttribute("steamAdapter", $adapter);
+        $adapter = new Hybridauth($config);
+        self::$request = self::$request->withAttribute("authHandler", $adapter);
     }
 
 }

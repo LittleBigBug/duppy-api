@@ -19,9 +19,9 @@ class WebUser extends AbstractEntity {
     protected int $id;
 
     /**
-     * @ORM\Column(type="string", length=17, unique=true)
+     * @ORM\Column(type="string", nullable=true)
      */
-    protected string $steamid64;
+    protected string $thirdpartyAuth;
 
     /**
      * @ORM\Column(type="string")
@@ -31,12 +31,17 @@ class WebUser extends AbstractEntity {
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    protected string $bio;
+    protected string $email;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      */
-    protected string $email;
+    protected string $password;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected string $bio;
 
     /**
      * @ORM\OneToMany(targetEntity="Post", mappedBy="webuser")
