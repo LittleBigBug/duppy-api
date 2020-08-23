@@ -8,10 +8,17 @@ use Yosymfony\Toml\Toml;
 
 final class ModLoader {
 
+    /**
+     * Map of mods
+     *
+     * @var array
+     */
     public static array $mods = [];
 
-    public static function build(): void
-    {
+    /**
+     * Build mods
+     */
+    public static function build(): void {
         $iterator = new DirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", "Mods"], true));
 
         foreach ($iterator as $file) {

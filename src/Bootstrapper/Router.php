@@ -35,8 +35,7 @@ final class Router {
      *
      * @param string $uriPrefix
      */
-    public function __construct(string $uriPrefix = '')
-    {
+    public function __construct(string $uriPrefix = '') {
         $this->endpointsSrc = 'Endpoints';
         $this->uriPrefix = $uriPrefix;
     }
@@ -44,8 +43,7 @@ final class Router {
     /**
      * Build slim routes
      */
-    public function build(): void
-    {
+    public function build(): void {
         $endPoints = [];
         $endPointGroups = [];
 
@@ -141,8 +139,7 @@ final class Router {
      *
      * @param callable $fn
      */
-    private function loop(callable $fn): void
-    {
+    private function loop(callable $fn): void {
         $searchPath = Util::combinePaths([DUPPY_PATH, "src", $this->endpointsSrc]);
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($searchPath));
 
@@ -199,8 +196,7 @@ final class Router {
      * @param string $path
      * @return string
      */
-    private function resolveUri(string $path): string
-    {
+    private function resolveUri(string $path): string {
         $path = substr($path, strlen($this->endpointsSrc));
         $uri = str_replace('\\', '/', $path);
 
@@ -216,8 +212,7 @@ final class Router {
      * @param string $uri
      * @return string
      */
-    private function parseVariables(string $uri): string
-    {
+    private function parseVariables(string $uri): string {
         $exploded = explode('/', $uri);
         $imploded = [];
 
@@ -242,8 +237,7 @@ final class Router {
      * @param array $group
      * @param App|RouteCollectorProxy $app
      */
-    private function buildRouteGroups(array $group, $app = null)
-    {
+    private function buildRouteGroups(array $group, $app = null) {
         if ($app == null) {
             $app = Bootstrapper::getApp();
         }
@@ -279,8 +273,7 @@ final class Router {
      * @param array $endpoints
      * @param App|RouteCollectorProxy $app
      */
-    private function buildRouteEndpoints(array $endpoints, $app = null)
-    {
+    private function buildRouteEndpoints(array $endpoints, $app = null) {
         if ($app == null) {
             $app = Bootstrapper::getApp();
         }
@@ -380,8 +373,7 @@ final class Router {
      * @param array $result
      * @return array
      */
-    private static function sortByParentLoadOrder(array &$toBeSorted, string $parent = null, int &$depth = 0, array &$result = [])
-    {
+    private static function sortByParentLoadOrder(array &$toBeSorted, string $parent = null, int &$depth = 0, array &$result = []) {
         if (count($toBeSorted) <= 1) {
             return $toBeSorted;
         }
