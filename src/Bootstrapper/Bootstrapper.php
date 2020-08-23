@@ -3,7 +3,7 @@ namespace Duppy\Bootstrapper;
 
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
-use Duppy\Middleware\SteamMiddleware;
+use Duppy\Middleware\AuthMiddleware;
 use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
@@ -13,8 +13,7 @@ use Dotenv\Dotenv;
 use DI\Container;
 use Slim\App;
 
-final class Bootstrapper
-{
+final class Bootstrapper {
     /**
      * Slim instance
      *
@@ -48,8 +47,7 @@ final class Bootstrapper
      *
      * @return void
      */
-    public static function boot(): void
-    {
+    public static function boot(): void {
         // Load .env file for config
         (Dotenv::createImmutable(DUPPY_PATH))->load();
 
@@ -69,8 +67,7 @@ final class Bootstrapper
      * @return EntityManager
      * @throws ORMException|DBALException
      */
-    public static function cli(): EntityManager
-    {
+    public static function cli(): EntityManager {
         self::setManager(self::configureDatabase());
         return self::getManager();
     }
@@ -80,13 +77,12 @@ final class Bootstrapper
      *
      * @return void
      */
-    public static function configure(): void
-    {
+    public static function configure(): void {
         $app = self::getApp();
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
 
-        $app->add(new SteamMiddleware);
+        $app->add(new AuthMiddleware);
 
         self::buildDependencies();
     }
@@ -94,8 +90,7 @@ final class Bootstrapper
     /**
      * Build dependencies into DI and other services
      */
-    public static function buildDependencies(): void
-    {
+    public static function buildDependencies(): void {
         $container = self::getContainer();
 
         // Doctrine setup
@@ -113,8 +108,7 @@ final class Bootstrapper
      * @return EntityManager
      * @throws ORMException|DBALException
      */
-    public static function configureDatabase(): EntityManager
-    {
+    public static function configureDatabase(): EntityManager {
         Type::addType('uuid', UuidType::class);
 
         if (!isset(self::$manager)) {
@@ -145,8 +139,7 @@ final class Bootstrapper
     /**
      * Build routes within Slim and run the app
      */
-    public static function buildRoutes(): void
-    {
+    public static function buildRoutes(): void {
         self::$router = new Router;
         self::$router->build();
 
@@ -158,8 +151,7 @@ final class Bootstrapper
      *
      * @return App
      */
-    public static function getApp(): App
-    {
+    public static function getApp(): App {
         return static::$app;
     }
 

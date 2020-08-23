@@ -1,8 +1,7 @@
 <?php
 namespace Duppy\Abstracts;
 
-abstract class AbstractEndpointGroup
-{
+abstract class AbstractEndpointGroup {
 
     /**
      * Endpoint URI (defaults to path)
@@ -32,8 +31,7 @@ abstract class AbstractEndpointGroup
      *
      * @return string|null
      */
-    final public static function getUri(): ?string
-    {
+    final public static function getUri(): ?string {
         return static::$uri;
     }
 
@@ -42,8 +40,7 @@ abstract class AbstractEndpointGroup
      *
      * @return array
      */
-    final public static function getMiddleware(): array
-    {
+    final public static function getMiddleware(): array {
         return static::$middleware;
     }
 
@@ -52,8 +49,7 @@ abstract class AbstractEndpointGroup
      *
      * @return string|null
      */
-    final public static function getParentGroupEndpoint(): ?string
-    {
+    final public static function getParentGroupEndpoint(): ?string {
         return static::$parentGroup;
     }
 

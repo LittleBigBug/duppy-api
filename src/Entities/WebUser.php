@@ -10,8 +10,7 @@ use Duppy\Abstracts\AbstractEntity;
  * @ORM\Entity
  * @ORM\Table(name="web_users")
  */
-class WebUser extends AbstractEntity
-{
+class WebUser extends AbstractEntity {
     /**
      * @ORM\Id
      * @ORM\GeneratedValue

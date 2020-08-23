@@ -6,8 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Duppy\Bootstrapper\Bootstrapper;
 use DI\Container;
 
-abstract class AbstractEndpoint
-{
+abstract class AbstractEndpoint {
     /**
      * Type(s) of requests accepted
      *
@@ -78,8 +77,7 @@ abstract class AbstractEndpoint
      * @param array $args
      * @return Response
      */
-    public function __invoke(Request $request, Response $response, array $args = []): Response
-    {
+    public function __invoke(Request $request, Response $response, array $args = []): Response {
         return $response;
     }
 
@@ -88,8 +86,7 @@ abstract class AbstractEndpoint
      *
      * @return array
      */
-    final public static function getTypes(): array
-    {
+    final public static function getTypes(): array {
         return static::$types;
     }
 
@@ -98,8 +95,7 @@ abstract class AbstractEndpoint
      *
      * @return array|null
      */
-    final public static function getUri(): ?array
-    {
+    final public static function getUri(): ?array {
         return static::$uri;
     }
 
@@ -108,8 +104,7 @@ abstract class AbstractEndpoint
      *
      * @return array|null
      */
-    final public static function getUriFuncMap(): ?array
-    {
+    final public static function getUriFuncMap(): ?array {
         return static::$uriFuncNames;
     }
 
@@ -118,8 +113,7 @@ abstract class AbstractEndpoint
      *
      * @return array|null
      */
-    final public static function getUriRedirectMap(): ?array
-    {
+    final public static function getUriRedirectMap(): ?array {
         return static::$uriRedirect;
     }
 
@@ -128,8 +122,7 @@ abstract class AbstractEndpoint
      *
      * @return array|boolean|null
      */
-    final public static function getUriMapTypes()
-    {
+    final public static function getUriMapTypes() {
         return static::$uriMapTypes;
     }
 
@@ -138,8 +131,7 @@ abstract class AbstractEndpoint
      *
      * @return array
      */
-    final public static function getMiddleware(): array
-    {
+    final public static function getMiddleware(): array {
         return static::$middleware;
     }
 
@@ -148,8 +140,7 @@ abstract class AbstractEndpoint
      *
      * @return string|null
      */
-    final public static function getParentGroupEndpoint(): ?string
-    {
+    final public static function getParentGroupEndpoint(): ?string {
         return static::$parentGroup;
     }
 
@@ -158,8 +149,7 @@ abstract class AbstractEndpoint
      *
      * @return Container
      */
-    final public static function getContainer(): Container
-    {
+    final public static function getContainer(): Container {
         return Bootstrapper::getContainer();
     }
 }

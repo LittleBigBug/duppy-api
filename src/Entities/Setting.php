@@ -10,8 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\Table(name="settings")
  */
-class Setting extends AbstractEntity
-{
+class Setting extends AbstractEntity {
 
     /**
      * @ORM\Id

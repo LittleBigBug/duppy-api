@@ -1,3 +1,12 @@
 [submodule "duppy-forums"]
 	path = src/Mods/Forums
 	url = https://github.com/dreamingg/duppy-forums.git
+[submodule "src/Mods/--force"]
+	path = src/Mods/--force
+	url = https://git.yasfu.net/duppy/api-forums.git
+[submodule "src/Mods/Mods"]
+	path = src/Mods/Mods
+	url = https://git.yasfu.net/duppy/api-forums.git
+[submodule "src/Mods/Forums"]
+	path = src/Mods/Forums
+	url = https://git.yasfu.net/duppy/api-forums.git

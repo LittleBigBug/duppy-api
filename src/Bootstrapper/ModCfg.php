@@ -2,8 +2,7 @@
 namespace Duppy\Bootstrapper;
 
 
-class ModCfg
-{
+class ModCfg {
 
     /**
      * Path to the plugin (absolute)

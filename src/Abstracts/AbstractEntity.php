@@ -3,8 +3,7 @@ namespace Duppy\Abstracts;
 
 use Doctrine\ORM\Mapping as ORM;
 
-abstract class AbstractEntity
-{
+abstract class AbstractEntity {
     /**
      * @ORM\Column(type="datetime", columnDefinition="TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
      */
@@ -15,8 +14,7 @@ abstract class AbstractEntity
      *
      * @param array $data
      */
-    public function __construct(array $data)
-    {
+    public function __construct(array $data) {
         foreach ($data as $property => $value) {
             $this->$property = $value;
         }
@@ -28,8 +26,7 @@ abstract class AbstractEntity
      * @param string $property
      * @return mixed
      */
-    final public function get(string $property)
-    {
+    final public function get(string $property) {
         return $this->$property;
     }
 }

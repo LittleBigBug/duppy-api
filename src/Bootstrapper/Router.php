@@ -7,8 +7,7 @@ use RecursiveIteratorIterator;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
-final class Router
-{
+final class Router {
 
     /**
      * Map of routes

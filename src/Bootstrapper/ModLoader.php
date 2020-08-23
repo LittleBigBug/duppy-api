@@ -6,8 +6,7 @@ use Duppy\Util;
 use Yosymfony\Toml\Exception\ParseException;
 use Yosymfony\Toml\Toml;
 
-final class ModLoader
-{
+final class ModLoader {
 
     public static array $mods = [];
 

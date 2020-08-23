@@ -5,8 +5,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
-abstract class AbstractRouteMiddleware
-{
+abstract class AbstractRouteMiddleware {
     /**
      * Request obj
      *
@@ -55,8 +54,7 @@ abstract class AbstractRouteMiddleware
      *
      * @return Request
      */
-    final protected static function getRequest(): Request
-    {
+    final protected static function getRequest(): Request {
         return static::$request;
     }
 
@@ -65,8 +63,7 @@ abstract class AbstractRouteMiddleware
      *
      * @return RequestHandler
      */
-    final protected static function getHandler(): RequestHandler
-    {
+    final protected static function getHandler(): RequestHandler {
         return static::$handler;
     }
 
@@ -75,8 +72,7 @@ abstract class AbstractRouteMiddleware
      *
      * @return Response
      */
-    final protected static function getResponse(): Response
-    {
+    final protected static function getResponse(): Response {
         return static::$response;
     }
 }

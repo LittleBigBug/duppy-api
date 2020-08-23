@@ -5,8 +5,7 @@ use Duppy\Bootstrapper\ModCfg;
 use Duppy\Bootstrapper\Router;
 use Duppy\Util;
 
-abstract class AbstractMod
-{
+abstract class AbstractMod {
 
     /**
      * ModCfg Object associated with this mod

@@ -5,8 +5,7 @@ use Duppy\Abstracts\AbstractEndpoint;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class UserData extends AbstractEndpoint
-{
+class UserData extends AbstractEndpoint {
     /**
      * Catch / /all and /basic-info
      *
@@ -40,8 +39,7 @@ class UserData extends AbstractEndpoint
      * @param array $args
      * @return Response
      */
-    public function __invoke(Request $request, Response $response, array $args = []): Response
-    {
+    public function __invoke(Request $request, Response $response, array $args = []): Response {
         // Todo ; give full public user info
         return $response;
     }
@@ -57,8 +55,7 @@ class UserData extends AbstractEndpoint
      * @param array $args
      * @return Response
      */
-    public function basicInfo(Request $request, Response $response, array $args = []): Response
-    {
+    public function basicInfo(Request $request, Response $response, array $args = []): Response {
         // Todo ; give basic user info
         echo('Requested UID; ' . $args['id']);
         return $response;

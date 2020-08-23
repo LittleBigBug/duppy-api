@@ -4,14 +4,12 @@ namespace Duppy\Middleware;
 use Duppy\Abstracts\AbstractRouteMiddleware;
 use Hybridauth\Provider\Steam;
 
-class SteamMiddleware extends AbstractRouteMiddleware
-{
+class AuthMiddleware extends AbstractRouteMiddleware {
 
     /**
      * Steam account authentication
      */
-    final public function handle()
-    {
+    final public function handle() {
         $config = [
             'callback' => DUPPY_URI,
             'keys' => [

@@ -1,8 +1,7 @@
 <?php
 namespace Duppy;
 
-class Util
-{
+class Util {
 
     /**
      * Combines two paths
