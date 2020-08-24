@@ -2,19 +2,19 @@
 namespace Duppy\Endpoints\User;
 
 use Duppy\Abstracts\AbstractEndpoint;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Request;
+use Slim\Psr7\Response;
 
 class UserData extends AbstractEndpoint {
     /**
      * Catch / /all and /basic-info
      *
      * GET /user/0/ is an alias to GET /user/0/all and returns all available (public) user data
-     * GET /user/0/basic-info returns basic info about the user
+     * GET /user/0/basic returns basic info about the user
      *
      * @var string[]
      */
-    public static ?array $uri = [ '/', '/all', '/basic-info' ];
+    public static ?array $uri = [ '/', '/all', '/basic' ];
 
     /**
      * Map /basic-info the use the BasicInfo function in this class.

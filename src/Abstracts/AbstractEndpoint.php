@@ -1,8 +1,8 @@
 <?php
 namespace Duppy\Abstracts;
 
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Psr7\Request;
+use Slim\Psr7\Response;
 use Duppy\Bootstrapper\Bootstrapper;
 use DI\Container;
 

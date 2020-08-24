@@ -5,9 +5,8 @@ use Doctrine\Common\Collections\Criteria;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\Settings;
-use Duppy\Entities\WebUser;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Psr7\Request;
+use Slim\Psr7\Response;
 
 class Login extends AbstractEndpoint {
 
