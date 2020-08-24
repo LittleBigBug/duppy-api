@@ -60,7 +60,7 @@ final class Settings {
 
     public static function getSetting(string $key): object {
         $manager = Bootstrapper::getManager();
-        $setting = $manager->getRepository('settings')->findOneBy([ 'settingKey' => $key, ]);
+        $setting = $manager->getRepository('setting')->findOneBy([ 'settingKey' => $key, ]);
 
         $settingDef = static::$settings[$key];
         $default = null;
