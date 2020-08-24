@@ -13,7 +13,7 @@ class Username extends AbstractEndpoint {
      *
      * @var array
      */
-    public static ?array $uri = [ '/user/namecheck/{username}' ];
+    public static ?array $uri = [ '/user/namecheck[/{username}]' ];
 
     /**
      * Handles logins with passwords or third-party (HybridAuth)
@@ -26,10 +26,22 @@ class Username extends AbstractEndpoint {
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $username = $args["username"];
 
+        if (!isset($username) || empty($username)) {
+            $username = $request->getParsedBody()['username'];
+
+            if (!isset($username) || empty($username)) {
+                return $response->withJson([
+                    'success' => false,
+                    'error' => "No username was given",
+                ]);
+            }
+        }
+
         $dbo = Bootstrapper::getManager();
         $userRes = $dbo->getRepository("webuser")->count([ 'username' => $username, ]);
 
         return $response->withJson([
+            'success' => true,
             'username' => $username,
             'available' => $userRes < 1,
         ]);
