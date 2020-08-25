@@ -18,14 +18,14 @@ final class Settings {
      *
      * @var string
      */
-    public string $settingsSrc = '';
+    public string $settingsSrc = "";
 
     /**
      * Settings builder constructor.
      *
      * @param string $settingsSrc
      */
-    public function __construct(string $settingsSrc = 'Settings') {
+    public function __construct(string $settingsSrc = "Settings") {
         $this->settingsSrc = $settingsSrc;
     }
 
@@ -45,8 +45,8 @@ final class Settings {
             // Get pathname
             $path = $file->getRealPath() ?: $file->getPathname();
 
-            $classPath = substr(Util::toProjectPath($path), strlen('src/'));
-            $class = 'Duppy\\' . str_replace("/", "\\", $classPath);
+            $classPath = substr(Util::toProjectPath($path), strlen("src/"));
+            $class = "Duppy\\" . str_replace("/", "\\", $classPath);
 
             $key = $class::$key;
 
@@ -60,7 +60,7 @@ final class Settings {
 
     public static function getSetting(string $key): object {
         $manager = Bootstrapper::getManager();
-        $setting = $manager->getRepository('setting')->findOneBy([ 'settingKey' => $key, ]);
+        $setting = $manager->getRepository("Duppy\Entities\Setting")->findOneBy([ "settingkey" => $key, ]);
 
         $settingDef = static::$settings[$key];
         $default = null;

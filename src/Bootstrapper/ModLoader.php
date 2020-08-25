@@ -1,7 +1,6 @@
 <?php
 namespace Duppy\Bootstrapper;
 
-use DirectoryIterator;
 use Duppy\Util;
 use Yosymfony\Toml\Exception\ParseException;
 use Yosymfony\Toml\Toml;
@@ -19,7 +18,7 @@ final class ModLoader {
      * Build mods
      */
     public static function build(): void {
-        $iterator = new DirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", "Mods"], true));
+        $iterator = new \DirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", "Mods"], true));
 
         foreach ($iterator as $file) {
             // Check if file is a directory

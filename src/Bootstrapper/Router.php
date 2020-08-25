@@ -2,8 +2,6 @@
 namespace Duppy\Bootstrapper;
 
 use Duppy\Util;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
@@ -141,7 +139,7 @@ final class Router {
      */
     private function loop(callable $fn): void {
         $searchPath = Util::combinePaths([DUPPY_PATH, "src", $this->endpointsSrc]);
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($searchPath));
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($searchPath));
 
         foreach ($iterator as $file) {
             // Check if file is a valid file
@@ -158,9 +156,9 @@ final class Router {
             }
 
             // Resolve class
-            $path = str_replace('.php', '', $path);
-            $path = substr(Util::toProjectPath($path), strlen('src/'));
-            $class = 'Duppy\\' . str_replace("/", "\\", $path);
+            $path = str_replace(".php", "", $path);
+            $path = substr(Util::toProjectPath($path), strlen("src/"));
+            $class = "Duppy\\" . str_replace("/", "\\", $path);
 
             $isEndpoint = is_subclass_of($class, 'Duppy\Abstracts\AbstractEndpoint');
             $isEndpointGroup = is_subclass_of($class, 'Duppy\Abstracts\AbstractEndpointGroup');
@@ -181,9 +179,9 @@ final class Router {
             }
 
             $fn([
-                'class' => $class,
-                'uri' => $uri,
-                'type' => $isEndpoint ? 'endpoint' : 'group',
+                "class" => $class,
+                "uri" => $uri,
+                "type" => $isEndpoint ? "endpoint" : "group",
             ]);
 
             $uri = null;
@@ -198,10 +196,10 @@ final class Router {
      */
     private function resolveUri(string $path): string {
         $path = substr($path, strlen($this->endpointsSrc));
-        $uri = str_replace('\\', '/', $path);
+        $uri = str_replace("\\", "/", $path);
 
         // Add dashes between words
-        $uri = preg_replace('/(?<![_])\B([A-Z])/', '-$1', $uri);
+        $uri = preg_replace("/(?<![_])\B([A-Z])/", "-$1", $uri);
 
         return strtolower($this->parseVariables($uri));
     }
@@ -242,15 +240,15 @@ final class Router {
             $app = Bootstrapper::getApp();
         }
 
-        $grClass = $group['class'];
+        $grClass = $group["class"];
 
-        $endpoints = $group['endpoints'] ?? [];
-        $groups = $group['endpointGroups'] ?? [];
+        $endpoints = $group["endpoints"] ?? [];
+        $groups = $group["endpointGroups"] ?? [];
 
-        $this->uriPrefix ??= '';
+        $this->uriPrefix ??= "";
 
         $router = $this;
-        $path = Util::combinePath($this->uriPrefix, $group['uri']);
+        $path = Util::combinePath($this->uriPrefix, $group["uri"]);
 
         $appGroup = $app->group($path, function(RouteCollectorProxy $group) use($endpoints, $groups, $router) {
             $router->buildRouteEndpoints($endpoints, $group);
@@ -281,7 +279,7 @@ final class Router {
         $this->uriPrefix ??= '';
 
         foreach ($endpoints as $key => $endpoint) {
-            $epClass = $endpoint['class'];
+            $epClass = $endpoint["class"];
 
             $types = $epClass::getTypes();
             $uris = $epClass::getUri();
@@ -379,18 +377,18 @@ final class Router {
         }
 
         foreach ($toBeSorted as $key => $value) {
-            if ($value['parent'] != $parent) {
+            if ($value["parent"] != $parent) {
                 continue;
             }
 
-            $value['depth'] = $depth;
+            $value["depth"] = $depth;
             //$result[] = $value;
             array_unshift($result, $value);
 
             $toBeSorted[$key] = null;
 
             $depth++;
-            self::sortByParentLoadOrder($toBeSorted, $value['name'], $depth, $result);
+            self::sortByParentLoadOrder($toBeSorted, $value["name"], $depth, $result);
             $depth--;
         }
 
