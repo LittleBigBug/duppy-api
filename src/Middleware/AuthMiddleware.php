@@ -17,7 +17,7 @@ class AuthMiddleware extends AbstractRouteMiddleware {
             'callback' => DUPPY_URI,
             'providers' => [
                 'Steam' => [
-                    'enabled' => Settings::getSetting("auth.steam.enabled"),
+                    'enabled' => Settings::getSetting("auth.steam.enable"),
                     'keys' => [
                         'secret' => Settings::getSetting("auth.steam.secret"),
                     ],

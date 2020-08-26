@@ -33,40 +33,43 @@ final class Settings {
      * Build settings
      */
     public function build(): void {
-        $dirIterator = new \DirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", $this->settingsSrc], true));
-        $iterator = new \RecursiveIteratorIterator($dirIterator);
+        try {
+            $dirIterator = new \RecursiveDirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", $this->settingsSrc], true));
+            $iterator = new \RecursiveIteratorIterator($dirIterator);
 
-        foreach ($iterator as $file) {
-            // Check if file is a directory
-            if (!$file->isDir() || $file->isDot()) {
-                continue;
+            foreach ($iterator as $file) {
+                if (!$file->isFile()) {
+                    continue;
+                }
+
+                // Get pathname
+                $path = $file->getRealPath() ?: $file->getPathname();
+                $path = str_replace(".php", "", $path);
+
+                $classPath = substr(Util::toProjectPath($path), strlen("src/"));
+                $class = "Duppy\\" . str_replace("/", "\\", $classPath);
+
+                $key = $class::$key;
+
+                if (!isset($key)) {
+                    continue;
+                }
+
+                $settings[$key] = $class;
             }
-
-            // Get pathname
-            $path = $file->getRealPath() ?: $file->getPathname();
-
-            $classPath = substr(Util::toProjectPath($path), strlen("src/"));
-            $class = "Duppy\\" . str_replace("/", "\\", $classPath);
-
-            $key = $class::$key;
-
-            if (!isset($key)) {
-                continue;
-            }
-
-           $settings[$key] = $class;
-        }
+        } catch (\UnexpectedValueException $ex) { }
     }
 
-    public static function getSetting(string $key): object {
+    public static function getSetting(string $key, $default = "") {
         $manager = Bootstrapper::getManager();
         $setting = $manager->getRepository("Duppy\Entities\Setting")->findOneBy([ "settingKey" => $key, ]);
 
-        $settingDef = static::$settings[$key];
-        $default = null;
+        if (array_key_exists($key, static::$settings)) {
+            $settingDef = static::$settings[$key];
 
-        if (isset($settingDef)) {
-            $default = $settingDef::$defaultValue;
+            if (isset($settingDef)) {
+                $default = $settingDef::$defaultValue;
+            }
         }
 
         return $setting ?? $default;

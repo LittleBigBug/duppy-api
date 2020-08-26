@@ -3,6 +3,7 @@ namespace Duppy\Endpoints\User;
 
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -30,7 +31,7 @@ class Username extends AbstractEndpoint {
             $username = $request->getParsedBody()['username'];
 
             if (!isset($username) || empty($username)) {
-                return $response->withJson([
+                return Util::responseJSON($response, [
                     'success' => false,
                     'error' => "No username was given",
                 ]);
@@ -40,7 +41,7 @@ class Username extends AbstractEndpoint {
         $dbo = Bootstrapper::getManager();
         $userRes = $dbo->getRepository("Duppy\Entities\WebUser")->count([ 'username' => $username, ]);
 
-        return $response->withJson([
+        return Util::responseJSON($response, [
             'success' => true,
             'username' => $username,
             'available' => $userRes < 1,

@@ -5,6 +5,7 @@ use Doctrine\Common\Collections\Criteria;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\Settings;
+use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -32,10 +33,10 @@ class Login extends AbstractEndpoint {
             $provider = "pwd";
         }
 
-        $providerEnabled = Settings::getSetting("auth.$provider.enabled") == true;
+        $providerEnabled = Settings::getSetting("auth.$provider.enable") == true;
 
         $respondError = function ($err) use ($response) {
-            return $response->withJson(['success' => false, 'error' => $err]);
+            return Util::responseJSON($response, ['success' => false, 'error' => $err]);
         };
 
         if (!$providerEnabled) {
@@ -82,7 +83,7 @@ class Login extends AbstractEndpoint {
             $username = $userObj->getUsername();
             $avatar = $userObj->getAvatarUrl();
 
-            return $response->withJson([
+            return Util::responseJSON($response, [
                 'success' => true,
                 'data' => [
                     'id' => $userId,
@@ -120,7 +121,7 @@ class Login extends AbstractEndpoint {
         $username = $userObj->getUsername();
         $avatar = $userObj->getAvatarUrl();
 
-        return $response->withJson([
+        return Util::responseJSON($response, [
             'success' => true,
             'data' => [
                 'id' => $userId,

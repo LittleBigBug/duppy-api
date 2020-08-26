@@ -1,6 +1,8 @@
 <?php
 namespace Duppy;
 
+use Slim\Psr7\Response;
+
 class Util {
 
     /**
@@ -56,6 +58,20 @@ class Util {
     public static function toProjectPath(string $path): string {
         $newPath = str_replace(DUPPY_PATH, '', $path);
         return trim($newPath, DIRECTORY_SEPARATOR);
+    }
+
+    /**
+     * Slim v4 JSON request
+     *
+     * @param Response $resp
+     * @param array $table
+     * @return Response
+     */
+    public static function responseJSON(Response $resp, array $table): Response {
+        $pl = json_encode($table);
+        $resp->getBody()->write($pl);
+
+        return $resp->withHeader("Content-Type", "application/json")->withStatus(201);
     }
 
 }
