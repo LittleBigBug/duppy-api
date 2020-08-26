@@ -313,12 +313,13 @@ final class Router {
                 }
 
                 $singleType = count($types) == 1;
+                $shouldMap = !$singleType && (is_array($epUriMapTypes) && !empty($epUriMapTypes) && $epUriMapTypes[$k]) || $epUriMapTypes === true;
 
                 foreach ($types as $type) {
                     $suffix = '';
                     $typeLower = strtolower($type);
 
-                    if (!$singleType) {
+                    if (!$singleType && !$shouldMap) {
                         $suffix .= strtolower($typeLower);
                     }
 
@@ -335,19 +336,14 @@ final class Router {
 
                     $funcName = $epClass . $suffix;
 
-                    $shouldMap = (is_array($epUriMapTypes) && !empty($epUriMapTypes) && $epUriMapTypes[$k]) || $epUriMapTypes === true;
-
                     // Replacement is needed because function is referenced this way in slim but NOT PHP
                     if ($usedFunc && !$shouldMap && !method_exists($epClass, substr($suffix, 1))) {
                         continue;
                     }
 
                     $theseTypesMapped = false;
-                    echo(var_dump($epUriMapTypes));
-                    echo($uri . "<br/>");
 
-                    if (!$singleType && $shouldMap) {
-                        echo($uri);
+                    if ($shouldMap) {
                         $route = $app->map($types, $uri, $funcName);
                         $theseTypesMapped = true;
                     } else {
