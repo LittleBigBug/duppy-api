@@ -98,6 +98,10 @@ final class Bootstrapper {
     public static function buildDependencies(): void {
         $container = self::getContainer();
 
+        // User settings definitions
+        $settingDefinitions = new Settings;
+        $settingDefinitions->build();
+
         // Doctrine setup
         $manager = self::configureDatabase();
         $container->set("database", fn () => $manager);
