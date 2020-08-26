@@ -17,6 +17,20 @@ class Username extends AbstractEndpoint {
     public static ?array $uri = [ '/user/namecheck[/{username}]' ];
 
     /**
+     * Allow get and post
+     *
+     * @var string[]
+     */
+    public static array $types = [ 'GET', 'POST' ];
+
+    /**
+     * Map all to 1 function
+     *
+     * @var array|boolean
+     */
+    public static $uriMapTypes = true;
+
+    /**
      * Handles logins with passwords or third-party (HybridAuth)
      *
      * @param Request $request

@@ -19,6 +19,13 @@ class Login extends AbstractEndpoint {
     public static ?array $uri = [ '/login[/{provider}]' ];
 
     /**
+     * Allow post
+     *
+     * @var string[]
+     */
+    public static array $types = [ 'post' ];
+
+    /**
      * Handles logins with passwords or third-party (HybridAuth)
      *
      * @param Request $request

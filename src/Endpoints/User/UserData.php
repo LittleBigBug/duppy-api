@@ -17,6 +17,20 @@ class UserData extends AbstractEndpoint {
     public static ?array $uri = [ '/', '/all', '/basic' ];
 
     /**
+     * Allow get and post
+     *
+     * @var string[]
+     */
+    public static array $types = [ 'GET', 'POST' ];
+
+    /**
+     * Map all to 1 function
+     *
+     * @var array|boolean
+     */
+    public static $uriMapTypes = true;
+
+    /**
      * Map /basic-info the use the BasicInfo function in this class.
      * Explanation in UserData::basicInfo
      *

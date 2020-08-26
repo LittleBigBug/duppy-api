@@ -12,7 +12,7 @@ abstract class AbstractEndpoint {
      *
      * @var string[]
      */
-    public static array $types = [ 'get' ];
+    public static array $types = [ 'GET' ];
 
     /**
      * Endpoint URI(s) (defaults to path)

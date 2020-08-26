@@ -4,6 +4,7 @@ namespace Duppy\Bootstrapper;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
 use Duppy\Middleware\AuthMiddleware;
+use Duppy\Middleware\CORSMiddleware;
 use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
@@ -88,6 +89,7 @@ final class Bootstrapper {
         $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
 
         $app->add(new AuthMiddleware);
+        $app->add(new CORSMiddleware);
 
         self::buildDependencies();
     }

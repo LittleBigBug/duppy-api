@@ -15,5 +15,4 @@ class GroupUser extends AbstractEndpointGroup {
      */
     public static ?string $uri = "/user/{id}";
 
-
 }
