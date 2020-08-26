@@ -68,8 +68,13 @@ final class Bootstrapper {
      * @throws ORMException|DBALException
      */
     public static function cli(): EntityManager {
-        self::setManager(self::configureDatabase());
-        return self::getManager();
+        // Load .env file for config
+        (Dotenv::createImmutable(DUPPY_PATH))->load();
+
+        // Database connection
+        $manager = self::configureDatabase();
+        self::setManager($manager);
+        return $manager;
     }
 
     /**
@@ -95,7 +100,7 @@ final class Bootstrapper {
 
         // Doctrine setup
         $manager = self::configureDatabase();
-        $container->set('database', fn () => $manager);
+        $container->set("database", fn () => $manager);
         self::setManager($manager);
 
         ModLoader::build();

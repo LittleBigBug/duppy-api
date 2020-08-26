@@ -38,7 +38,7 @@ class Username extends AbstractEndpoint {
         }
 
         $dbo = Bootstrapper::getManager();
-        $userRes = $dbo->getRepository("webuser")->count([ 'username' => $username, ]);
+        $userRes = $dbo->getRepository("Duppy\Entities\WebUser")->count([ 'username' => $username, ]);
 
         return $response->withJson([
             'success' => true,

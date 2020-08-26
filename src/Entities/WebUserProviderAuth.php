@@ -13,7 +13,14 @@ use Duppy\Abstracts\AbstractEntity;
 class WebUserProviderAuth extends AbstractEntity {
 
     /**
-     * @ORM\Column(type="int")
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
+    protected int $id;
+
+    /**
+     * @ORM\Column(type="integer")
      */
     protected int $userid;
 
@@ -28,7 +35,7 @@ class WebUserProviderAuth extends AbstractEntity {
     protected string $providerid;
 
     /**
-     * @ORM\ManyToOne(targetEntity="WebUser", inversedBy="posts")
+     * @ORM\ManyToOne(targetEntity="WebUser", inversedBy="providerAuths")
      * @ORM\JoinColumn(name="userid", referencedColumnName="id")
      */
     protected $webuser;

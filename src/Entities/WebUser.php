@@ -49,16 +49,6 @@ class WebUser extends AbstractEntity {
      */
     protected string $bio;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Post", mappedBy="webuser")
-     */
-    protected $posts;
-
-    /**
-     * @ORM\OneToMany(targetEntity="Thread", mappedBy="webuser")
-     */
-    protected $threads;
-
     public function getId() {
         return $this->id;
     }

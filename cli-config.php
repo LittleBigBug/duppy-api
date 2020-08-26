@@ -8,8 +8,10 @@ use Duppy\Bootstrapper\Bootstrapper;
 
 require __DIR__ . '/vendor/autoload.php';
 
+define('DUPPY_PATH', __DIR__);
+
 /**
  * Configure doctrine CLI
  */
 
-return ConsoleRunner::createHelperSet((new Bootstrapper)->cli());
+return ConsoleRunner::createHelperSet(Bootstrapper::cli());

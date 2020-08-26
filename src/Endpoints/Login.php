@@ -72,7 +72,7 @@ class Login extends AbstractEndpoint {
                 $expr->eq("username", $user),
             ));
 
-            $userObj = $dbo->getRepository("webuser")->matching($cr)->first();
+            $userObj = $dbo->getRepository("Duppy\Entities\WebUser")->matching($cr)->first();
 
             if ($userObj == null) {
                 return $respondError("No matching user");
@@ -110,7 +110,7 @@ class Login extends AbstractEndpoint {
         $cr->where($expr->eq("providername", $provider));
         $cr->andWhere($expr->eq("providerid", $providerId));
 
-        $userObj = $dbo->getRepository("webuserproviderauth")->matching($cr)->first();
+        $userObj = $dbo->getRepository("Duppy\Entities\WebUserProviderAuth")->matching($cr)->first();
 
         if ($userObj == null) {
             return $respondError("No matching user");
