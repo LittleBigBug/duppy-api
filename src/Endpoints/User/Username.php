@@ -14,7 +14,7 @@ class Username extends AbstractEndpoint {
      *
      * @var array
      */
-    public static ?array $uri = [ '/user/namecheck[/{username}]' ];
+    public static ?array $uri = [ '/user/namecheck/[{username}]' ];
 
     /**
      * Allow get and post
@@ -42,12 +42,14 @@ class Username extends AbstractEndpoint {
         $username = $args["username"];
 
         if (!isset($username) || empty($username)) {
-            $username = $request->getParsedBody()['username'];
+            $params = (array) $request->getParsedBody();
+            $username = $params["username"];
 
             if (!isset($username) || empty($username)) {
                 return Util::responseJSON($response, [
                     'success' => false,
                     'error' => "No username was given",
+                    'test' => $params,
                 ]);
             }
         }
