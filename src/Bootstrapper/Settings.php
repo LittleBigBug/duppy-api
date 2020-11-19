@@ -60,19 +60,62 @@ final class Settings {
         } catch (\UnexpectedValueException $ex) { }
     }
 
+    /**
+     * Return a single setting by key
+     *
+     * @param string $key
+     * @param string $default
+     * @return string
+     */
     public static function getSetting(string $key, $default = "") {
+        $result = static::getSettings([ $key, ], [ $key => $default, ]);
+        return $result[$key];
+    }
+
+    /**
+     * Return an array of settings by multiple keys and checks for defaults
+     *
+     * @param array $keys
+     * @param array $defaults
+     * @return array
+     */
+    public static function getSettings(array $keys, array $defaults) {
         $manager = Bootstrapper::getManager();
-        $setting = $manager->getRepository("Duppy\Entities\Setting")->findOneBy([ "settingKey" => $key, ]);
+        $settings = $manager->getRepository("Duppy\Entities\Setting")->findBy([ "settingKey" => $keys, ]);
 
-        if (array_key_exists($key, static::$settings)) {
-            $settingDef = static::$settings[$key];
+        $ret = [];
 
-            if (isset($settingDef)) {
-                $default = $settingDef::$defaultValue;
-            }
+        foreach ($settings as $setting) {
+            $ret[$setting->settingKey] = $setting->value;
         }
 
-        return $setting ?? $default;
+        foreach ($keys as $key) {
+            $exists = array_key_exists($key, $ret);
+            $useDefault = false;
+
+            if (!$exists || ($exists && empty($ret[$key]))) {
+                $useDefault = true;
+            }
+
+            if (!$useDefault) {
+                continue;
+            }
+
+            if (array_key_exists($key, $defaults) && !empty($defaults[$key])) {
+                $ret[$key] = $defaults[$key];
+                continue;
+            }
+
+            if (array_key_exists($key, static::$settings)) {
+                $settingDef = static::$settings[$key];
+                $ret[$key] = $settingDef::$defaultValue;
+                continue;
+            }
+
+            $ret[$key] = "";
+        }
+
+        return $ret;
     }
 
 }
