@@ -7,11 +7,18 @@ use Duppy\Util;
 final class Settings {
 
     /**
-     * Map of settings
+     * Array of classes extending AbstractSetting
      *
      * @var array
      */
     public static array $settings = [];
+
+    /**
+     * Array of setting keys that are public app settings
+     *
+     * @var array
+     */
+    private static array $appSettings = [];
 
     /**
      * Path of settings to build
@@ -55,9 +62,22 @@ final class Settings {
                     continue;
                 }
 
-                $settings[$key] = $class;
+                if ($class::$appSetting) {
+                    static::$appSettings[] = $key;
+                }
+
+                static::$settings[$key] = $class;
             }
         } catch (\UnexpectedValueException $ex) { }
+    }
+
+    /**
+     * Returns all public app settings
+     *
+     * @return array
+     */
+    public static function getAppSettings() {
+        return static::getSettings(static::$appSettings);
     }
 
     /**
@@ -79,7 +99,7 @@ final class Settings {
      * @param array $defaults
      * @return array
      */
-    public static function getSettings(array $keys, array $defaults) {
+    public static function getSettings(array $keys, array $defaults = []) {
         $manager = Bootstrapper::getManager();
         $settings = $manager->getRepository("Duppy\Entities\Setting")->findBy([ "settingKey" => $keys, ]);
 
@@ -117,5 +137,4 @@ final class Settings {
 
         return $ret;
     }
-
 }

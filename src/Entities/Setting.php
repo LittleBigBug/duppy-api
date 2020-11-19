@@ -14,7 +14,7 @@ class Setting extends AbstractEntity {
 
     /**
      * @ORM\Id
-     * @ORM\Column(type="string", length=17)
+     * @ORM\Column(type="string", length=255)
      */
     protected string $settingKey;
 

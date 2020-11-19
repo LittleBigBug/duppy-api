@@ -12,6 +12,8 @@ class SteamAuth extends AbstractSetting {
 
     public static string $required = "notnull|boolean";
 
+    public static bool $appSetting = true;
+
     public static $defaultValue = false;
 
 }

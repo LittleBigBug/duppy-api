@@ -49,7 +49,6 @@ class Username extends AbstractEndpoint {
                 return Util::responseJSON($response, [
                     'success' => false,
                     'error' => "No username was given",
-                    'test' => $params,
                 ]);
             }
         }

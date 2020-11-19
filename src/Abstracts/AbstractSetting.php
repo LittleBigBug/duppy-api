@@ -30,6 +30,13 @@ abstract class AbstractSetting {
     public static string $required = "";
 
     /**
+     * Setting that is sent upfront to the user
+     *
+     * @var bool
+     */
+    public static bool $appSetting = false;
+
+    /**
      * Default fallback value
      */
     public static $defaultValue;
