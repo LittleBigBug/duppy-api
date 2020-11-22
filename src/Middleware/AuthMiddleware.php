@@ -9,17 +9,37 @@ use Hybridauth\Hybridauth;
 class AuthMiddleware extends AbstractRouteMiddleware {
 
     /**
-     * Steam account authentication
+     * Account authentication (HybridAuth)
      * @throws InvalidArgumentException
      */
     final public function handle() {
+        $authSettings = Settings::getSettings([
+            "auth.steam.enable", "auth.steam.secret",
+            "auth.facebook.enable", "auth.facebook.id", "auth.facebook.secret",
+            "auth.google.enable", "auth.google.id", "auth.google.secret",
+        ]);
+
         $config = [
             'callback' => DUPPY_URI,
             'providers' => [
                 'Steam' => [
-                    'enabled' => Settings::getSetting("auth.steam.enable"),
+                    'enabled' => $authSettings["auth.steam.enable"],
                     'keys' => [
-                        'secret' => Settings::getSetting("auth.steam.secret"),
+                        'secret' => $authSettings["auth.steam.secret"],
+                    ],
+                ],
+                'Facebook' => [
+                    'enabled' => $authSettings["auth.facebook.enable"],
+                    'keys' => [
+                        'id' => $authSettings["auth.facebook.id"],
+                        'secret' => $authSettings["auth.facebook.secret"],
+                    ],
+                ],
+                'Google' => [
+                    'enabled' => $authSettings["auth.google.enable"],
+                    'keys' => [
+                        'id' => $authSettings["auth.google.id"],
+                        'secret' => $authSettings["auth.google.secret"],
                     ],
                 ],
             ],
