@@ -1,6 +1,7 @@
 <?php
 namespace Duppy\Bootstrapper;
 
+use Duppy\Abstracts\AbstractEndpointGroup;
 use Duppy\Util;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
@@ -171,7 +172,7 @@ final class Router {
 
             if ($uri == null) {
                 $uri = [ $this->resolveUri($path) ];
-                $class::$uri = $uri;
+                $class::setUri($uri);
             }
 
             if (!is_array($uri) && $isEndpoint) {
@@ -248,7 +249,10 @@ final class Router {
         $this->uriPrefix ??= "";
 
         $router = $this;
-        $path = Util::combinePath($this->uriPrefix, $group["uri"]);
+        $path = Util::combinePaths([
+            getenv('APP_ROOT_PATH'),
+            $this->uriPrefix, $group["uri"],
+        ]);
 
         $appGroup = $app->group($path, function(RouteCollectorProxy $group) use($endpoints, $groups, $router) {
             $router->buildRouteEndpoints($endpoints, $group);
@@ -287,9 +291,18 @@ final class Router {
             $epUriFuncMap = $epClass::getUriFuncMap();
             $epUriRedirects = $epClass::getUriRedirectMap();
             $epUriMapTypes = $epClass::getUriMapTypes();
+            $epParent = $epClass::getParentGroupEndpoint();
+
+            $hasParent = is_subclass_of($epParent, 'Duppy\Abstracts\AbstractEndpointGroup');
 
             foreach ($uris as $k => $uri) {
-                $uri = Util::combinePath($this->uriPrefix, $uri);
+                // Only apply these paths when outside of a group
+                if (!$hasParent) {
+                    $uri = Util::combinePaths([
+                        getenv('APP_ROOT_PATH'),
+                        $this->uriPrefix, $uri,
+                    ]);
+                }
 
                 if (!empty($epUriRedirects) && $epUriRedirects[$k]) {
                     $redirectTo = $epUriRedirects[$k];

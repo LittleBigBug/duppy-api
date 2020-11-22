@@ -1,6 +1,6 @@
 <?php
 
-namespace Duppy\Settings;
+namespace Duppy\Settings\Auth;
 
 use Duppy\Abstracts\AbstractSetting;
 

@@ -11,7 +11,7 @@ class GroupUser extends AbstractEndpointGroup {
     /**
      * Set Endpoint to /user/{id}
      *
-     * @var string
+     * @var ?string
      */
     public static ?string $uri = "/user/{id}";
 

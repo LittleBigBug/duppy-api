@@ -14,7 +14,7 @@ class Login extends AbstractEndpoint {
     /**
      * Set the URI to /login or /login/steam /login/google etc
      *
-     * @var array
+     * @var ?array
      */
     public static ?array $uri = [ '/login[/{provider}]' ];
 

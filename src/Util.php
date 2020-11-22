@@ -30,11 +30,14 @@ class Util {
         $firstPath = $paths[0];
 
         for ($i = 0; $i < count($paths); $i++) {
-            $path = str_replace('/', $sl, $paths[$i]);
+            $path = str_replace('\\', $sl, $paths[$i]);
+            $path = str_replace('/', $sl, $path);
+
             $paths[$i] = trim($path, $sl);
         }
 
         $pathJoined = join($sl, $paths);
+        $pathJoined = preg_replace('~' . $sl . $sl . '+~', $sl, $pathJoined);
 
         if ($trailingSlash) {
             $pathJoined .= $sl;
@@ -42,7 +45,7 @@ class Util {
 
         $firstChar = substr($firstPath, 0, 1);
 
-        if ($firstChar == $sl || $firstChar == "/") {
+        if ($firstChar == $sl) {
             $pathJoined = $sl . $pathJoined;
         }
 

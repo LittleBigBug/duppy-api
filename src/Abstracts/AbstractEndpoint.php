@@ -82,6 +82,19 @@ abstract class AbstractEndpoint {
     }
 
     /**
+     * Sets uri(s)
+     *
+     * @param array|string|null
+     */
+    final public static function setUri($newUris) {
+        if (!is_array($newUris)) {
+            $newUris = [ $newUris ];
+        }
+
+        static::$uri = $newUris;
+    }
+
+    /**
      * Returns type(s) of requests accepted
      *
      * @return array

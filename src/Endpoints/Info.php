@@ -11,6 +11,13 @@ use Slim\Psr7\Response;
 class Info extends AbstractEndpoint {
 
     /**
+     * Auto generate uri
+     *
+     * @var ?array
+     */
+    public static ?array $uri = null;
+
+    /**
      * Handles info request
      *
      * @param Request $request
