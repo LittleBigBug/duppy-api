@@ -7,7 +7,7 @@
         "doctrine/orm": "^2.7",
         "ramsey/uuid-doctrine": "^1.6",
         "yosymfony/toml": "^1.0",
-        "hybridauth/hybridauth": "^3.3",
+        "hybridauth/hybridauth": "^3.6",
         "ext-json": "*"
     },
     "autoload": {
