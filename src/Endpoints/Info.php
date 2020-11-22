@@ -30,9 +30,7 @@ class Info extends AbstractEndpoint {
 
         return Util::responseJSON($response, [
             "success" => true,
-            "data" => [
-                $settings,
-            ],
+            "data" => $settings,
         ]);
     }
 

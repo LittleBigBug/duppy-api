@@ -37,7 +37,7 @@ class Login extends AbstractEndpoint {
         $provider = $args["provider"];
 
         if (!isset($provider) || empty($provider)) {
-            $provider = "pwd";
+            $provider = "password";
         }
 
         $providerEnabled = Settings::getSetting("auth.$provider.enable") == true;
@@ -50,7 +50,7 @@ class Login extends AbstractEndpoint {
             return $respondError("Provider not enabled");
         }
 
-        if ($provider == "pwd") {
+        if ($provider == "password") {
             $postArgs = $request->getParsedBody();
 
             if ($postArgs == null || empty($postArgs)) {
