@@ -35,9 +35,18 @@ class WebUser extends AbstractEntity {
     protected string $password;
 
     /**
-     * @ORM\OneToMany(targetEntity="WebUserProviderAuth", mappedBy="webuser")
+     * @ORM\ManyToMany(targetEntity="WebUserProviderAuth")
+     * @ORM\JoinTable(name="web_user_auth_provider_map",
+     *     joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id")},
+     *     inverseJoinColumns={@ORM\JoinColumn(name="providerauthconnection_id", referencedColumnName="id", unique=true)})
      */
     protected $providerAuths;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="UserGroup", inversedBy="users")
+     * @ORM\JoinTable(name="web_user_group_map")
+     */
+    protected $groups;
 
     /**
      * @ORM\Column(type="string", nullable=true)
