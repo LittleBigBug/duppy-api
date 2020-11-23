@@ -78,7 +78,6 @@ final class Settings {
                 }
 
                 static::$settings[$key] = $class;
-                static::buildSettingsCategories();
             }
         } catch (\UnexpectedValueException $ex) { }
     }
@@ -88,7 +87,7 @@ final class Settings {
      *
      * @return array
      */
-    public static function buildSettingsCategories() {
+    public static function getSettingsCategories() {
         static::$categories = [];
 
         foreach (static::$settings as $key => $class) {
@@ -147,13 +146,8 @@ final class Settings {
 
         foreach ($keys as $key) {
             $exists = array_key_exists($key, $ret);
-            $useDefault = false;
 
-            if (!$exists || ($exists && empty($ret[$key]))) {
-                $useDefault = true;
-            }
-
-            if (!$useDefault) {
+            if ($exists || empty($ret[$key])) {
                 continue;
             }
 
@@ -164,7 +158,7 @@ final class Settings {
 
             if (array_key_exists($key, static::$settings)) {
                 $settingDef = static::$settings[$key];
-                $ret[$key] = $settingDef::$defaultValue;
+                $ret[$key] = static::extractValueFromSetting($settingDef, "defaultValue");
                 continue;
             }
 
@@ -173,4 +167,40 @@ final class Settings {
 
         return $ret;
     }
+
+    /**
+     * Creates a setting dynamically
+     *
+     * @param string $key
+     * @param array $settingValues
+     */
+    public static function createSetting(string $key, array $settingValues) {
+        if (array_key_exists($key, static::$settings)) {
+            throw new \OverflowException("setting already exists by that key");
+        }
+
+        $settingValues["dynamic"] = true;
+
+        static::$settings[$key] = $settingValues;
+    }
+
+    /**
+     * Gets a value from a setting whether it is a static AbstractSetting or an array
+     *
+     * @param object $setting
+     * @param string $settingKey
+     * @return ?object
+     */
+    public static function extractValueFromSetting(object $setting, string $settingKey): ?object {
+        if (!is_subclass_of($setting, "Duppy\Abstracts\AbstractSetting") || is_array($setting)) {
+            if (array_key_exists($settingKey, $setting)) {
+                return $setting[$settingKey];
+            }
+
+            return null;
+        }
+
+        return $setting::$$settingKey;
+    }
+
 }
