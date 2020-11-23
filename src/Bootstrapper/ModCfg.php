@@ -53,4 +53,11 @@ class ModCfg {
      */
     public string $mainClass;
 
+    /**
+     * If the mod is enabled or not
+     *
+     * @var bool
+     */
+    public bool $active;
+
 }

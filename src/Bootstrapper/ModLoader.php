@@ -68,8 +68,23 @@ final class ModLoader {
             $modCfg->description = $desc ?? '';
             $modCfg->author = $author ?? 'Unknown';
 
+            $enabledName = "mods.${$name}.enable";
+
+            Settings::createSetting($enabledName, [
+                "category" => "system.mods",
+                "defaultValue" => true,
+            ]);
+
+            $ct = Settings::getSetting($enabledName);
+
+            $modCfg->active = $ct;
+
             self::$mods[] = $modCfg;
             $class::$modInfo = $modCfg;
+
+            if (!$ct) {
+                continue;
+            }
 
             $class::start();
         }
