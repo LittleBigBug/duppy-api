@@ -19,6 +19,13 @@ abstract class AbstractSetting {
     public static string $description = "";
 
     /**
+     * Setting category separated by .
+     *
+     * @var string
+     */
+    public static string $category = "system.uncategorized";
+
+    /**
      * Setting value requirements
      * Similar to pterodactyl settings, separated by |
      *

@@ -21,6 +21,13 @@ final class Settings {
     private static array $appSettings = [];
 
     /**
+     * Array of categories and sub-categories
+     *
+     * @var array
+     */
+    public static array $categories = [];
+
+    /**
      * Path of settings to build
      *
      * @var string
@@ -56,6 +63,10 @@ final class Settings {
                 $classPath = substr(Util::toProjectPath($path), strlen("src/"));
                 $class = "Duppy\\" . str_replace("/", "\\", $classPath);
 
+                if (!is_subclass_of($class, "Duppy\Abstracts\AbstractSetting")) {
+                    continue;
+                }
+
                 $key = $class::$key;
 
                 if (!isset($key)) {
@@ -67,8 +78,33 @@ final class Settings {
                 }
 
                 static::$settings[$key] = $class;
+                static::buildSettingsCategories();
             }
         } catch (\UnexpectedValueException $ex) { }
+    }
+
+    /**
+     * Build settings nested categories and return it
+     *
+     * @return array
+     */
+    public static function buildSettingsCategories() {
+        static::$categories = [];
+
+        foreach (static::$settings as $key => $class) {
+            $res = explode(".", $class::$category);
+            $tab = &static::$categories;
+
+            foreach ($res as $category) {
+                if (!array_key_exists($category, $tab)) {
+                    $tab[$category] = [];
+                }
+
+                $tab = &$tab[$category];
+            }
+        }
+
+        return static::$categories;
     }
 
     /**
