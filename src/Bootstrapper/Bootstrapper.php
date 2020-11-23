@@ -3,8 +3,10 @@ namespace Duppy\Bootstrapper;
 
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
-use Duppy\Middleware\AuthMiddleware;
+use duncan3dc\Sessions\SessionInstance;
 use Duppy\Middleware\CORSMiddleware;
+use Hybridauth\Exception\InvalidArgumentException;
+use Hybridauth\Hybridauth;
 use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
@@ -37,6 +39,20 @@ final class Bootstrapper {
     public static ?EntityManager $manager;
 
     /**
+     * Non-blocking Session Manager
+     *
+     * @var SessionInstance|null
+     */
+    public static ?SessionInstance $sessionManager;
+
+    /**
+     * Auth handler (Hybridauth)
+     *
+     * @var Hybridauth|null
+     */
+    public static ?Hybridauth $authHandler;
+
+    /**
      * Duppy Router instance
      *
      * @var Router|null
@@ -48,7 +64,7 @@ final class Bootstrapper {
      *
      * @return void
      */
-    public static function boot(): void {
+    public static function boot() {
         // Load .env file for config
         (Dotenv::createImmutable(DUPPY_PATH))->load();
 
@@ -83,12 +99,11 @@ final class Bootstrapper {
      *
      * @return void
      */
-    public static function configure(): void {
+    public static function configure() {
         $app = self::getApp();
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
 
-        $app->add(new AuthMiddleware);
         $app->add(new CORSMiddleware);
 
         self::buildDependencies();
@@ -97,7 +112,7 @@ final class Bootstrapper {
     /**
      * Build dependencies into DI and other services
      */
-    public static function buildDependencies(): void {
+    public static function buildDependencies() {
         $container = self::getContainer();
 
         // User settings definitions
@@ -108,6 +123,16 @@ final class Bootstrapper {
         $manager = self::configureDatabase();
         $container->set("database", fn () => $manager);
         self::setManager($manager);
+
+        // Non-blocking session
+        $session = new SessionInstance("duppy");
+        $container->set("session", fn () => $session);
+        self::setSessionManager($session);
+
+        // Hybridauth external login helper
+        $hybridauth = self::configureHybridAuth();
+        $container->set("authHandler", fn () => $hybridauth);
+        self::setAuthHandler($hybridauth);
 
         ModLoader::build();
         self::buildRoutes();
@@ -148,9 +173,58 @@ final class Bootstrapper {
     }
 
     /**
+     * Configures Hybridauth
+     *
+     * @return Hybridauth
+     * @throws InvalidArgumentException
+     */
+    public static function configureHybridAuth(): Hybridauth {
+        $authSettings = Settings::getSettings([
+            "auth.steam.enable", "auth.steam.secret",
+            "auth.facebook.enable", "auth.facebook.id", "auth.facebook.secret",
+            "auth.google.enable", "auth.google.id", "auth.google.secret",
+        ]);
+
+        $config = [
+            'callback' => DUPPY_URI,
+            'providers' => [
+                'Steam' => [
+                    'enabled' => $authSettings["auth.steam.enable"],
+                    'keys' => [
+                        'secret' => $authSettings["auth.steam.secret"],
+                    ],
+                ],
+                'Facebook' => [
+                    'enabled' => $authSettings["auth.facebook.enable"],
+                    'keys' => [
+                        'id' => $authSettings["auth.facebook.id"],
+                        'secret' => $authSettings["auth.facebook.secret"],
+                    ],
+                ],
+                'Google' => [
+                    'enabled' => $authSettings["auth.google.enable"],
+                    'keys' => [
+                        'id' => $authSettings["auth.google.id"],
+                        'secret' => $authSettings["auth.google.secret"],
+                    ],
+                ],
+            ],
+        ];
+
+        /**
+         * https://github.com/hybridauth/hybridauth/blob/master/src/Provider/Steam.php
+         * https://github.com/hybridauth/hybridauth/blob/master/src/Adapter/OpenID.php
+         *
+         * $adapter->isConnected();
+         */
+
+        return new Hybridauth($config);
+    }
+
+    /**
      * Build routes within Slim and run the app
      */
-    public static function buildRoutes(): void {
+    public static function buildRoutes() {
         self::$router = new Router;
         self::$router->build();
 
@@ -171,8 +245,7 @@ final class Bootstrapper {
      *
      * @return Container
      */
-    public static function getContainer(): Container
-    {
+    public static function getContainer(): Container {
         return static::$container;
     }
 
@@ -181,9 +254,17 @@ final class Bootstrapper {
      *
      * @return EntityManager
      */
-    public static function getManager(): EntityManager
-    {
+    public static function getManager(): EntityManager {
         return static::$manager;
+    }
+
+    /**
+     * Session Manager getter
+     *
+     * @return SessionInstance
+     */
+    public static function getSessionManager(): SessionInstance {
+        return static::$sessionManager;
     }
 
     /**
@@ -191,8 +272,26 @@ final class Bootstrapper {
      *
      * @param EntityManager $manager
      */
-    public static function setManager(EntityManager $manager): void
-    {
+    public static function setManager(EntityManager $manager) {
         static::$manager = $manager;
     }
+
+    /**
+     * EntityManager setter
+     *
+     * @param EntityManager $manager
+     */
+    public static function setSessionManager(SessionInstance $manager) {
+        static::$sessionManager = $manager;
+    }
+
+    /**
+     * Auth handler
+     *
+     * @param Hybridauth $handler
+     */
+    public static function setAuthHandler(Hybridauth $handler) {
+        static::$authHandler = $handler;
+    }
+
 }

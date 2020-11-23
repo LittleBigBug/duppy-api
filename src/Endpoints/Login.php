@@ -1,6 +1,8 @@
 <?php
 namespace Duppy\Endpoints;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Doctrine\Common\Collections\Criteria;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
@@ -32,6 +34,8 @@ class Login extends AbstractEndpoint {
      * @param Response $response
      * @param array $args
      * @return Response
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $provider = $args["provider"];
@@ -100,7 +104,7 @@ class Login extends AbstractEndpoint {
             ]);
         }
 
-        $authHandler = $request->getAttribute("authHandler");
+        $authHandler = Bootstrapper::getContainer()->get('authHandler');
         $authHandler->authenticate($provider);
 
         $connected = $authHandler->isConnected();
