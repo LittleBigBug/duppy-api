@@ -37,4 +37,34 @@ class PermissionAssignment {
      */
     protected $groups;
 
+    /**
+     * Returns the permission string without any modifiers
+     *
+     * @return string
+     */
+    public function getPermission(): string {
+        if (str_starts_with($this->permission, "-")) {
+            return substr($this->permission, 1);
+        }
+
+        return $this->permission;
+    }
+
+    /**
+     * Returns if the permission string with modifiers is additive
+     *
+     * @return bool
+     */
+    public function getPermissionEval(): bool {
+        return !str_starts_with($this->permission, "-");
+    }
+
+    public function getUsers() {
+        return $this->users;
+    }
+
+    public function getGroups() {
+        return $this->groups;
+    }
+
 }

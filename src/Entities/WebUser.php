@@ -3,6 +3,7 @@ namespace Duppy\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Abstracts\AbstractEntity;
+use Duppy\Util;
 
 /**
  * WebUser Entity
@@ -64,6 +65,13 @@ class WebUser extends AbstractEntity {
      */
     protected string $bio;
 
+    /**
+     * Cached generated permissions with groups/inheritance
+     *
+     * @var array
+     */
+    protected array $generatedPermissions;
+
     public function getId() {
         return $this->id;
     }
@@ -74,6 +82,79 @@ class WebUser extends AbstractEntity {
 
     public function getAvatarUrl() {
         return $this->avatarUrl;
+    }
+
+    public function getGroups() {
+        return $this->groups;
+    }
+
+    /**
+     * Gets users permissions, in an array
+     * Specify it to return a dictionary with $dictionary
+     *
+     * This generates the full permissions array for this user based on their groups and their inheritance.
+     * The array is cached to only run once per connection
+     *
+     * @param bool $dictionary
+     * @return array
+     */
+    public function getPermissions(bool $dictionary = true): array{
+        // Return generated permissions for this session if there are some to save processing power
+        if ($this->generatedPermissions != null && sizeof($this->generatedPermissions) > 0) {
+            if (!$dictionary) {
+                return Util::boolDictToNormal($this->generatedPermissions);
+            }
+
+            return $this->generatedPermissions;
+        }
+
+        $perms = [];
+        $groups = $this->getGroups();
+
+        // Sort groups by weight ascending to apply heaviest last
+        usort($groups, function($a, $b) {
+           $aW = $a->getWeight();
+           $bW = $b->getWeight();
+
+           return $aW <=> $bW;
+        });
+
+        foreach ($groups as $group) {
+            $groupPerms = $group->getPermissions();
+
+            foreach ($groupPerms as $perm) {
+                $ind = $perm->getPermission();
+                $eval = $perm->getPermissionEval();
+
+                $perms[$ind] = $eval;
+            }
+        }
+
+        foreach ($this->permissions as $perm) {
+            $ind = $perm->getPermission();
+            $perms[$ind] = $perm->getPermissionEval();
+        }
+
+        $this->generatedPermissions = $perms;
+
+        // Convert to regular table
+        // Its faster to do this in the case of searching thru the table if the eval is false.
+        if ($dictionary) {
+            return Util::boolDictToNormal($this->generatedPermissions);
+        }
+
+        return $perms;
+    }
+
+    /**
+     * If the user has the permission or not
+     *
+     * @param $perm
+     * @return bool
+     */
+    public function hasPermission($perm): bool {
+        $perms = $this->getPermissions();
+        return $perms[$perm] == true;
     }
 
 }
