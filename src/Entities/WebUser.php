@@ -49,6 +49,12 @@ class WebUser extends AbstractEntity {
     protected $groups;
 
     /**
+     * @ORM\OneToMany(targetEntity="PermissionAssignment", mappedBy="users")
+     * @ORM\JoinColumn(name="permission_id", referencedColumnName="id")
+     */
+    protected $permissions;
+
+    /**
      * @ORM\Column(type="string", nullable=true)
      */
     protected string $avatarUrl;

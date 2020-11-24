@@ -51,6 +51,12 @@ class UserGroup extends AbstractEntity {
      */
     protected $parent;
 
+    /**
+     * @ORM\OneToMany(targetEntity="PermissionAssignment", mappedBy="groups")
+     * @ORM\JoinColumn(name="permission_id", referencedColumnName="id")
+     */
+    protected $permissions;
+
     public function getId() {
         return $this->id;
     }
