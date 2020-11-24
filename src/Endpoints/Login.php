@@ -54,6 +54,29 @@ class Login extends AbstractEndpoint {
             return $respondError("Provider not enabled");
         }
 
+        $loggedIn = function ($userObj) use ($response, $respondError) {
+            if ($userObj == null) {
+                return $respondError("No matching user");
+            }
+
+            $userId = $userObj->getId();
+            $username = $userObj->getUsername();
+            $avatar = $userObj->getAvatarUrl();
+
+            $session = Bootstrapper::getContainer()->get('session');
+            $session->set("user", $userId);
+            $session->set("username", $username);
+
+            return Util::responseJSON($response, [
+                'success' => true,
+                'data' => [
+                    'id' => $userId,
+                    'username' => $username,
+                    'avatarUrl' => $avatar,
+                ],
+            ]);
+        };
+
         if ($provider == "password") {
             $postArgs = $request->getParsedBody();
 
@@ -74,7 +97,7 @@ class Login extends AbstractEndpoint {
 
             $hash = password_hash($pass, PASSWORD_DEFAULT);
 
-            $dbo = Bootstrapper::getManager();
+            $dbo = Bootstrapper::getContainer()->get('database');
             $expr = Criteria::expr();
 
             $cr = new Criteria();
@@ -85,23 +108,7 @@ class Login extends AbstractEndpoint {
             ));
 
             $userObj = $dbo->getRepository("Duppy\Entities\WebUser")->matching($cr)->first();
-
-            if ($userObj == null) {
-                return $respondError("No matching user");
-            }
-
-            $userId = $userObj->getId();
-            $username = $userObj->getUsername();
-            $avatar = $userObj->getAvatarUrl();
-
-            return Util::responseJSON($response, [
-                'success' => true,
-                'data' => [
-                    'id' => $userId,
-                    'username' => $username,
-                    'avatarUrl' => $avatar,
-                ],
-            ]);
+            return $loggedIn($userObj);
         }
 
         $authHandler = Bootstrapper::getContainer()->get('authHandler');
@@ -115,7 +122,7 @@ class Login extends AbstractEndpoint {
 
         $providerId = $authHandler->getUserProfile()->identifier;
 
-        $dbo = Bootstrapper::getManager();
+        $dbo = Bootstrapper::getContainer()->get('database');
         $expr = Criteria::expr();
 
         $cr = new Criteria();
@@ -123,23 +130,7 @@ class Login extends AbstractEndpoint {
         $cr->andWhere($expr->eq("providerid", $providerId));
 
         $userObj = $dbo->getRepository("Duppy\Entities\WebUserProviderAuth")->matching($cr)->first();
-
-        if ($userObj == null) {
-            return $respondError("No matching user");
-        }
-
-        $userId = $userObj->getId();
-        $username = $userObj->getUsername();
-        $avatar = $userObj->getAvatarUrl();
-
-        return Util::responseJSON($response, [
-            'success' => true,
-            'data' => [
-                'id' => $userId,
-                'username' => $username,
-                'avatarUrl' => $avatar,
-            ],
-        ]);
+        return $loggedIn($userObj);
     }
 
 }

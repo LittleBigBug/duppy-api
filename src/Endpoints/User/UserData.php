@@ -6,6 +6,7 @@ use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
 class UserData extends AbstractEndpoint {
+
     /**
      * Catch / /all and /basic-info
      *
