@@ -8,7 +8,8 @@
         "ramsey/uuid-doctrine": "^1.6",
         "yosymfony/toml": "^1.0",
         "hybridauth/hybridauth": "^3.6",
-        "ext-json": "*"
+        "ext-json": "*",
+        "duncan3dc/sessions": "^2.0"
     },
     "autoload": {
         "psr-4": {
