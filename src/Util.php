@@ -1,6 +1,7 @@
 <?php
 namespace Duppy;
 
+use Psr\Http\Message\ResponseInterface;
 use Slim\Psr7\Response;
 
 class Util {
@@ -66,15 +67,37 @@ class Util {
     /**
      * Slim v4 JSON request
      *
-     * @param Response $resp
+     * @param ResponseInterface $resp
      * @param array $table
+     * @param int $status
      * @return Response
      */
-    public static function responseJSON(Response $resp, array $table): Response {
+    public static function responseJSON(ResponseInterface &$resp, array $table, int $status = 200): ResponseInterface {
         $pl = json_encode($table);
         $resp->getBody()->write($pl);
 
-        return $resp->withHeader("Content-Type", "application/json")->withStatus(201);
+        $resp = $resp->withHeader("Content-Type", "application/json")->withStatus($status);
+        return $resp;
+    }
+
+    /**
+     * Converts a boolean dictionary to a regular array by mapping the keys to values if their value is true
+     *
+     * @param array $dict
+     * @return array
+     */
+    public static function boolDictToNormal(array $dict): array {
+        $new = [];
+
+        foreach ($dict as $key => $val) {
+            if (!$val) {
+                continue;
+            }
+
+            $new[] = $key;
+        }
+
+        return $new;
     }
 
 }
