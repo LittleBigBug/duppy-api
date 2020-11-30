@@ -31,7 +31,7 @@ class Username extends AbstractEndpoint {
     public static $uriMapTypes = true;
 
     /**
-     * Handles logins with passwords or third-party (HybridAuth)
+     * Checks if a username is taken or not
      *
      * @param Request $request
      * @param Response $response

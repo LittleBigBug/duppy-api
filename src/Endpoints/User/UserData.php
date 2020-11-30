@@ -47,6 +47,13 @@ class UserData extends AbstractEndpoint {
     public static ?string $parentGroup = "Duppy\Endpoints\User\GroupUser";
 
     /**
+     * If its configured to, only allow logged in users to view this
+     *
+     * @var array
+     */
+    public static array $middleware = [ "Duppy\Middleware\AuthRequiredSettingMiddleware" ];
+
+    /**
      * Default invoke method
      *
      * @param Request $request

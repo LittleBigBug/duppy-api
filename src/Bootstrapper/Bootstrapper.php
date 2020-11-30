@@ -1,9 +1,12 @@
 <?php
 namespace Duppy\Bootstrapper;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
 use duncan3dc\Sessions\SessionInstance;
+use Duppy\Entities\WebUser;
 use Duppy\Middleware\CORSMiddleware;
 use Hybridauth\Exception\InvalidArgumentException;
 use Hybridauth\Hybridauth;
@@ -256,6 +259,30 @@ final class Bootstrapper {
      */
     public static function getManager(): EntityManager {
         return static::$manager;
+    }
+
+    /**
+     * Convenience function to get the current logged in user
+     *
+     * @return WebUser
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function getLoggedInUser(): WebUser {
+        $container = static::getContainer();
+
+        $dbo = $container->get("database");
+        $session = $container->get("session");
+
+        $userid = $session->get("user");
+
+        $user = null;
+
+        if ($userid != null) {
+            $user = $dbo->getRepository("Duppy\Entities\WebUser")->find($userid)->first();
+        }
+
+        return $user;
     }
 
     /**
