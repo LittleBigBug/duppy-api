@@ -262,6 +262,24 @@ final class Bootstrapper {
     }
 
     /**
+     * Convenience function to get a user by their ID
+     *
+     * @param $id
+     * @return WebUser
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function getUser($id): WebUser {
+        if ($id == "me") {
+            return static::getLoggedInUser();
+        }
+
+        $container = static::getContainer();
+        $dbo = $container->get("database");
+        return $dbo->getRepository("Duppy\Entities\WebUser")->find($id)->first();
+    }
+
+    /**
      * Convenience function to get the current logged in user
      *
      * @return WebUser
@@ -270,16 +288,12 @@ final class Bootstrapper {
      */
     public static function getLoggedInUser(): WebUser {
         $container = static::getContainer();
-
-        $dbo = $container->get("database");
         $session = $container->get("session");
-
         $userid = $session->get("user");
 
         $user = null;
-
         if ($userid != null) {
-            $user = $dbo->getRepository("Duppy\Entities\WebUser")->find($userid)->first();
+            $user = static::getUser($userid);
         }
 
         return $user;
