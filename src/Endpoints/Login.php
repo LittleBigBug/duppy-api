@@ -65,7 +65,7 @@ class Login extends AbstractEndpoint {
             $avatar = $userObj->getAvatarUrl();
 
             $data = [
-                "user" => $userId,
+                "id" => $userId,
                 "username" => $username,
                 "avatarUrl" => $avatar,
             ];

@@ -367,11 +367,11 @@ final class Bootstrapper {
     public static function getLoggedInUser(): ?WebUser {
         $authToken = static::getAuthToken();
 
-        if (!array_key_exists("user", $authToken)) {
+        if (!array_key_exists("id", $authToken)) {
             return null;
         }
 
-        return static::getUser($authToken["user"]);
+        return static::getUser($authToken["id"]);
     }
 
     /**

@@ -168,11 +168,11 @@ class WebUser extends AbstractEntity {
     public function isMe(): bool {
         $authToken = Bootstrapper::getAuthToken();
 
-        if ($authToken == null || !array_key_exists("user", $authToken)) {
+        if ($authToken == null || !array_key_exists("id", $authToken)) {
             return false;
         }
 
-        return $this->getId() == $authToken["user"];
+        return $this->getId() == $authToken["id"];
     }
 
 }
