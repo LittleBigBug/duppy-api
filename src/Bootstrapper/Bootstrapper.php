@@ -5,11 +5,23 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
-use duncan3dc\Sessions\SessionInstance;
 use Duppy\Entities\WebUser;
 use Duppy\Middleware\CORSMiddleware;
 use Hybridauth\Exception\InvalidArgumentException;
 use Hybridauth\Hybridauth;
+use Jose\Component\Core\AlgorithmManager;
+use Jose\Component\Core\JWK;
+use Jose\Component\Encryption\Algorithm\ContentEncryption\A256CBCHS512;
+use Jose\Component\Encryption\Algorithm\KeyEncryption\A256GCMKW;
+use Jose\Component\Encryption\Compression\CompressionMethodManager;
+use Jose\Component\Encryption\Compression\Deflate;
+use Jose\Component\Encryption\JWEBuilder;
+use Jose\Component\Encryption\JWEDecrypter;
+use Jose\Component\KeyManagement\JWKFactory;
+use Jose\Component\Signature\Algorithm\ES256;
+use Jose\Component\Signature\Algorithm\PS256;
+use Jose\Component\Signature\JWSBuilder;
+use Jose\Component\Signature\JWSVerifier;
 use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
@@ -42,11 +54,39 @@ final class Bootstrapper {
     public static ?EntityManager $manager;
 
     /**
-     * Non-blocking Session Manager
+     * JWT Key
      *
-     * @var SessionInstance|null
+     * @var JWK|null
      */
-    public static ?SessionInstance $sessionManager;
+    public static ?JWK $jwKey;
+
+    /**
+     * JWS (Signed) token builder
+     *
+     * @var JWSBuilder|null
+     */
+    public static ?JWSBuilder $jwsBuilder;
+
+    /**
+     * JWS Verifier
+     *
+     * @var JWSVerifier|null
+     */
+    public static ?JWSVerifier $jwsVerifier;
+
+    /**
+     * JWE (Encrypted) token builder
+     *
+     * @var JWEBuilder|null
+     */
+    public static ?JWEBuilder $jweBuilder;
+
+    /**
+     * JWE Decrypter
+     *
+     * @var JWEDecrypter|null
+     */
+    public static ?JWEDecrypter $jweDecrypter;
 
     /**
      * Auth handler (Hybridauth)
@@ -61,6 +101,13 @@ final class Bootstrapper {
      * @var Router|null
      */
     public static ?Router $router;
+
+    /**
+     * Decrypted and verified auth token (from JWT)
+     *
+     * @var array|null
+     */
+    public static ?array $authToken;
 
     /**
      * Boots the application and loads any global dependencies
@@ -127,10 +174,8 @@ final class Bootstrapper {
         $container->set("database", fn () => $manager);
         self::setManager($manager);
 
-        // Non-blocking session
-        $session = new SessionInstance("duppy");
-        $container->set("session", fn () => $session);
-        self::setSessionManager($session);
+        // JSON Web Token (JWS/JWE)
+        static::configureJWT();
 
         // Hybridauth external login helper
         $hybridauth = self::configureHybridAuth();
@@ -173,6 +218,38 @@ final class Bootstrapper {
         }
 
         return self::$manager;
+    }
+
+    /**
+     * Configures jwt-framework and sets up the Signing and Encryption token builders
+     */
+    public static function configureJWT() {
+        self::$jwKey = JWKFactory::createFromSecret(getenv('JWT_SECRET'), [
+            'alg' => 'HS256',
+        ]);
+
+        $algorithmManager = new AlgorithmManager([
+            new ES256(),
+            new PS256(),
+        ]);
+
+        self::$jwsBuilder = new JWSBuilder($algorithmManager);
+        self::$jwsVerifier = new JWSVerifier($algorithmManager);
+
+        $keyEncryptionManager = new AlgorithmManager([
+            new A256GCMKW(),
+        ]);
+
+        $contentEncryptionManager = new AlgorithmManager([
+            new A256CBCHS512(),
+        ]);
+
+        $compressionManager = new CompressionMethodManager([
+            new Deflate(),
+        ]);
+
+        self::$jweBuilder = new JWEBuilder($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
+        self::$jweDecrypter = new JWEDecrypter($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
     }
 
     /**
@@ -282,30 +359,81 @@ final class Bootstrapper {
     /**
      * Convenience function to get the current logged in user
      *
-     * @return WebUser
+     * @return WebUser|null
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getLoggedInUser(): WebUser {
-        $container = static::getContainer();
-        $session = $container->get("session");
-        $userid = $session->get("user");
+    public static function getLoggedInUser(): ?WebUser {
+        $authToken = static::getAuthToken();
 
-        $user = null;
-        if ($userid != null) {
-            $user = static::getUser($userid);
+        if (!array_key_exists("user", $authToken)) {
+            return null;
         }
 
-        return $user;
+        return static::getUser($authToken["user"]);
     }
 
     /**
-     * Session Manager getter
+     * Gets the auth token array from the submitted JWT, also caches it
      *
-     * @return SessionInstance
+     * @return array|null
      */
-    public static function getSessionManager(): SessionInstance {
-        return static::$sessionManager;
+    public static function getAuthToken(): ?array {
+        if (!array_key_exists("authToken", $_POST)) {
+            return null;
+        }
+
+        if (static::$authToken != null) {
+            return static::$authToken;
+        }
+
+        $token = $_POST["authToken"];
+        return static::$authToken = TokenManager::loadToken($token);
+    }
+
+    /**
+     * JWKey getter
+     *
+     * @return JWK
+     */
+    public static function getJWKey(): JWK {
+        return static::$jwKey;
+    }
+
+    /**
+     * JWS Builder getter
+     *
+     * @return JWSBuilder
+     */
+    public static function getJWSBuilder(): JWSBuilder {
+        return static::$jwsBuilder;
+    }
+
+    /**
+     * JWS Verifier getter
+     *
+     * @return JWSVerifier
+     */
+    public static function getJWSVerifier(): JWSVerifier {
+        return static::$jwsVerifier;
+    }
+
+    /**
+     * JWE Builder getter
+     *
+     * @return JWEBuilder
+     */
+    public static function getJWEBuilder(): JWEBuilder {
+        return static::$jweBuilder;
+    }
+
+    /**
+     * JWE Decrypter getter
+     *
+     * @return JWEDecrypter
+     */
+    public static function getJWEDecrypter(): JWEDecrypter {
+        return static::$jweDecrypter;
     }
 
     /**
@@ -315,15 +443,6 @@ final class Bootstrapper {
      */
     public static function setManager(EntityManager $manager) {
         static::$manager = $manager;
-    }
-
-    /**
-     * EntityManager setter
-     *
-     * @param EntityManager $manager
-     */
-    public static function setSessionManager(SessionInstance $manager) {
-        static::$sessionManager = $manager;
     }
 
     /**

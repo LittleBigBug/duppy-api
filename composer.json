@@ -9,7 +9,11 @@
         "yosymfony/toml": "^1.0",
         "hybridauth/hybridauth": "^3.6",
         "ext-json": "*",
-        "duncan3dc/sessions": "^2.0"
+        "web-token/jwt-framework": "^2.2",
+        "web-token/jwt-signature-algorithm-rsa": "^2.2",
+        "web-token/jwt-signature-algorithm-ecdsa": "^2.2",
+        "web-token/jwt-signature-algorithm-hmac": "^2.2",
+        "web-token/jwt-encryption-algorithm-aesgcmkw": "^2.2"
     },
     "autoload": {
         "psr-4": {
