@@ -1,7 +1,10 @@
 <?php
 namespace Duppy\Endpoints\User;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
+use Duppy\Bootstrapper\Bootstrapper;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -42,7 +45,7 @@ class UserData extends AbstractEndpoint {
     /**
      * Set the parent group classname to 'GroupUser'
      *
-     * @var string
+     * @var ?string
      */
     public static ?string $parentGroup = "Duppy\Endpoints\User\GroupUser";
 
@@ -60,9 +63,15 @@ class UserData extends AbstractEndpoint {
      * @param Response $response
      * @param array $args
      * @return Response
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
-        // Todo ; give full public user info
+        $userId = $args["id"];
+        $user = Bootstrapper::getUser($userId);
+
+
+
         return $response;
     }
 
@@ -76,10 +85,17 @@ class UserData extends AbstractEndpoint {
      * @param Response $response
      * @param array $args
      * @return Response
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function basicInfo(Request $request, Response $response, array $args = []): Response {
-        // Todo ; give basic user info
-        echo('Requested UID; ' . $args['id']);
+        $userId = $args["id"];
+        $user = Bootstrapper::getUser($userId);
+
+        if ($user->isMe()) {
+
+        }
+
         return $response;
     }
 

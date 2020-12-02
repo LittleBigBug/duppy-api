@@ -1,8 +1,11 @@
 <?php
 namespace Duppy\Entities;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Abstracts\AbstractEntity;
+use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Util;
 
 /**
@@ -155,6 +158,21 @@ class WebUser extends AbstractEntity {
     public function hasPermission($perm): bool {
         $perms = $this->getPermissions();
         return $perms[$perm] == true;
+    }
+
+    /**
+     * If the user is the current logged in user
+     *
+     * @return bool
+     */
+    public function isMe(): bool {
+        $authToken = Bootstrapper::getAuthToken();
+
+        if ($authToken == null || !array_key_exists("user", $authToken)) {
+            return false;
+        }
+
+        return $this->getId() == $authToken["user"];
     }
 
 }

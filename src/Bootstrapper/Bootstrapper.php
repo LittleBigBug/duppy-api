@@ -32,6 +32,7 @@ use DI\Container;
 use Slim\App;
 
 final class Bootstrapper {
+
     /**
      * Slim instance
      *

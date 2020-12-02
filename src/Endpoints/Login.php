@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\Criteria;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\Settings;
+use Duppy\Bootstrapper\TokenManager;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -63,17 +64,19 @@ class Login extends AbstractEndpoint {
             $username = $userObj->getUsername();
             $avatar = $userObj->getAvatarUrl();
 
-            $session = Bootstrapper::getContainer()->get('session');
-            $session->set("user", $userId);
-            $session->set("username", $username);
+            $data = [
+                "user" => $userId,
+                "username" => $username,
+                "avatarUrl" => $avatar,
+            ];
+
+            $token = TokenManager::createTokenFill($data);
 
             return Util::responseJSON($response, [
-                'success' => true,
-                'data' => [
-                    'id' => $userId,
-                    'username' => $username,
-                    'avatarUrl' => $avatar,
-                ],
+                "success" => true,
+                "data" => array_merge($data, [
+                    "token" => $token,
+                ]),
             ]);
         };
 
