@@ -347,8 +347,8 @@ final class Bootstrapper {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getUser($id): WebUser {
-        if ($id == "me") {
+    public static function getUser($id = null): WebUser {
+        if ($id == "me" || $id == null) {
             return static::getLoggedInUser();
         }
 

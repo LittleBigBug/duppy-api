@@ -2,6 +2,9 @@
 
 namespace Duppy\Bootstrapper;
 
+use DI\DependencyException;
+use DI\NotFoundException;
+use Duppy\Entities\WebUser;
 use Jose\Component\Checker\AlgorithmChecker;
 use Jose\Component\Checker\AudienceChecker;
 use Jose\Component\Checker\ClaimCheckerManager;
@@ -75,6 +78,35 @@ final class TokenManager {
         $payload = array_merge($defaults, $payload);
 
         return static::createToken($payload);
+    }
+
+    /**
+     * Creates a user's JWT token
+     *
+     * @param WebUser $user
+     * @return string
+     */
+    public static function createTokenFromUser(WebUser $user): string {
+        $data = [
+            "id" => $user->getId(),
+            "username" => $user->getUsername(),
+            "avatarUrl" => $user->getAvatarUrl(),
+        ];
+
+        return static::createTokenFill($data);
+    }
+
+    /**
+     * Creates a user's JWT token from their user ID
+     *
+     * @param int $userId
+     * @return ?string
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function createTokenFromUserId(int $userId): string {
+        $userObj = Bootstrapper::getUser($userId);
+        return static::createTokenFromUser($userObj);
     }
 
     /**
