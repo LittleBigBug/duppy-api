@@ -47,17 +47,13 @@ class Login extends AbstractEndpoint {
 
         $providerEnabled = Settings::getSetting("auth.$provider.enable") == true;
 
-        $respondError = function ($err) use ($response) {
-            return Util::responseJSON($response, ['success' => false, 'error' => $err]);
-        };
-
         if (!$providerEnabled) {
-            return $respondError("Provider not enabled");
+            return Util::responseError($response, "Provider not enabled");
         }
 
-        $loggedIn = function ($userObj) use ($response, $respondError) {
+        $loggedIn = function ($userObj) use ($response) {
             if ($userObj == null) {
-                return $respondError("No matching user");
+                return Util::responseError($response, "No matching user");
             }
 
             $userId = $userObj->get("id");
@@ -84,18 +80,18 @@ class Login extends AbstractEndpoint {
             $postArgs = $request->getParsedBody();
 
             if ($postArgs == null || empty($postArgs)) {
-                return $respondError("No POST arguments using pwd auth");
+                return Util::responseError($response, "No POST arguments using pwd auth");
             }
 
             $user = $postArgs["user"];
             $pass = $postArgs["pass"];
 
             if (empty($user)) {
-                return $respondError("User is empty");
+                return Util::responseError($response, "User is empty");
             }
 
             if (empty($pass)) {
-                return $respondError("Pass is empty");
+                return Util::responseError($response, "Pass is empty");
             }
 
             $hash = password_hash($pass, PASSWORD_DEFAULT);
@@ -119,7 +115,7 @@ class Login extends AbstractEndpoint {
         $connected = $authHandler->isConnected();
 
         if (!$connected) {
-            return $respondError("Provider auth error");
+            return Util::responseError($response, "Provider auth error");
         }
 
         $providerId = $authHandler->getUserProfile()->identifier;
@@ -135,7 +131,7 @@ class Login extends AbstractEndpoint {
         $userObj = $userAuth->get("user");
 
         if ($userObj == null || !is_subclass_of($userObj, "Duppy\Entities\WebUser")) {
-            return $respondError("Cant find user associated to provider auth");
+            return Util::responseError($response, "Cant find user associated to provider auth");
         }
 
         return $loggedIn($userObj);

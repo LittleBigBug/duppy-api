@@ -81,6 +81,18 @@ class Util {
     }
 
     /**
+     * Convenience function for error JSON
+     *
+     * @param ResponseInterface $resp
+     * @param string $error
+     * @param int $status
+     * @return Response
+     */
+    public static function responseError(ResponseInterface &$resp, string $error, int $status = 200): ResponseInterface {
+        return static::responseJSON($resp, ["success" => false, "err" => $error]);
+    }
+
+    /**
      * Converts a boolean dictionary to a regular array by mapping the keys to values if their value is true
      *
      * @param array $dict

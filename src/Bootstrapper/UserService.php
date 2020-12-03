@@ -71,4 +71,19 @@ final class UserService {
         return static::getUser($authToken["id"]);
     }
 
+    /**
+     * Takes a string reference to a provider name and corrects it, and also checks if it is enabled.
+     *
+     * @param string $provider
+     * @return boolean
+     */
+    public static function enabledProvider(string &$provider): bool {
+        if (!isset($provider) || empty($provider)) {
+            $provider = "password";
+        }
+
+        $providerEnabled = Settings::getSetting("auth.$provider.enable") == true;
+        return $providerEnabled;
+    }
+
 }

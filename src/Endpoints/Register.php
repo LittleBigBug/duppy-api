@@ -4,9 +4,7 @@ namespace Duppy\Endpoints;
 
 use DI\DependencyException;
 use DI\NotFoundException;
-use Doctrine\Common\Collections\Criteria;
 use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\Bootstrapper\Settings;
 use Duppy\Bootstrapper\TokenManager;
 use Duppy\Bootstrapper\UserService;
 use Duppy\Entities\WebUser;
@@ -44,26 +42,16 @@ class Register {
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $provider = $args["provider"];
-
-        if (!isset($provider) || empty($provider)) {
-            $provider = "password";
-        }
-
-        $providerEnabled = Settings::getSetting("auth.$provider.enable") == true;
-
-        $respondError = function ($err) use ($response) {
-            return Util::responseJSON($response, ['success' => false, 'error' => $err]);
-        };
+        $providerEnabled = UserService::enabledProvider($provider);
+        $postArgs = $request->getParsedBody();
 
         if (!$providerEnabled) {
-            return $respondError("Provider not enabled");
+            return Util::responseError($response, "Provider not enabled");
         }
 
         if ($provider == "password") {
-            $postArgs = $request->getParsedBody();
-
             if ($postArgs == null || empty($postArgs)) {
-                return $respondError("No POST arguments using pwd auth");
+                return Util::responseError($response, "No POST arguments using pwd auth");
             }
 
             $username = $postArgs["username"];
@@ -71,36 +59,42 @@ class Register {
             $pass = $postArgs["pass"];
             $passConf = $postArgs["passConf"];
 
+            $err = "";
+
             if (empty($username)) {
-                return $respondError("Username is empty");
+                $err = "Username is empty";
             }
 
             if (UserService::getUserByName($username) !== null) {
-                return $respondError("Username is taken");
+                $err = "Username is taken";
             }
 
             if (empty($email)) {
-                return $respondError("Email is empty");
+                $err = "Email is empty";
             }
 
             if (UserService::getUserByEmail($email) !== null) {
-                return $respondError("Email is taken");
+                $err = "Email is taken";
             }
 
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return $respondError("Invalid email");
+                $err = "Invalid email";
             }
 
             if (empty($pass)) {
-                return $respondError("Pass is empty");
+                $err = "Pass is empty";
             }
 
             if (empty($passConf)) {
-                return $respondError("Pass Conf is empty");
+                $err = "Pass Conf is empty";
             }
 
             if ($passConf !== $pass) {
-                return $respondError("Pass Conf does not match pass");
+                $err = "Pass Conf does not match pass";
+            }
+
+            if (!empty($err)) {
+                return Util::responseError($response, $err);
             }
 
             $hash = password_hash($pass, PASSWORD_DEFAULT);
@@ -127,7 +121,7 @@ class Register {
         $connected = $authHandler->isConnected();
 
         if (!$connected) {
-            return $respondError("Provider auth error");
+            return Util::responseError($response, "Provider auth error");
         }
 
         $profile = $authHandler->getUserProfile();

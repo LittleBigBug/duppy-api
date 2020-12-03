@@ -95,6 +95,18 @@ class WebUser extends AbstractEntity {
         $this->avatarUrl = $url;
     }
 
+    public function addProviderAuth(WebUserProviderAuth $providerAuth) {
+        $this->providerAuths->add($providerAuth);
+    }
+
+    public function addGroup(UserGroup $group) {
+        $this->groups->add($group);
+    }
+
+    public function addPermission(PermissionAssignment $perm) {
+        $this->permissions->add($perm);
+    }
+
     /**
      * Gets users permissions, in an array
      * Specify it to return a dictionary with $dictionary
