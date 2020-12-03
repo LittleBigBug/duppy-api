@@ -1,11 +1,10 @@
 <?php
 namespace Duppy\Entities;
 
-use DI\DependencyException;
-use DI\NotFoundException;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Abstracts\AbstractEntity;
-use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\Bootstrapper\TokenManager;
 use Duppy\Util;
 
 /**
@@ -39,10 +38,7 @@ class WebUser extends AbstractEntity {
     protected string $password;
 
     /**
-     * @ORM\ManyToMany(targetEntity="WebUserProviderAuth")
-     * @ORM\JoinTable(name="web_user_auth_provider_map",
-     *     joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id")},
-     *     inverseJoinColumns={@ORM\JoinColumn(name="providerauthconnection_id", referencedColumnName="id", unique=true)})
+     * @ORM\OneToMany(targetEntity="WebUserProviderAuth", mappedBy="user")
      */
     protected $providerAuths;
 
@@ -75,20 +71,28 @@ class WebUser extends AbstractEntity {
      */
     protected array $generatedPermissions;
 
-    public function getId() {
-        return $this->id;
+    public function __construct(array $data) {
+        parent::__construct($data);
+
+        $this->providerAuths = new ArrayCollection();
+        $this->groups = new ArrayCollection();
+        $this->permissions = new ArrayCollection();
     }
 
-    public function getUsername() {
-        return $this->username;
+    public function setEmail(string $email) {
+        $this->email = $email;
     }
 
-    public function getAvatarUrl() {
-        return $this->avatarUrl;
+    public function setPassword(string $password) {
+        $this->password = $password;
     }
 
-    public function getGroups() {
-        return $this->groups;
+    public function setUsername(string $username) {
+        $this->username = $username;
+    }
+
+    public function setAvatarUrl(string $url) {
+        $this->avatarUrl = $url;
     }
 
     /**
@@ -112,7 +116,7 @@ class WebUser extends AbstractEntity {
         }
 
         $perms = [];
-        $groups = $this->getGroups();
+        $groups = $this->get("groups");
 
         // Sort groups by weight ascending to apply heaviest last
         usort($groups, function($a, $b) {
@@ -166,13 +170,13 @@ class WebUser extends AbstractEntity {
      * @return bool
      */
     public function isMe(): bool {
-        $authToken = Bootstrapper::getAuthToken();
+        $authToken = TokenManager::getAuthToken();
 
         if ($authToken == null || !array_key_exists("id", $authToken)) {
             return false;
         }
 
-        return $this->getId() == $authToken["id"];
+        return $this->get("id") == $authToken["id"];
     }
 
 }

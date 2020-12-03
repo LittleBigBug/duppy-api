@@ -1,25 +1,27 @@
 <?php
+
 namespace Duppy\Endpoints;
 
 use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\Common\Collections\Criteria;
-use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\Settings;
 use Duppy\Bootstrapper\TokenManager;
+use Duppy\Bootstrapper\UserService;
+use Duppy\Entities\WebUserVerification;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
-class Login extends AbstractEndpoint {
+class Register {
 
     /**
-     * Set the URI to /login or /login/steam /login/google etc
+     * Set the URI to /register or /register/steam /register/google etc
      *
      * @var ?array
      */
-    public static ?array $uri = [ '/login[/{provider}]' ];
+    public static ?array $uri = [ '/register[/{provider}]' ];
 
     /**
      * Allow post
@@ -29,7 +31,7 @@ class Login extends AbstractEndpoint {
     public static array $types = [ 'post' ];
 
     /**
-     * Handles logins with passwords or third-party (HybridAuth)
+     * Handles Registers with passwords or third-party (HybridAuth)
      *
      * @param Request $request
      * @param Response $response
@@ -60,9 +62,9 @@ class Login extends AbstractEndpoint {
                 return $respondError("No matching user");
             }
 
-            $userId = $userObj->get("id");
-            $username = $userObj->get("username");
-            $avatar = $userObj->get("avatarUrl");
+            $userId = $userObj->getId();
+            $username = $userObj->getUsername();
+            $avatar = $userObj->getAvatarUrl();
 
             $data = [
                 "id" => $userId,
@@ -87,31 +89,59 @@ class Login extends AbstractEndpoint {
                 return $respondError("No POST arguments using pwd auth");
             }
 
-            $user = $postArgs["user"];
+            $username = $postArgs["username"];
+            $email = $postArgs["email"];
             $pass = $postArgs["pass"];
+            $passConf = $postArgs["passConf"];
 
-            if (empty($user)) {
-                return $respondError("User is empty");
+            if (empty($username)) {
+                return $respondError("Username is empty");
+            }
+
+            if (UserService::getUserByName($username) !== null) {
+                return $respondError("Username is taken");
+            }
+
+            if (empty($email)) {
+                return $respondError("Email is empty");
+            }
+
+            if (UserService::getUserByEmail($email) !== null) {
+                return $respondError("Email is taken");
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return $respondError("Invalid email");
             }
 
             if (empty($pass)) {
                 return $respondError("Pass is empty");
             }
 
+            if (empty($passConf)) {
+                return $respondError("Pass Conf is empty");
+            }
+
+            if ($passConf !== $pass) {
+                return $respondError("Pass Conf does not match pass");
+            }
+
             $hash = password_hash($pass, PASSWORD_DEFAULT);
-
             $dbo = Bootstrapper::getContainer()->get('database');
-            $expr = Criteria::expr();
 
-            $cr = new Criteria();
-            $cr->where($expr->eq("password", $hash));
-            $cr->andWhere($expr->orX(
-                $expr->eq("email", $user),
-                $expr->eq("username", $user),
-            ));
+            $uVerify = new WebUserVerification([
+                'email' => $email,
+                'password' => $hash,
+                'username' => $username,
+            ]);
 
-            $userObj = $dbo->getRepository("Duppy\Entities\WebUser")->matching($cr)->first();
-            return $loggedIn($userObj);
+            $dbo->persist($uVerify);
+            $dbo->flush();
+
+            return Util::responseJSON($response, [
+                "success" => true,
+                "message" => "User needs to be verified",
+            ], 201);
         }
 
         $authHandler = Bootstrapper::getContainer()->get('authHandler');
@@ -132,11 +162,10 @@ class Login extends AbstractEndpoint {
         $cr->where($expr->eq("providername", $provider));
         $cr->andWhere($expr->eq("providerid", $providerId));
 
-        $userAuth = $dbo->getRepository("Duppy\Entities\WebUserProviderAuth")->matching($cr)->first();
-        $userObj = $userAuth->get("user");
+        $userObj = $dbo->getRepository("Duppy\Entities\WebUserProviderAuth")->matching($cr)->first();
 
-        if ($userObj == null || !is_subclass_of($userObj, "Duppy\Entities\WebUser")) {
-            return $respondError("Cant find user associated to provider auth");
+        if ($userObj == null) {
+
         }
 
         return $loggedIn($userObj);

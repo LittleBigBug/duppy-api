@@ -5,8 +5,7 @@ namespace Duppy\Middleware;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractRouteMiddleware;
-use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\Util;
+use Duppy\Bootstrapper\UserService;
 
 class AdminAccessMiddleware extends AbstractRouteMiddleware {
 
@@ -16,7 +15,7 @@ class AdminAccessMiddleware extends AbstractRouteMiddleware {
      * @throws NotFoundException
      */
     final public function handle(): ?bool {
-        $user = Bootstrapper::getLoggedInUser();
+        $user = UserService::getLoggedInUser();
 
         if ($user == null || !is_subclass_of($user, "Duppy\Entities\WebUser")) {
             static::$response = static::$response->withStatus(401);
@@ -27,6 +26,8 @@ class AdminAccessMiddleware extends AbstractRouteMiddleware {
             static::$response = static::$response->withStatus(403);
             return false;
         }
+
+        return true;
     }
 
 }

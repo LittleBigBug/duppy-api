@@ -5,8 +5,8 @@ namespace Duppy\Middleware;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractRouteMiddleware;
-use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\Settings;
+use Duppy\Bootstrapper\UserService;
 use Duppy\Util;
 
 class AuthRequiredSettingMiddleware extends AbstractRouteMiddleware {
@@ -22,7 +22,7 @@ class AuthRequiredSettingMiddleware extends AbstractRouteMiddleware {
             return true;
         }
 
-        $user = Bootstrapper::getLoggedInUser();
+        $user = UserService::getLoggedInUser();
 
         if ($user == null || !is_subclass_of($user, "Duppy\Entities\WebUser")) {
             static::$response = Util::responseJSON(static::$response, [
@@ -33,6 +33,8 @@ class AuthRequiredSettingMiddleware extends AbstractRouteMiddleware {
 
             return false;
         }
+
+        return true;
     }
 
 }

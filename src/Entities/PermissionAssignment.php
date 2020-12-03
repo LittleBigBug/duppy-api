@@ -59,12 +59,4 @@ class PermissionAssignment {
         return !str_starts_with($this->permission, "-");
     }
 
-    public function getUsers() {
-        return $this->users;
-    }
-
-    public function getGroups() {
-        return $this->groups;
-    }
-
 }

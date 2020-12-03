@@ -66,26 +66,6 @@ class UserGroup extends AbstractEntity {
      */
     protected array $generatedPermissions;
 
-    public function getId() {
-        return $this->id;
-    }
-
-    public function getName() {
-        return $this->name;
-    }
-
-    public function getWeight() {
-        return $this->weight;
-    }
-
-    public function getColour() {
-        return $this->colour;
-    }
-
-    public function getParent() {
-        return $this->parent;
-    }
-
     /**
      * Recursive function to fetch all nested parents of this group
      *
@@ -103,7 +83,7 @@ class UserGroup extends AbstractEntity {
             return $parents;
         }
 
-        $newParent = $parent->getParent();
+        $newParent = $parent->get("parent");
         $parents[] = $newParent;
 
         return $this->getParents($parents);

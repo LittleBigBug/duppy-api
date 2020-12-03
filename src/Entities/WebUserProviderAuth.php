@@ -29,4 +29,10 @@ class WebUserProviderAuth extends AbstractEntity {
      */
     protected string $providerid;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="WebUser", inversedBy="providerAuths")
+     * @ORM\JoinColumn(name="product_id", referencedColumnName="id")
+     */
+    protected WebUser $user;
+
 }

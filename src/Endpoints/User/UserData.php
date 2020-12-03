@@ -5,6 +5,8 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\Bootstrapper\UserService;
+use http\Client\Curl\User;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -68,7 +70,7 @@ class UserData extends AbstractEndpoint {
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $userId = $args["id"];
-        $user = Bootstrapper::getUser($userId);
+        $user = UserService::getUser($userId);
 
 
 
@@ -90,7 +92,7 @@ class UserData extends AbstractEndpoint {
      */
     public function basicInfo(Request $request, Response $response, array $args = []): Response {
         $userId = $args["id"];
-        $user = Bootstrapper::getUser($userId);
+        $user = UserService::getUser($userId);
 
         if ($user->isMe()) {
 
