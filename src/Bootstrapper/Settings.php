@@ -147,7 +147,7 @@ final class Settings {
         foreach ($keys as $key) {
             $exists = array_key_exists($key, $ret);
 
-            if ($exists || empty($ret[$key])) {
+            if ($exists) {
                 continue;
             }
 
@@ -187,11 +187,10 @@ final class Settings {
     /**
      * Gets a value from a setting whether it is a static AbstractSetting or an array
      *
-     * @param object $setting
+     * @param $setting
      * @param string $settingKey
-     * @return ?object
      */
-    public static function extractValueFromSetting(object $setting, string $settingKey): ?object {
+    public static function extractValueFromSetting($setting, string $settingKey) {
         if (!is_subclass_of($setting, "Duppy\Abstracts\AbstractSetting") || is_array($setting)) {
             if (array_key_exists($settingKey, $setting)) {
                 return $setting[$settingKey];

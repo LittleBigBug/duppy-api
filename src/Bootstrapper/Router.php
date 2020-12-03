@@ -391,7 +391,7 @@ final class Router {
         }
 
         foreach ($toBeSorted as $key => $value) {
-            if ($value["parent"] != $parent) {
+            if (!is_array($value) || $value["parent"] != $parent) {
                 continue;
             }
 
@@ -402,7 +402,7 @@ final class Router {
             $toBeSorted[$key] = null;
 
             $depth++;
-            self::sortByParentLoadOrder($toBeSorted, $value["name"], $depth, $result);
+            self::sortByParentLoadOrder($toBeSorted, $value["parent"], $depth, $result);
             $depth--;
         }
 
