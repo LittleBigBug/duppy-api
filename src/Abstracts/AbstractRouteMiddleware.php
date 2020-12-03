@@ -37,17 +37,24 @@ abstract class AbstractRouteMiddleware {
     final public function __invoke(Request $request, RequestHandler $handler): Response {
         static::$request = $request;
         static::$handler = $handler;
-        static::$response = $handler->handle($request);
 
-        $this->handle();
+        static::$response = new \Slim\Psr7\Response;
+
+        $continue = $this->handle() ?? true;
+
+        if ($continue) {
+            static::$response = $handler->handle($request);
+        }
 
         return static::$response;
     }
 
     /**
      * Handles the middleware
+     *
+     * @return bool
      */
-    abstract public function handle();
+    abstract public function handle(): ?bool;
 
     /**
      * Get request obj

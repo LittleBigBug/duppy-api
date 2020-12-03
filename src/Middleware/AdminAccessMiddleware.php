@@ -10,29 +10,22 @@ use Duppy\Util;
 
 class AdminAccessMiddleware extends AbstractRouteMiddleware {
 
-    final static private function respondFail(string $err = "Unauthorized", int $status = 403) {
-        static::$response = Util::responseJSON(static::$response, [
-            "success" => false,
-            "data" => [],
-            "err" => $err,
-        ], $status);
-    }
-
     /**
      * Reject any using this middleware who does not have admin permissions
      * @throws DependencyException
      * @throws NotFoundException
      */
-    final public function handle() {
+    final public function handle(): ?bool {
         $user = Bootstrapper::getLoggedInUser();
 
         if ($user == null || !is_subclass_of($user, "Duppy\Entities\WebUser")) {
-            static::respondFail(null, 401);
-            return;
+            static::$response = static::$response->withStatus(401);
+            return false;
         }
 
         if (!$user->hasPermission("admin")) {
-            static::respondFail(null, 403);
+            static::$response = static::$response->withStatus(403);
+            return false;
         }
     }
 

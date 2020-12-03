@@ -16,10 +16,10 @@ class AuthRequiredSettingMiddleware extends AbstractRouteMiddleware {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    final public function handle() {
+    final public function handle(): ?bool {
         // Only process this middleware if the setting is enabled
         if (!Settings::getSetting("requireAuthGeneralAccess")) {
-            return;
+            return true;
         }
 
         $user = Bootstrapper::getLoggedInUser();
@@ -30,6 +30,8 @@ class AuthRequiredSettingMiddleware extends AbstractRouteMiddleware {
                 "data" => [],
                 "err" => "You must be authenticated to view this content",
             ], 401);
+
+            return false;
         }
     }
 
