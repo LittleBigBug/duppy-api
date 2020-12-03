@@ -9,6 +9,8 @@ use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\Settings;
 use Duppy\Bootstrapper\TokenManager;
 use Duppy\Bootstrapper\UserService;
+use Duppy\Entities\WebUser;
+use Duppy\Entities\WebUserProviderAuth;
 use Duppy\Entities\WebUserVerification;
 use Duppy\Util;
 use Slim\Psr7\Request;
@@ -56,31 +58,6 @@ class Register {
         if (!$providerEnabled) {
             return $respondError("Provider not enabled");
         }
-
-        $loggedIn = function ($userObj) use ($response, $respondError) {
-            if ($userObj == null) {
-                return $respondError("No matching user");
-            }
-
-            $userId = $userObj->getId();
-            $username = $userObj->getUsername();
-            $avatar = $userObj->getAvatarUrl();
-
-            $data = [
-                "id" => $userId,
-                "username" => $username,
-                "avatarUrl" => $avatar,
-            ];
-
-            $token = TokenManager::createTokenFill($data);
-
-            return Util::responseJSON($response, [
-                "success" => true,
-                "data" => array_merge($data, [
-                    "token" => $token,
-                ]),
-            ]);
-        };
 
         if ($provider == "password") {
             $postArgs = $request->getParsedBody();
@@ -153,22 +130,50 @@ class Register {
             return $respondError("Provider auth error");
         }
 
-        $providerId = $authHandler->getUserProfile()->identifier;
+        $profile = $authHandler->getUserProfile();
 
-        $dbo = Bootstrapper::getContainer()->get('database');
-        $expr = Criteria::expr();
+        $providerId = $profile->identifier;
+        $username = $profile->displayName;
+        $email = $profile->emailVerified ?? ""; // This email may not be provided but we can ask the user later
+        $avatar = $profile->photoURL ?? "";
 
-        $cr = new Criteria();
-        $cr->where($expr->eq("providername", $provider));
-        $cr->andWhere($expr->eq("providerid", $providerId));
+        $dbo = Bootstrapper::getContainer()->get("database");
 
-        $userObj = $dbo->getRepository("Duppy\Entities\WebUserProviderAuth")->matching($cr)->first();
+        // Create new account from provider info
+        $userObj = new WebUser([
+            "email" => $email,
+            "username" => $username,
+            "avatarUrl" => $avatar,
+        ]);
 
-        if ($userObj == null) {
+        $registerAuth = new WebUserProviderAuth([
+            "providername" => $provider,
+            "providerid" => $providerId,
+            "user" => $userObj,
+        ]);
 
-        }
+        $userObj->addProviderAuth($registerAuth);
 
-        return $loggedIn($userObj);
+        $dbo->persist($userObj);
+        $dbo->persist($registerAuth);
+
+        $dbo->flush();
+
+        $data = [
+            "id" => $userObj->get("id"),
+            "username" => $username,
+            "avatarUrl" => $avatar,
+        ];
+
+        // Login Immediately
+        $token = TokenManager::createTokenFill($data);
+
+        return Util::responseJSON($response, [
+            "success" => true,
+            "data" => array_merge($data, [
+                "token" => $token,
+            ]),
+        ]);
     }
 
 }

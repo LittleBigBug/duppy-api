@@ -107,7 +107,6 @@ class Login extends AbstractEndpoint {
             $cr->where($expr->eq("password", $hash));
             $cr->andWhere($expr->orX(
                 $expr->eq("email", $user),
-                $expr->eq("username", $user),
             ));
 
             $userObj = $dbo->getRepository("Duppy\Entities\WebUser")->matching($cr)->first();
