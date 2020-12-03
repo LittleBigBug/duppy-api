@@ -5,6 +5,7 @@ namespace Duppy\Bootstrapper;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Entities\WebUser;
+use Exception;
 use Jose\Component\Checker\AlgorithmChecker;
 use Jose\Component\Checker\AudienceChecker;
 use Jose\Component\Checker\ClaimCheckerManager;
@@ -22,6 +23,13 @@ use Jose\Component\Signature\Serializer\CompactSerializer as SigCompactSerialize
 use Jose\Component\Signature\Serializer\JWSSerializerManager;
 
 final class TokenManager {
+
+    /**
+     * Decrypted and verified auth token (from JWT)
+     *
+     * @var array|null
+     */
+    public static ?array $authToken;
 
     /**
      * Creates a new signed and encrypted token with the payload
@@ -88,9 +96,9 @@ final class TokenManager {
      */
     public static function createTokenFromUser(WebUser $user): string {
         $data = [
-            "id" => $user->getId(),
-            "username" => $user->getUsername(),
-            "avatarUrl" => $user->getAvatarUrl(),
+            "id" => $user->get("id"),
+            "username" => $user->get("username"),
+            "avatarUrl" => $user->get("avatarUrl"),
         ];
 
         return static::createTokenFill($data);
@@ -105,7 +113,7 @@ final class TokenManager {
      * @throws NotFoundException
      */
     public static function createTokenFromUserId(int $userId): string {
-        $userObj = Bootstrapper::getUser($userId);
+        $userObj = UserService::getUser($userId);
         return static::createTokenFromUser($userObj);
     }
 
@@ -158,9 +166,27 @@ final class TokenManager {
             $claimChecker->check($pl, ["iss", "aud"]);
 
             return $pl;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return null;
         }
+    }
+
+    /**
+     * Gets the auth token array from the submitted JWT, also caches it
+     *
+     * @return array|null
+     */
+    public static function getAuthToken(): ?array {
+        if (!array_key_exists("authToken", $_POST)) {
+            return null;
+        }
+
+        if (static::$authToken != null) {
+            return static::$authToken;
+        }
+
+        $token = $_POST["authToken"];
+        return static::$authToken = static::loadToken($token);
     }
 
 }

@@ -5,7 +5,6 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
-use Duppy\Entities\WebUser;
 use Duppy\Middleware\CORSMiddleware;
 use Hybridauth\Exception\InvalidArgumentException;
 use Hybridauth\Hybridauth;
@@ -102,13 +101,6 @@ final class Bootstrapper {
      * @var Router|null
      */
     public static ?Router $router;
-
-    /**
-     * Decrypted and verified auth token (from JWT)
-     *
-     * @var array|null
-     */
-    public static ?array $authToken;
 
     /**
      * Boots the application and loads any global dependencies
@@ -337,59 +329,6 @@ final class Bootstrapper {
      */
     public static function getManager(): EntityManager {
         return static::$manager;
-    }
-
-    /**
-     * Convenience function to get a user by their ID
-     *
-     * @param $id
-     * @return WebUser
-     * @throws DependencyException
-     * @throws NotFoundException
-     */
-    public static function getUser($id = null): WebUser {
-        if ($id == "me" || $id == null) {
-            return static::getLoggedInUser();
-        }
-
-        $container = static::getContainer();
-        $dbo = $container->get("database");
-        return $dbo->getRepository("Duppy\Entities\WebUser")->find($id)->first();
-    }
-
-    /**
-     * Convenience function to get the current logged in user
-     *
-     * @return WebUser|null
-     * @throws DependencyException
-     * @throws NotFoundException
-     */
-    public static function getLoggedInUser(): ?WebUser {
-        $authToken = static::getAuthToken();
-
-        if ($authToken == null || !array_key_exists("id", $authToken)) {
-            return null;
-        }
-
-        return static::getUser($authToken["id"]);
-    }
-
-    /**
-     * Gets the auth token array from the submitted JWT, also caches it
-     *
-     * @return array|null
-     */
-    public static function getAuthToken(): ?array {
-        if (!array_key_exists("authToken", $_POST)) {
-            return null;
-        }
-
-        if (static::$authToken != null) {
-            return static::$authToken;
-        }
-
-        $token = $_POST["authToken"];
-        return static::$authToken = TokenManager::loadToken($token);
     }
 
     /**
