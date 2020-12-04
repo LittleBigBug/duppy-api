@@ -11,6 +11,8 @@ use Duppy\Entities\WebUser;
 use Duppy\Entities\WebUserProviderAuth;
 use Duppy\Entities\WebUserVerification;
 use Duppy\Util;
+use Hybridauth\Exception\InvalidArgumentException;
+use Hybridauth\Exception\UnexpectedValueException;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -39,6 +41,8 @@ class Register {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws InvalidArgumentException
+     * @throws UnexpectedValueException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $provider = $args["provider"];
@@ -115,16 +119,15 @@ class Register {
             ], 201);
         }
 
-        $authHandler = Bootstrapper::getContainer()->get('authHandler');
-        $authHandler->authenticate($provider);
+        $profile = UserService::authenticateHybridAuth($provider, $postArgs);
 
-        $connected = $authHandler->isConnected();
-
-        if (!$connected) {
-            return Util::responseError($response, "Provider auth error");
+        if (is_subclass_of($profile, "Slim\Psr7\Response")) {
+            return $response;
         }
 
-        $profile = $authHandler->getUserProfile();
+        if (!is_subclass_of($profile, "HybridAuth\User\Profile")) {
+            return Util::responseError($response, "HybridAuth authentication error");
+        }
 
         $providerId = $profile->identifier;
         $username = $profile->displayName;

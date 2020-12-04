@@ -8,7 +8,10 @@ use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\Settings;
 use Duppy\Bootstrapper\TokenManager;
+use Duppy\Bootstrapper\UserService;
 use Duppy\Util;
+use Hybridauth\Exception\InvalidArgumentException;
+use Hybridauth\Exception\UnexpectedValueException;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -37,8 +40,11 @@ class Login extends AbstractEndpoint {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws InvalidArgumentException
+     * @throws UnexpectedValueException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
+        $postArgs = $request->getParsedBody();
         $provider = $args["provider"];
 
         if (!isset($provider) || empty($provider)) {
@@ -77,8 +83,6 @@ class Login extends AbstractEndpoint {
         };
 
         if ($provider == "password") {
-            $postArgs = $request->getParsedBody();
-
             if ($postArgs == null || empty($postArgs)) {
                 return Util::responseError($response, "No POST arguments using pwd auth");
             }
@@ -109,16 +113,17 @@ class Login extends AbstractEndpoint {
             return $loggedIn($userObj);
         }
 
-        $authHandler = Bootstrapper::getContainer()->get('authHandler');
-        $authHandler->authenticate($provider);
+        $profile = UserService::authenticateHybridAuth($provider, $postArgs);
 
-        $connected = $authHandler->isConnected();
-
-        if (!$connected) {
-            return Util::responseError($response, "Provider auth error");
+        if (is_subclass_of($profile, "Slim\Psr7\Response")) {
+            return $response;
         }
 
-        $providerId = $authHandler->getUserProfile()->identifier;
+        if (!is_subclass_of($profile, "HybridAuth\User\Profile")) {
+            return Util::responseError($response, "HybridAuth authentication error");
+        }
+
+        $providerId = $profile->identifier;
 
         $dbo = Bootstrapper::getContainer()->get('database');
         $expr = Criteria::expr();

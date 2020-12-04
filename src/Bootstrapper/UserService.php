@@ -5,6 +5,11 @@ namespace Duppy\Bootstrapper;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Entities\WebUser;
+use Duppy\Util;
+use Hybridauth\Exception\InvalidArgumentException;
+use Hybridauth\Exception\UnexpectedValueException;
+use Hybridauth\User\Profile;
+use Slim\Psr7\Response;
 
 final class UserService {
 
@@ -84,6 +89,50 @@ final class UserService {
 
         $providerEnabled = Settings::getSetting("auth.$provider.enable") == true;
         return $providerEnabled;
+    }
+
+    /**
+     * Authenticate with hybridauth, either directly or using a pre-given oAuth token
+     *
+     * @param string $provider
+     * @param array $postArgs
+     * @return Profile|Response
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws InvalidArgumentException
+     * @throws UnexpectedValueException
+     */
+    public static function authenticateHybridAuth(string $provider, array $postArgs) {
+        $authHandler = Bootstrapper::getContainer()->get('authHandler');
+
+        $oAuthToken = $postArgs["oAuthToken"];
+        $oAuthTokenSecret = $postArgs["oAuthTokenSecret"];
+        $refreshToken = $postArgs["refreshToken"];
+        $expiry = $postArgs["tokenExpiry"];
+
+        if (!is_subclass_of($authHandler, "Hybridauth\Hybridauth")) {
+            return Util::responseError($response, "Provider auth error");
+        }
+
+        $adapter = $authHandler->getAdapter($provider);
+
+        if ($oAuthToken !== null) {
+            $adapter->setAccessToken([
+                "expires_at" => $expiry,
+                "access_token" => $oAuthToken,
+                "access_token_secret" => $oAuthTokenSecret,
+                "refresh_token" => $refreshToken,
+            ]);
+        } else {
+            $authHandler->authenticate($provider);
+            $connected = $authHandler->isConnected();
+
+            if (!$connected) {
+                return Util::responseError($response, "Provider auth error");
+            }
+        }
+
+        return $adapter->getUserProfile();
     }
 
 }
