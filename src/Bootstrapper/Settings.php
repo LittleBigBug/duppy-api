@@ -28,6 +28,19 @@ final class Settings {
     public static array $categories = [];
 
     /**
+     * Array of allowed types for settings, with their respective 'casting' function
+     *
+     * @var array
+     */
+    private static array $types = [
+        "boolean" => 'boolval',
+        "string" => '', // Should already be a string
+        "integer" => 'intval',
+        "float" => 'floatval',
+        "array" => 'json_decode',
+    ];
+
+    /**
      * Path of settings to build
      *
      * @var string
@@ -136,12 +149,25 @@ final class Settings {
      */
     public static function getSettings(array $keys, array $defaults = []) {
         $manager = Bootstrapper::getManager();
-        $settings = $manager->getRepository("Duppy\Entities\Setting")->findBy([ "settingKey" => $keys, ]);
+        $settings = $manager->getRepository("Duppy\Entities\Setting")->findBy(["settingKey" => $keys,]);
 
         $ret = [];
 
         foreach ($settings as $setting) {
-            $ret[$setting->settingKey] = $setting->value;
+            $key = $setting->get("settingKey");
+            $value = $setting->get("value");
+
+            $settingDef = static::$settings[$key];
+            $required = static::extractValueFromSetting($settingDef, "required");
+            $reqSettings = static::processSettingRequirements($required);
+            $type = array_key_exists("type", $reqSettings) ? $reqSettings["type"] : "string";
+            $typeFunc = static::$types[$type];
+
+            if (!empty($typeFunc)) {
+                $ret[$key] = $typeFunc($setting->get("value"));
+            } else {
+                $ret[$key] = $value;
+            }
         }
 
         foreach ($keys as $key) {
@@ -169,6 +195,36 @@ final class Settings {
     }
 
     /**
+     * Process and return an array of data based on AbstractSetting::$required
+     *
+     * @param $req
+     * @return array
+     */
+    public static function processSettingRequirements($req): array {
+        $stgs = [];
+        $sep = explode("|", $req);
+
+        foreach ($sep as $ea) {
+            if ($ea === "notnull") {
+                $stgs["notnull"] = true;
+                continue;
+            }
+
+            if (array_key_exists($ea, static::$types)) {
+                $stgs["type"] = $ea;
+                continue;
+            }
+
+            if (str_starts_with($ea, "max:")) {
+                $stgs["max"] = intval(substr($ea, 4));
+                continue;
+            }
+        }
+
+        return $stgs;
+    }
+
+    /**
      * Creates a setting dynamically
      *
      * @param string $key
@@ -189,6 +245,7 @@ final class Settings {
      *
      * @param $setting
      * @param string $settingKey
+     * @return mixed|null
      */
     public static function extractValueFromSetting($setting, string $settingKey) {
         if (!is_subclass_of($setting, "Duppy\Abstracts\AbstractSetting") || is_array($setting)) {
