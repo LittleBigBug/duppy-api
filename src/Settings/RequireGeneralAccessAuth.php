@@ -1,10 +1,10 @@
 <?php
 
-
 namespace Duppy\Settings;
 
+use Duppy\Abstracts\AbstractSetting;
 
-class RequireGeneralAccessAuth {
+class RequireGeneralAccessAuth extends AbstractSetting {
 
     public static string $key = "requireAuthGeneralAccess";
 
