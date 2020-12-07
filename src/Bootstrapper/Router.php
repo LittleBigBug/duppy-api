@@ -332,7 +332,7 @@ final class Router {
                     $suffix = '';
                     $typeLower = strtolower($type);
 
-                    if (!$singleType && !$shouldMap) {
+                    if ($shouldMap) {
                         $suffix .= strtolower($typeLower);
                     }
 
