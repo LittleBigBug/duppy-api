@@ -5,11 +5,9 @@ namespace Duppy\Bootstrapper;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Entities\WebUser;
-use Duppy\Util;
 use Hybridauth\Exception\InvalidArgumentException;
 use Hybridauth\Exception\UnexpectedValueException;
 use Hybridauth\User\Profile;
-use Slim\Psr7\Response;
 
 final class UserService {
 
@@ -110,8 +108,8 @@ final class UserService {
         $refreshToken = $postArgs["refreshToken"];
         $expiry = $postArgs["tokenExpiry"];
 
-        if (!is_subclass_of($authHandler, "Hybridauth\Hybridauth")) {
-            return "Provider auth error";
+        if (get_class($authHandler) !== "Hybridauth\Hybridauth") {
+            return "Dependency error";
         }
 
         $adapter = $authHandler->getAdapter($provider);
