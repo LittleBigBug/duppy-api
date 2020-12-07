@@ -25,11 +25,11 @@ class Login extends AbstractEndpoint {
     public static ?array $uri = [ '/login[/{provider}]' ];
 
     /**
-     * Allow post
+     * Allow get, post
      *
      * @var string[]
      */
-    public static array $types = [ 'post' ];
+    public static array $types = [ 'get', 'post' ];
 
     /**
      * Handles logins with passwords or third-party (HybridAuth)
@@ -83,6 +83,10 @@ class Login extends AbstractEndpoint {
         };
 
         if ($provider == "password") {
+            if ($request->getMethod() !== "POST") {
+                return Util::responseError($response, "POST Required for password auth", 405);
+            }
+
             if ($postArgs == null || empty($postArgs)) {
                 return Util::responseError($response, "No POST arguments using pwd auth");
             }
