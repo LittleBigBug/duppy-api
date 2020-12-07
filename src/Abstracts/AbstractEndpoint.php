@@ -85,7 +85,7 @@ abstract class AbstractEndpoint {
      *
      * @param array|string|null
      */
-    final public static function setUri($newUris):  array|string|null {
+    final public static function setUri(array|string|null $newUris) {
         if (!is_array($newUris)) {
             $newUris = [ $newUris ];
         }
