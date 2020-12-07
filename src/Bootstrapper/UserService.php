@@ -95,14 +95,14 @@ final class UserService {
      * Authenticate with hybridauth, either directly or using a pre-given oAuth token
      *
      * @param string $provider
-     * @param array $postArgs
-     * @return Profile|Response
+     * @param array|null $postArgs
+     * @return Profile|string
      * @throws DependencyException
-     * @throws NotFoundException
      * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws UnexpectedValueException
      */
-    public static function authenticateHybridAuth(string $provider, array $postArgs) {
+    public static function authenticateHybridAuth(string $provider, ?array $postArgs = []) {
         $authHandler = Bootstrapper::getContainer()->get('authHandler');
 
         $oAuthToken = $postArgs["oAuthToken"];
@@ -111,7 +111,7 @@ final class UserService {
         $expiry = $postArgs["tokenExpiry"];
 
         if (!is_subclass_of($authHandler, "Hybridauth\Hybridauth")) {
-            return Util::responseError($response, "Provider auth error");
+            return "Provider auth error";
         }
 
         $adapter = $authHandler->getAdapter($provider);
@@ -128,7 +128,7 @@ final class UserService {
             $connected = $authHandler->isConnected();
 
             if (!$connected) {
-                return Util::responseError($response, "Provider auth error");
+                return "Provider auth error";
             }
         }
 

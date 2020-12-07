@@ -121,8 +121,9 @@ class Register {
 
         $profile = UserService::authenticateHybridAuth($provider, $postArgs);
 
-        if (is_subclass_of($profile, "Slim\Psr7\Response")) {
-            return $response;
+        // Error
+        if (is_string($profile)) {
+            return Util::responseError($response, $profile);
         }
 
         if (!is_subclass_of($profile, "HybridAuth\User\Profile")) {
