@@ -100,7 +100,7 @@ final class UserService {
      * @throws NotFoundException
      * @throws UnexpectedValueException
      */
-    public static function authenticateHybridAuth(string $provider, ?array $postArgs = []) {
+    public static function authenticateHybridAuth(string $provider, ?array $postArgs = []): Profile|string {
         $authHandler = Bootstrapper::getContainer()->get('authHandler');
 
         $oAuthToken = $postArgs["oAuthToken"];

@@ -34,7 +34,7 @@ class UserData extends AbstractEndpoint {
      *
      * @var array|boolean
      */
-    public static $uriMapTypes = true;
+    public static array|bool $uriMapTypes = true;
 
     /**
      * Map /basic-info the use the BasicInfo function in this class.

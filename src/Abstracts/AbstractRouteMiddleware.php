@@ -52,7 +52,7 @@ abstract class AbstractRouteMiddleware {
     /**
      * Handles the middleware
      *
-     * @return bool
+     * @return ?bool
      */
     abstract public function handle(): ?bool;
 

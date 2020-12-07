@@ -48,10 +48,9 @@ abstract class AbstractEndpoint {
      * Specifies if seperate functions for $types should be called instead.
      * This doesn't apply if $types only has one member.
      *
-     * https://stitcher.io/blog/new-in-php-8#union-types-rfc
      * @var array|boolean
      */
-    public static $uriMapTypes = null;
+    public static array|bool $uriMapTypes = false;
 
     /**
      * Route middleware
@@ -86,7 +85,7 @@ abstract class AbstractEndpoint {
      *
      * @param array|string|null
      */
-    final public static function setUri($newUris) {
+    final public static function setUri($newUris):  array|string|null {
         if (!is_array($newUris)) {
             $newUris = [ $newUris ];
         }
@@ -135,7 +134,7 @@ abstract class AbstractEndpoint {
      *
      * @return array|boolean|null
      */
-    final public static function getUriMapTypes() {
+    final public static function getUriMapTypes(): array|bool|null {
         return static::$uriMapTypes;
     }
 

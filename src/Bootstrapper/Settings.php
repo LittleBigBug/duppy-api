@@ -59,7 +59,7 @@ final class Settings {
     /**
      * Build settings
      */
-    public function build(): void {
+    public function build() {
         try {
             $dirIterator = new \RecursiveDirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", $this->settingsSrc], true));
             $iterator = new \RecursiveIteratorIterator($dirIterator);
@@ -135,7 +135,7 @@ final class Settings {
      * @param string $default
      * @return string
      */
-    public static function getSetting(string $key, $default = "") {
+    public static function getSetting(string $key, $default = ""): string {
         $result = static::getSettings([ $key, ], [ $key => $default, ]);
         return $result[$key];
     }
@@ -147,7 +147,7 @@ final class Settings {
      * @param array $defaults
      * @return array
      */
-    public static function getSettings(array $keys, array $defaults = []) {
+    public static function getSettings(array $keys, array $defaults = []): array {
         $manager = Bootstrapper::getManager();
         $settings = $manager->getRepository("Duppy\Entities\Setting")->findBy(["settingKey" => $keys,]);
 

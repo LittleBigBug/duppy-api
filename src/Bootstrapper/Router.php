@@ -42,7 +42,7 @@ final class Router {
     /**
      * Build slim routes
      */
-    public function build(): void {
+    public function build() {
         $endPoints = [];
         $endPointGroups = [];
 
@@ -138,7 +138,7 @@ final class Router {
      *
      * @param callable $fn
      */
-    private function loop(callable $fn): void {
+    private function loop(callable $fn) {
         $searchPath = Util::combinePaths([DUPPY_PATH, "src", $this->endpointsSrc]);
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($searchPath));
 
@@ -234,9 +234,9 @@ final class Router {
      * Recursively called function for each group to create their child's routes
      *
      * @param array $group
-     * @param App|RouteCollectorProxy $app
+     * @param App|RouteCollectorProxy|null $app
      */
-    private function buildRouteGroups(array $group, $app = null) {
+    private function buildRouteGroups(array $group, App|RouteCollectorProxy $app = null) {
         if ($app == null) {
             $app = Bootstrapper::getApp();
         }
@@ -273,9 +273,9 @@ final class Router {
      * Create routes
      *
      * @param array $endpoints
-     * @param App|RouteCollectorProxy $app
+     * @param App|RouteCollectorProxy|null $app
      */
-    private function buildRouteEndpoints(array $endpoints, $app = null) {
+    private function buildRouteEndpoints(array $endpoints, App|RouteCollectorProxy $app = null) {
         if ($app == null) {
             $app = Bootstrapper::getApp();
         }

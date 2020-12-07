@@ -28,7 +28,7 @@ class Username extends AbstractEndpoint {
      *
      * @var array|boolean
      */
-    public static $uriMapTypes = true;
+    public static array|bool $uriMapTypes = true;
 
     /**
      * Checks if a username is taken or not

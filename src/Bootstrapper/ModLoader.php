@@ -17,7 +17,7 @@ final class ModLoader {
     /**
      * Build mods
      */
-    public static function build(): void {
+    public static function build() {
         $iterator = new \DirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", "Mods"], true));
 
         foreach ($iterator as $file) {
