@@ -8,7 +8,6 @@
         "ramsey/uuid-doctrine": "^1.6",
         "yosymfony/toml": "^1.0",
         "hybridauth/hybridauth": "^3.6",
-        "ext-json": "*",
         "web-token/jwt-framework": "^2.2",
         "web-token/jwt-signature-algorithm-rsa": "^2.2",
         "web-token/jwt-signature-algorithm-ecdsa": "^2.2",
