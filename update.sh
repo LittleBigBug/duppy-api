@@ -15,3 +15,4 @@ if [ "$skipcomposer" -eq "0" ] ; then
 fi
 
 vendor/bin/doctrine orm:schema-tool:update --force --dump-sql
+vendor/bin/doctrine orm:generate-proxies

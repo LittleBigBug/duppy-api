@@ -8,5 +8,6 @@ composer update
 
 :skip_update_composer
 vendor/bin/doctrine.exe orm:schema-tool:update --force --dump-sql
+vendor/bin/doctrine.exe orm:generate-proxies
 
 PAUSE
