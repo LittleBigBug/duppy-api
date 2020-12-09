@@ -3,7 +3,6 @@
 namespace Duppy\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use Duppy\Abstracts\AbstractEntity;
 use Duppy\Util;
 
 /**
@@ -12,7 +11,7 @@ use Duppy\Util;
  * @ORM\Entity
  * @ORM\Table(name="user_groups")
  */
-class UserGroup extends AbstractEntity {
+class UserGroup {
 
     /**
      * @ORM\Id
@@ -65,6 +64,17 @@ class UserGroup extends AbstractEntity {
      * @var array
      */
     protected array $generatedPermissions;
+
+    // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
+    /**
+     * Return a property
+     *
+     * @param string $property
+     * @return mixed
+     */
+    public function get(string $property) {
+        return $this->$property;
+    }
 
     /**
      * Recursive function to fetch all nested parents of this group

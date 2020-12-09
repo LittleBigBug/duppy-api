@@ -1,7 +1,6 @@
 <?php
 namespace Duppy\Entities;
 
-use Duppy\Abstracts\AbstractEntity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -10,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\Table(name="settings")
  */
-class Setting extends AbstractEntity {
+class Setting {
 
     /**
      * @ORM\Id
@@ -22,5 +21,16 @@ class Setting extends AbstractEntity {
      * @ORM\Column(type="string")
      */
     protected string $value;
+
+    // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
+    /**
+     * Return a property
+     *
+     * @param string $property
+     * @return mixed
+     */
+    public function get(string $property) {
+        return $this->$property;
+    }
 
 }

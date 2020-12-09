@@ -1,18 +1,15 @@
 {
     "require": {
+        "php": "^8.0",
         "slim/slim": "^4.6",
         "slim/psr7": "^1.0",
         "vlucas/phpdotenv": "^4.1",
         "php-di/php-di": "^6.1",
-        "doctrine/orm": "^2.7",
+        "doctrine/orm": "^2.8",
         "ramsey/uuid-doctrine": "^1.6",
         "yosymfony/toml": "^1.0",
         "hybridauth/hybridauth": "^3.6",
-        "web-token/jwt-framework": "^2.2",
-        "web-token/jwt-signature-algorithm-rsa": "^2.2",
-        "web-token/jwt-signature-algorithm-ecdsa": "^2.2",
-        "web-token/jwt-signature-algorithm-hmac": "^2.2",
-        "web-token/jwt-encryption-algorithm-aesgcmkw": "^2.2"
+        "web-token/jwt-framework": "^2.2"
     },
     "autoload": {
         "psr-4": {

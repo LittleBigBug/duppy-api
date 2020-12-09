@@ -6,6 +6,7 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Entities\WebUser;
 use Exception;
+use JetBrains\PhpStorm\Pure;
 use Jose\Component\Checker\AlgorithmChecker;
 use Jose\Component\Checker\AudienceChecker;
 use Jose\Component\Checker\ClaimCheckerManager;
@@ -41,32 +42,40 @@ final class TokenManager {
         $payload = json_encode($payload);
 
         $jwsBuilder = Bootstrapper::getJWSBuilder();
-        $jweBuilder = Bootstrapper::getJWEBuilder();
-        $jwKey = Bootstrapper::getJWKey();
+        $jwsKey = Bootstrapper::getJWSKey();
 
         // Sign
         $signedSerializer = new SigCompactSerializer();
 
         $jws = $jwsBuilder->create()
             ->withPayload($payload)
-            ->addSignature($jwKey, ['alg' => 'HS256'])
+            ->addSignature($jwsKey, ['alg' => 'HS256'])
             ->build();
 
         $signedToken = $signedSerializer->serialize($jws, 0);
 
+        $encrypt = TokenManager::isEncryptionEnabled();
+
         // Encrypt
-        $encryptedSerializer = new EncCompactSerializer();
+        if ($encrypt) {
+            $jweBuilder = Bootstrapper::getJWEBuilder();
+            $jweKey = Bootstrapper::getJWEKey();
 
-        $jwe = $jweBuilder->create()
-            ->withPayload($signedToken)
-            ->withSharedProtectedHeader([
-                "alg" => "A256KW",
-                "enc" => "A256CBC-HS512",
-            ])
-            ->addRecipient($jwKey)
-            ->build();
+            $encryptedSerializer = new EncCompactSerializer();
 
-        return $encryptedSerializer->serialize($jwe, 0);
+            $jwe = $jweBuilder->create()
+                ->withPayload($signedToken)
+                ->withSharedProtectedHeader([
+                    "alg" => "A256KW",
+                    "enc" => "A128CBC-HS256",
+                ])
+                ->addRecipient($jweKey)
+                ->build();
+
+            return $encryptedSerializer->serialize($jwe, 0);
+        }
+
+        return $signedToken;
     }
 
     /**
@@ -85,7 +94,7 @@ final class TokenManager {
         // Merge payload over defaults so it overwrites them
         $payload = array_merge($defaults, $payload);
 
-        return static::createToken($payload);
+        return TokenManager::createToken($payload);
     }
 
     /**
@@ -101,20 +110,20 @@ final class TokenManager {
             "avatarUrl" => $user->get("avatarUrl"),
         ];
 
-        return static::createTokenFill($data);
+        return TokenManager::createTokenFill($data);
     }
 
     /**
      * Creates a user's JWT token from their user ID
      *
      * @param int $userId
-     * @return ?string
+     * @return string
      * @throws DependencyException
      * @throws NotFoundException
      */
     public static function createTokenFromUserId(int $userId): string {
         $userObj = UserService::getUser($userId);
-        return static::createTokenFromUser($userObj);
+        return TokenManager::createTokenFromUser($userObj);
     }
 
     /**
@@ -126,21 +135,28 @@ final class TokenManager {
     public static function loadToken(string $token): ?string {
         $jweDecrypter = Bootstrapper::getJWEDecrypter();
         $jwsVerifier = Bootstrapper::getJWSVerifier();
-        $jwKey = Bootstrapper::getJWKey();
+        $jweKey = Bootstrapper::getJWEKey();
+        $jwsKey = Bootstrapper::getJWSKey();
+
+        $isEncrypted = TokenManager::isEncryptionEnabled();
+
+        $jwsToken = $token;
 
         // Decrypt
-        $encryptedSerializer = new JWESerializerManager([ new EncCompactSerializer(), ]);
-        $headerCheckerEnc = new HeaderCheckerManager([
-            new AlgorithmChecker([ "A256KW" ]),
-        ], [
-            new JWETokenSupport(),
-        ]);
+        if ($isEncrypted) {
+            $encryptedSerializer = new JWESerializerManager([new EncCompactSerializer(),]);
+            $headerCheckerEnc = new HeaderCheckerManager([
+                new AlgorithmChecker(["A256KW"]),
+            ], [
+                new JWETokenSupport(),
+            ]);
 
-        $jweLoader = new JWELoader($encryptedSerializer, $jweDecrypter, $headerCheckerEnc);
-        $jwe = $jweLoader->loadAndDecryptWithKey($token, $jwKey, $recipient);
+            $jweLoader = new JWELoader($encryptedSerializer, $jweDecrypter, $headerCheckerEnc);
+            $jwe = $jweLoader->loadAndDecryptWithKey($token, $jweKey, $recipient);
 
-        // Get JWS from encrypted payload
-        $jwsToken = $jwe->getPayload();
+            // Get JWS from encrypted payload
+            $jwsToken = $jwe->getPayload();
+        }
 
         // Check signed token
         $signedSerializer = new JWSSerializerManager([ new SigCompactSerializer(), ]);
@@ -153,7 +169,7 @@ final class TokenManager {
         $jwsLoader = new JWSLoader($signedSerializer, $jwsVerifier, $headerCheckerSig);
 
         try {
-            $jws = $jwsLoader->loadAndVerifyWithKey($jwsToken, $jwKey, $signature);
+            $jws = $jwsLoader->loadAndVerifyWithKey($jwsToken, $jwsKey, $signature);
             $pl = json_decode($jws->getPayload());
 
             $claimChecker = new ClaimCheckerManager([
@@ -166,7 +182,7 @@ final class TokenManager {
             $claimChecker->check($pl, ["iss", "aud"]);
 
             return $pl;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return null;
         }
     }
@@ -181,12 +197,22 @@ final class TokenManager {
             return null;
         }
 
-        if (static::$authToken != null) {
-            return static::$authToken;
+        if (TokenManager::$authToken != null) {
+            return TokenManager::$authToken;
         }
 
         $token = $_POST["authToken"];
-        return static::$authToken = static::loadToken($token);
+        return TokenManager::$authToken = TokenManager::loadToken($token);
+    }
+
+    /**
+     * Convenience function to get the bool eval of JWT_ENCRYPT
+     *
+     * @return bool
+     */
+    #[Pure]
+    public static function isEncryptionEnabled(): bool {
+        return getenv("JWT_ENCRYPT") !== "false";
     }
 
 }

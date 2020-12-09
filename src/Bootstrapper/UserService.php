@@ -21,12 +21,12 @@ final class UserService {
      */
     public static function getUser($id = null): WebUser {
         if ($id == "me" || $id == null) {
-            return static::getLoggedInUser();
+            return UserService::getLoggedInUser();
         }
 
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        return $dbo->getRepository("Duppy\Entities\WebUser")->find($id)->first();
+        return $dbo->find("Duppy\Entities\WebUser", $id);
     }
 
     /**
@@ -71,7 +71,7 @@ final class UserService {
             return null;
         }
 
-        return static::getUser($authToken["id"]);
+        return UserService::getUser($authToken["id"]);
     }
 
     /**
@@ -85,8 +85,7 @@ final class UserService {
             $provider = "password";
         }
 
-        $providerEnabled = Settings::getSetting("auth.$provider.enable") == true;
-        return $providerEnabled;
+        return Settings::getSetting("auth.$provider.enable") == true;
     }
 
     /**
@@ -96,9 +95,7 @@ final class UserService {
      * @param array|null $postArgs
      * @return Profile|string
      * @throws DependencyException
-     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws UnexpectedValueException
      */
     public static function authenticateHybridAuth(string $provider, ?array $postArgs = []): Profile|string {
         $authHandler = Bootstrapper::getContainer()->get('authHandler');
@@ -108,7 +105,7 @@ final class UserService {
         $refreshToken = $postArgs["refreshToken"];
         $expiry = $postArgs["tokenExpiry"];
 
-        if (get_class($authHandler) !== "Hybridauth\Hybridauth") {
+        if ($authHandler::class !== "Hybridauth\Hybridauth") {
             return "Dependency error";
         }
 
@@ -123,7 +120,7 @@ final class UserService {
             ]);
         } else {
             $authHandler->authenticate($provider);
-            $connected = $authHandler->isConnected();
+            $connected = $authHandler->isConnectedWith($provider);
 
             if (!$connected) {
                 return "Provider auth error";

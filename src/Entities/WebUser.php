@@ -1,9 +1,9 @@
 <?php
 namespace Duppy\Entities;
 
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use Duppy\Abstracts\AbstractEntity;
 use Duppy\Bootstrapper\TokenManager;
 use Duppy\Util;
 
@@ -13,7 +13,7 @@ use Duppy\Util;
  * @ORM\Entity
  * @ORM\Table(name="web_users")
  */
-class WebUser extends AbstractEntity {
+class WebUser {
 
     /**
      * @ORM\Id
@@ -25,17 +25,23 @@ class WebUser extends AbstractEntity {
     /**
      * @ORM\Column(type="string")
      */
-    protected string $username;
+    protected string $username = "";
 
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    protected string $email;
+    protected string $email = "";
 
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    protected string $password;
+    protected string $password = "";
+
+    /**
+     * @ORM\Column(type="datetime", nullable=false)
+     * @ORM\Version
+     */
+    protected DateTime $created;
 
     /**
      * @ORM\OneToMany(targetEntity="WebUserProviderAuth", mappedBy="user")
@@ -57,12 +63,12 @@ class WebUser extends AbstractEntity {
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    protected string $avatarUrl;
+    protected string $avatarUrl = "";
 
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    protected string $bio;
+    protected string $bio = "";
 
     /**
      * Cached generated permissions with groups/inheritance
@@ -71,9 +77,7 @@ class WebUser extends AbstractEntity {
      */
     protected array $generatedPermissions;
 
-    public function __construct(array $data) {
-        parent::__construct($data);
-
+    public function __construct() {
         $this->providerAuths = new ArrayCollection();
         $this->groups = new ArrayCollection();
         $this->permissions = new ArrayCollection();
@@ -105,6 +109,17 @@ class WebUser extends AbstractEntity {
 
     public function addPermission(PermissionAssignment $perm) {
         $this->permissions->add($perm);
+    }
+
+    // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
+    /**
+     * Return a property
+     *
+     * @param string $property
+     * @return mixed
+     */
+    public function get(string $property) {
+        return $this->$property;
     }
 
     /**

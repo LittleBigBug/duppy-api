@@ -5,7 +5,6 @@ namespace Duppy\Entities;
 
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-use Duppy\Abstracts\AbstractEntity;
 
 /**
  * WebUser Verification is a list of unverified users waiting to verify their emails.
@@ -13,7 +12,7 @@ use Duppy\Abstracts\AbstractEntity;
  * @ORM\Entity
  * @ORM\Table(name="web_users_verification")
  */
-class WebUserVerification extends AbstractEntity {
+class WebUserVerification {
 
     /**
      * @ORM\Id
@@ -44,5 +43,28 @@ class WebUserVerification extends AbstractEntity {
      * @ORM\Version
      */
     protected DateTime $issued;
+
+    // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
+    /**
+     * Return a property
+     *
+     * @param string $property
+     * @return mixed
+     */
+    public function get(string $property) {
+        return $this->$property;
+    }
+
+    public function setEmail(string $email) {
+        $this->email = $email;
+    }
+
+    public function setPassword(string $password) {
+        $this->password = $password;
+    }
+
+    public function setUsername(string $username) {
+        $this->username = $username;
+    }
 
 }

@@ -73,6 +73,9 @@ class Util {
      * @return Response
      */
     public static function responseJSON(ResponseInterface &$resp, array $table, int $status = 200): ResponseInterface {
+        $now = microtime(true);
+        $table["runtime"] = $now - DUPPY_START;
+
         $pl = json_encode($table);
         $resp->getBody()->write($pl);
 

@@ -1,7 +1,6 @@
 <?php
 namespace Duppy\Bootstrapper;
 
-use Duppy\Abstracts\AbstractEndpointGroup;
 use Duppy\Util;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
@@ -216,7 +215,7 @@ final class Router {
         $imploded = [];
 
         foreach ($exploded as $string) {
-            if (strpos($string, '_') === 0) {
+            if (str_starts_with($string, '_')) {
                 // Remove underscore
                 $sub = substr($string, 1);
                 $imploded[] = '{'. $sub .'}';
@@ -250,7 +249,7 @@ final class Router {
 
         $router = $this;
         $path = Util::combinePaths([
-            getenv('APP_ROOT_PATH'),
+            DUPPY_URI_PATH,
             $this->uriPrefix, $group["uri"],
         ]);
 
@@ -299,7 +298,7 @@ final class Router {
                 // Only apply these paths when outside of a group
                 if (!$hasParent) {
                     $uri = Util::combinePaths([
-                        getenv('APP_ROOT_PATH'),
+                        DUPPY_URI_PATH,
                         $this->uriPrefix, $uri,
                     ]);
                 }
@@ -316,7 +315,7 @@ final class Router {
                     // If we need more of these other places we should make a system for them
                     $envVar = "%env:";
 
-                    if (strpos($redirectTo, $envVar) !== false) {
+                    if (str_contains($redirectTo, $envVar)) {
                         $arg = substr($redirectTo, strlen($envVar));
                         $redirectTo = getenv($arg);
                     }
@@ -385,7 +384,7 @@ final class Router {
      * @param array $result
      * @return array
      */
-    private static function sortByParentLoadOrder(array &$toBeSorted, string $parent = null, int &$depth = 0, array &$result = []) {
+    private static function sortByParentLoadOrder(array &$toBeSorted, string $parent = null, int &$depth = 0, array &$result = []): array {
         if (count($toBeSorted) <= 1) {
             return $toBeSorted;
         }

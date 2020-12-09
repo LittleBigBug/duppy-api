@@ -1,8 +1,8 @@
 <?php
 namespace Duppy\Entities;
 
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
-use Duppy\Abstracts\AbstractEntity;
 
 /**
  * WebUserProviderAuth Entity
@@ -10,7 +10,7 @@ use Duppy\Abstracts\AbstractEntity;
  * @ORM\Entity
  * @ORM\Table(name="web_user_auth_providers")
  */
-class WebUserProviderAuth extends AbstractEntity {
+class WebUserProviderAuth {
 
     /**
      * @ORM\Id
@@ -31,8 +31,37 @@ class WebUserProviderAuth extends AbstractEntity {
 
     /**
      * @ORM\ManyToOne(targetEntity="WebUser", inversedBy="providerAuths")
-     * @ORM\JoinColumn(name="product_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="user_id", referencedColumnName="id")
      */
     protected WebUser $user;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=false)
+     * @ORM\Version
+     */
+    protected DateTime $created;
+
+    // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
+    /**
+     * Return a property
+     *
+     * @param string $property
+     * @return mixed
+     */
+    public function get(string $property) {
+        return $this->$property;
+    }
+
+    public function setProviderName(string $providerName) {
+        $this->providername = $providerName;
+    }
+
+    public function setProviderId(string $providerId) {
+        $this->providerid = $providerId;
+    }
+
+    public function setUser(WebUser $user) {
+        $this->user = $user;
+    }
 
 }

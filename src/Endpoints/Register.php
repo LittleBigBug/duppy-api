@@ -11,8 +11,6 @@ use Duppy\Entities\WebUser;
 use Duppy\Entities\WebUserProviderAuth;
 use Duppy\Entities\WebUserVerification;
 use Duppy\Util;
-use Hybridauth\Exception\InvalidArgumentException;
-use Hybridauth\Exception\UnexpectedValueException;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -41,8 +39,6 @@ class Register {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
-     * @throws InvalidArgumentException
-     * @throws UnexpectedValueException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $provider = $args["provider"];
@@ -104,11 +100,11 @@ class Register {
             $hash = password_hash($pass, PASSWORD_DEFAULT);
             $dbo = Bootstrapper::getContainer()->get('database');
 
-            $uVerify = new WebUserVerification([
-                'email' => $email,
-                'password' => $hash,
-                'username' => $username,
-            ]);
+            $uVerify = new WebUserVerification;
+
+            $uVerify->setEmail($email);
+            $uVerify->setPassword($hash);
+            $uVerify->setUsername($username);
 
             $dbo->persist($uVerify);
             $dbo->flush();
@@ -126,7 +122,7 @@ class Register {
             return Util::responseError($response, $profile);
         }
 
-        if (!is_subclass_of($profile, "HybridAuth\User\Profile")) {
+        if ($profile::class == "HybridAuth\User\Profile") {
             return Util::responseError($response, "HybridAuth authentication error");
         }
 
@@ -138,17 +134,17 @@ class Register {
         $dbo = Bootstrapper::getContainer()->get("database");
 
         // Create new account from provider info
-        $userObj = new WebUser([
-            "email" => $email,
-            "username" => $username,
-            "avatarUrl" => $avatar,
-        ]);
+        $userObj = new WebUser;
 
-        $registerAuth = new WebUserProviderAuth([
-            "providername" => $provider,
-            "providerid" => $providerId,
-            "user" => $userObj,
-        ]);
+        $userObj->setEmail($email);
+        $userObj->setUsername($username);
+        $userObj->setAvatarUrl($avatar);
+
+        $registerAuth = new WebUserProviderAuth;
+
+        $registerAuth->setProviderName($provider);
+        $registerAuth->setProviderId($providerId);
+        $registerAuth->setUser($userObj);
 
         $userObj->addProviderAuth($registerAuth);
 

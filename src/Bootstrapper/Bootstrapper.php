@@ -10,15 +10,14 @@ use Hybridauth\Exception\InvalidArgumentException;
 use Hybridauth\Hybridauth;
 use Jose\Component\Core\AlgorithmManager;
 use Jose\Component\Core\JWK;
-use Jose\Component\Encryption\Algorithm\ContentEncryption\A256CBCHS512;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\A256GCMKW;
+use Jose\Component\Encryption\Algorithm\ContentEncryption\A128CBCHS256;
+use Jose\Component\Encryption\Algorithm\KeyEncryption\A256KW;
 use Jose\Component\Encryption\Compression\CompressionMethodManager;
 use Jose\Component\Encryption\Compression\Deflate;
 use Jose\Component\Encryption\JWEBuilder;
 use Jose\Component\Encryption\JWEDecrypter;
 use Jose\Component\KeyManagement\JWKFactory;
-use Jose\Component\Signature\Algorithm\ES256;
-use Jose\Component\Signature\Algorithm\PS256;
+use Jose\Component\Signature\Algorithm\HS256;
 use Jose\Component\Signature\JWSBuilder;
 use Jose\Component\Signature\JWSVerifier;
 use Ramsey\Uuid\Doctrine\UuidType;
@@ -54,11 +53,18 @@ final class Bootstrapper {
     public static ?EntityManager $manager;
 
     /**
-     * JWT Key
+     * JWS Key
      *
      * @var JWK|null
      */
-    public static ?JWK $jwKey;
+    public static ?JWK $jwsKey;
+
+    /**
+     * JWE Key
+     *
+     * @var JWK|null
+     */
+    public static ?JWK $jweKey;
 
     /**
      * JWS (Signed) token builder
@@ -217,32 +223,43 @@ final class Bootstrapper {
      * Configures jwt-framework and sets up the Signing and Encryption token builders
      */
     public static function configureJWT() {
-        self::$jwKey = JWKFactory::createFromSecret(getenv('JWT_SECRET'), [
+        self::$jwsKey = JWKFactory::createFromSecret(getenv('JWT_SECRET'), [
             'alg' => 'HS256',
+            'use' => 'sig',
         ]);
 
+        $encrypt = TokenManager::isEncryptionEnabled();
+
+        if ($encrypt) {
+            self::$jweKey = JWKFactory::createFromSecret(getenv("JWT_SECRET"), [
+                'alg' => 'HS256',
+                'use' => 'enc',
+            ]);
+        }
+
         $algorithmManager = new AlgorithmManager([
-            new ES256(),
-            new PS256(),
+            new HS256(),
         ]);
 
         self::$jwsBuilder = new JWSBuilder($algorithmManager);
         self::$jwsVerifier = new JWSVerifier($algorithmManager);
 
-        $keyEncryptionManager = new AlgorithmManager([
-            new A256GCMKW(),
-        ]);
+        if ($encrypt) {
+            $keyEncryptionManager = new AlgorithmManager([
+                new A256KW(),
+            ]);
 
-        $contentEncryptionManager = new AlgorithmManager([
-            new A256CBCHS512(),
-        ]);
+            $contentEncryptionManager = new AlgorithmManager([
+                new A128CBCHS256(),
+            ]);
 
-        $compressionManager = new CompressionMethodManager([
-            new Deflate(),
-        ]);
+            $compressionManager = new CompressionMethodManager([
+                new Deflate(),
+            ]);
 
-        self::$jweBuilder = new JWEBuilder($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
-        self::$jweDecrypter = new JWEDecrypter($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
+            self::$jweBuilder = new JWEBuilder($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
+            self::$jweDecrypter = new JWEDecrypter($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
+        }
     }
 
     /**
@@ -258,8 +275,10 @@ final class Bootstrapper {
             "auth.google.enable", "auth.google.id", "auth.google.secret",
         ]);
 
+        $url = strtok(DUPPY_FULL_URL, "?");
+
         $config = [
-            'callback' => DUPPY_URI,
+            'callback' => $url,
             'providers' => [
                 'Steam' => [
                     'enabled' => $authSettings["auth.steam.enable"],
@@ -284,13 +303,6 @@ final class Bootstrapper {
             ],
         ];
 
-        /**
-         * https://github.com/hybridauth/hybridauth/blob/master/src/Provider/Steam.php
-         * https://github.com/hybridauth/hybridauth/blob/master/src/Adapter/OpenID.php
-         *
-         * $adapter->isConnected();
-         */
-
         return new Hybridauth($config);
     }
 
@@ -310,7 +322,7 @@ final class Bootstrapper {
      * @return App
      */
     public static function getApp(): App {
-        return static::$app;
+        return Bootstrapper::$app;
     }
 
     /**
@@ -319,7 +331,7 @@ final class Bootstrapper {
      * @return Container
      */
     public static function getContainer(): Container {
-        return static::$container;
+        return Bootstrapper::$container;
     }
 
     /**
@@ -328,16 +340,25 @@ final class Bootstrapper {
      * @return EntityManager
      */
     public static function getManager(): EntityManager {
-        return static::$manager;
+        return Bootstrapper::$manager;
     }
 
     /**
-     * JWKey getter
+     * JWSKey getter
      *
      * @return JWK
      */
-    public static function getJWKey(): JWK {
-        return static::$jwKey;
+    public static function getJWSKey(): JWK {
+        return Bootstrapper::$jwsKey;
+    }
+
+    /**
+     * JWEKey getter
+     *
+     * @return JWK
+     */
+    public static function getJWEKey(): JWK {
+        return Bootstrapper::$jweKey;
     }
 
     /**
@@ -346,7 +367,7 @@ final class Bootstrapper {
      * @return JWSBuilder
      */
     public static function getJWSBuilder(): JWSBuilder {
-        return static::$jwsBuilder;
+        return Bootstrapper::$jwsBuilder;
     }
 
     /**
@@ -355,7 +376,7 @@ final class Bootstrapper {
      * @return JWSVerifier
      */
     public static function getJWSVerifier(): JWSVerifier {
-        return static::$jwsVerifier;
+        return Bootstrapper::$jwsVerifier;
     }
 
     /**
@@ -364,7 +385,7 @@ final class Bootstrapper {
      * @return JWEBuilder
      */
     public static function getJWEBuilder(): JWEBuilder {
-        return static::$jweBuilder;
+        return Bootstrapper::$jweBuilder;
     }
 
     /**
@@ -373,7 +394,7 @@ final class Bootstrapper {
      * @return JWEDecrypter
      */
     public static function getJWEDecrypter(): JWEDecrypter {
-        return static::$jweDecrypter;
+        return Bootstrapper::$jweDecrypter;
     }
 
     /**
@@ -382,7 +403,7 @@ final class Bootstrapper {
      * @param EntityManager $manager
      */
     public static function setManager(EntityManager $manager) {
-        static::$manager = $manager;
+        Bootstrapper::$manager = $manager;
     }
 
     /**
@@ -391,7 +412,7 @@ final class Bootstrapper {
      * @param Hybridauth $handler
      */
     public static function setAuthHandler(Hybridauth $handler) {
-        static::$authHandler = $handler;
+        Bootstrapper::$authHandler = $handler;
     }
 
 }

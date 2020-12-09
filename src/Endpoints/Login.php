@@ -124,7 +124,7 @@ class Login extends AbstractEndpoint {
             return Util::responseError($response, $profile);
         }
 
-        if (!is_subclass_of($profile, "HybridAuth\User\Profile")) {
+        if ($profile::class == "HybridAuth\User\Profile") {
             return Util::responseError($response, "HybridAuth authentication error");
         }
 
@@ -138,9 +138,15 @@ class Login extends AbstractEndpoint {
         $cr->andWhere($expr->eq("providerid", $providerId));
 
         $userAuth = $dbo->getRepository("Duppy\Entities\WebUserProviderAuth")->matching($cr)->first();
+
+        if ($userAuth === false) {
+            $rg = new Register;
+            return $rg($request, $response, $args);
+        }
+
         $userObj = $userAuth->get("user");
 
-        if ($userObj == null || !is_subclass_of($userObj, "Duppy\Entities\WebUser")) {
+        if ($userObj == null) {
             return Util::responseError($response, "Cant find user associated to provider auth");
         }
 

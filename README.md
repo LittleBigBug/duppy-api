@@ -33,6 +33,7 @@ Most of it should be pretty self-explanatory, however here's some useful clarifi
 
 `APP_ROOT_PATH` should only be used if your API installation is in a different folder.
 `JWT_SECRET` is needed to sign and encrypt JWTs, its like a password and is best practice changing this every few weeks for the best security.
+`JWT_ENCRYPT` is a boolean if the tokens should also be encrypted (after being signed).
 `CLIENT_URL` is the url of the 'official' Duppy client for this API, the root of the api redirects to this.
 
 ### Using
