@@ -162,12 +162,8 @@ class Register {
         // Login Immediately
         $token = TokenManager::createTokenFill($data);
 
-        return Util::responseJSON($response, [
-            "success" => true,
-            "data" => array_merge($data, [
-                "token" => $token,
-            ]),
-        ]);
+        $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token  . "/" . $data["id"];
+        return $response->withHeader("Location", $redirect)->withStatus(302);
     }
 
 }
