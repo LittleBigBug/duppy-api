@@ -6,6 +6,7 @@ use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\UserService;
+use Duppy\Util;
 use http\Client\Curl\User;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -34,7 +35,7 @@ class UserData extends AbstractEndpoint {
      *
      * @var array|boolean
      */
-    public static array|bool $uriMapTypes = true;
+    public static array|bool $uriMapTypes = false;
 
     /**
      * Map /basic-info the use the BasicInfo function in this class.
@@ -42,7 +43,7 @@ class UserData extends AbstractEndpoint {
      *
      * @var string[]
      */
-    public static ?array $uriFuncNames = [ 2 => 'BasicInfo' ];
+    public static ?array $uriFuncNames = [ 2 => 'basicInfo' ];
 
     /**
      * Set the parent group classname to 'GroupUser'
@@ -88,17 +89,38 @@ class UserData extends AbstractEndpoint {
      * @param array $args
      * @return Response
      * @throws DependencyException
-     * @throws NotFoundException
      */
     public function basicInfo(Request $request, Response $response, array $args = []): Response {
         $userId = $args["id"];
-        $user = UserService::getUser($userId);
+        $user = null;
 
-        if ($user->isMe()) {
+        try {
+            $user = UserService::getUser($userId);
+        } catch (NotFoundException) { }
 
+        if ($user == null) {
+            return Util::responseError($response, "User not found.");
         }
 
-        return $response;
+        $data = [
+            "success" => true,
+            "data" => [
+                "id" => $userId,
+                "username" => $user->get("username"),
+                "avatarUrl" => $user->get("avatarUrl"),
+            ],
+        ];
+
+        if ($user->isMe()) {
+            $merge = [
+              "email" => $user->get("email"),
+            ];
+
+            $newData = array_merge($data["data"], $merge);
+            $data["data"] = $newData;
+        }
+
+        return Util::responseJSON($response, $data);
     }
 
 }
