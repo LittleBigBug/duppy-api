@@ -4,6 +4,7 @@ namespace Duppy\Entities;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Duppy\Bootstrapper\Settings;
 use Duppy\Bootstrapper\TokenManager;
 use Duppy\Util;
 
@@ -120,6 +121,39 @@ class WebUser {
      */
     public function get(string $property) {
         return $this->$property;
+    }
+
+    /**
+     * Returns the user's weight. This is the highest weight out of any of their ranks
+     *
+     * @return integer
+     */
+    public function getWeight(): int {
+        $mx = 0;
+
+        foreach ($this->get("groups") as $group) {
+            $w = $group->getWeight();
+
+            if ($w > $mx) {
+                $mx = $w;
+            }
+        }
+
+        return $mx;
+    }
+
+    /**
+     * Returns true if this user's weight is bigger than $otherUser
+     *
+     * @param WebUser $otherUser
+     * @return bool
+     */
+    public function weightCheck(WebUser $otherUser): bool {
+        $oWeight = $otherUser->getWeight();
+        $myWeight = $this->getWeight();
+
+        $eq =  Settings::getSetting("equalWeightPasses") && ($myWeight >= $oWeight);
+        return $eq || $myWeight > $oWeight;
     }
 
     /**
