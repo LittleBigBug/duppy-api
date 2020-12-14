@@ -28,9 +28,9 @@ final class TokenManager {
     /**
      * Decrypted and verified auth token (from JWT)
      *
-     * @var array|null
+     * @var array
      */
-    public static ?array $authToken;
+    public static array $authToken = [];
 
     /**
      * Creates a new signed and encrypted token with the payload
@@ -132,18 +132,15 @@ final class TokenManager {
      * @param string $token
      * @return array|null
      */
-    public static function loadToken(string $token): ?string {
-        $jweDecrypter = Bootstrapper::getJWEDecrypter();
-        $jwsVerifier = Bootstrapper::getJWSVerifier();
-        $jweKey = Bootstrapper::getJWEKey();
-        $jwsKey = Bootstrapper::getJWSKey();
-
+    public static function loadToken(string $token): ?array {
         $isEncrypted = TokenManager::isEncryptionEnabled();
 
         $jwsToken = $token;
 
         // Decrypt
         if ($isEncrypted) {
+            $jweDecrypter = Bootstrapper::getJWEDecrypter();
+            $jweKey = Bootstrapper::getJWEKey();
             $encryptedSerializer = new JWESerializerManager([new EncCompactSerializer(),]);
             $headerCheckerEnc = new HeaderCheckerManager([
                 new AlgorithmChecker(["A256KW"]),
@@ -158,6 +155,9 @@ final class TokenManager {
             $jwsToken = $jwe->getPayload();
         }
 
+        $jwsVerifier = Bootstrapper::getJWSVerifier();
+        $jwsKey = Bootstrapper::getJWSKey();
+
         // Check signed token
         $signedSerializer = new JWSSerializerManager([ new SigCompactSerializer(), ]);
         $headerCheckerSig = new HeaderCheckerManager([
@@ -170,7 +170,7 @@ final class TokenManager {
 
         try {
             $jws = $jwsLoader->loadAndVerifyWithKey($jwsToken, $jwsKey, $signature);
-            $pl = json_decode($jws->getPayload());
+            $pl = (array) json_decode($jws->getPayload());
 
             $claimChecker = new ClaimCheckerManager([
                 new IssuedAtChecker(),
@@ -197,12 +197,12 @@ final class TokenManager {
             return null;
         }
 
-        if (TokenManager::$authToken != null) {
+        if (!empty(TokenManager::$authToken)) {
             return TokenManager::$authToken;
         }
 
         $token = $_POST["authToken"];
-        return TokenManager::$authToken = TokenManager::loadToken($token);
+        return TokenManager::$authToken = TokenManager::loadToken($token) ?? [];
     }
 
     /**
