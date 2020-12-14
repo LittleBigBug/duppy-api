@@ -17,7 +17,7 @@ class AdminAccessMiddleware extends AbstractRouteMiddleware {
     final public function handle(): ?bool {
         $user = UserService::getLoggedInUser();
 
-        if ($user == null || !is_subclass_of($user, "Duppy\Entities\WebUser")) {
+        if ($user == null) {
             static::$response = static::$response->withStatus(401);
             return false;
         }

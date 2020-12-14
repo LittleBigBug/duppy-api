@@ -24,7 +24,7 @@ class AuthRequiredSettingMiddleware extends AbstractRouteMiddleware {
 
         $user = UserService::getLoggedInUser();
 
-        if ($user == null || !is_subclass_of($user, "Duppy\Entities\WebUser")) {
+        if ($user == null) {
             static::$response = Util::responseJSON(static::$response, [
                 "success" => false,
                 "data" => [],
