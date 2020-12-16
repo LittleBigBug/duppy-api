@@ -4,7 +4,12 @@
 namespace Duppy\Entities;
 
 use DateTime;
+use DI\DependencyException;
+use DI\NotFoundException;
 use Doctrine\ORM\Mapping as ORM;
+use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\Bootstrapper\UserService;
+use Exception;
 
 /**
  * WebUser Verification is a list of unverified users waiting to verify their emails.
@@ -24,17 +29,17 @@ class WebUserVerification {
     /**
      * @ORM\Column(type="string")
      */
-    protected string $username;
-
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
     protected string $email;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string")
      */
     protected string $password;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    public int $code;
 
     /**
      * Verification issue date, this is used to expire the record
@@ -51,7 +56,7 @@ class WebUserVerification {
      * @param string $property
      * @return mixed
      */
-    public function get(string $property) {
+    public function get(string $property): mixed {
         return $this->$property;
     }
 
@@ -63,8 +68,31 @@ class WebUserVerification {
         $this->password = $password;
     }
 
-    public function setUsername(string $username) {
-        $this->username = $username;
+    /**
+     * Generates the code for this entity and returns if it is successful
+     *
+     * @return int|bool
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public function genCode(): int|bool {
+        $container = Bootstrapper::getContainer();
+        $dbo = $container->get("database");
+        $repo = $dbo->getRepository("Duppy\Entities\WebUserVerification");
+
+        $checker = function($int) use($repo) {
+            $ct = $repo->count([ 'code' => $int, ]);
+            return $ct < 1;
+        };
+
+        $code = UserService::generateUniqueTempCode($checker);
+
+        if ($code == null) {
+            return false;
+        }
+
+        $this->code = $code;
+        return $code;
     }
 
 }
