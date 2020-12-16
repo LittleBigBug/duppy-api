@@ -1,6 +1,7 @@
 <?php
 namespace Duppy;
 
+use JetBrains\PhpStorm\Pure;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Psr7\Response;
 
@@ -113,6 +114,22 @@ class Util {
         }
 
         return $new;
+    }
+
+    /**
+     * Convenience function to get a value out of an array without the PHP warning if the index is null
+     * .-.
+     * @param array $array
+     * @param mixed $key
+     * @return mixed
+     */
+    #[Pure]
+    public static function indArrayNull(array $array, mixed $key): mixed {
+        if (!array_key_exists($key, $array)) {
+            return null;
+        }
+
+        return $array[$key];
     }
 
 }
