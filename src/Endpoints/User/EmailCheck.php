@@ -1,20 +1,22 @@
 <?php
 namespace Duppy\Endpoints\User;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
-use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\Bootstrapper\UserService;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
-class Username extends AbstractEndpoint {
+class EmailCheck extends AbstractEndpoint {
 
     /**
-     * Set the URI to /user/namecheck/{username to check availability for}
+     * Set the URI to /user/email-check/{username} to check availability for}
      *
-     * @var array
+     * @var ?array
      */
-    public static ?array $uri = [ '/user/namecheck/[{username}]' ];
+    public static ?array $uri = [ '/user/email-check[/{email}]' ];
 
     /**
      * Allow get and post
@@ -28,7 +30,7 @@ class Username extends AbstractEndpoint {
      *
      * @var array|boolean
      */
-    public static array|bool $uriMapTypes = true;
+    public static array|bool $uriMapTypes = false;
 
     /**
      * Checks if a username is taken or not
@@ -37,26 +39,27 @@ class Username extends AbstractEndpoint {
      * @param Response $response
      * @param array $args
      * @return Response
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
-        $username = $args["username"];
+        $email = $args["email"];
 
-        if (!isset($username) || empty($username)) {
+        if (!isset($email) || empty($email)) {
             $params = (array) $request->getParsedBody();
-            $username = $params["username"];
+            $email = $params["email"];
 
-            if (!isset($username) || empty($username)) {
-                return Util::responseError($response, "No username was given");
+            if (!isset($email) || empty($email)) {
+                return Util::responseError($response, "No email was given");
             }
         }
 
-        $dbo = Bootstrapper::getManager();
-        $userRes = $dbo->getRepository("Duppy\Entities\WebUser")->count([ 'username' => $username, ]);
+        $taken = UserService::emailTaken($email);
 
         return Util::responseJSON($response, [
             'success' => true,
-            'username' => $username,
-            'available' => $userRes < 1,
+            'email' => $email,
+            'available' => !$taken,
         ]);
     }
 
