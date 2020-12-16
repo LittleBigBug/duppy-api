@@ -1,11 +1,10 @@
 <?php
 namespace Duppy\Bootstrapper;
 
-use DI\DependencyException;
-use DI\NotFoundException;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
 use Duppy\Middleware\CORSMiddleware;
+use eftec\bladeone\BladeOne;
 use Hybridauth\Exception\InvalidArgumentException;
 use Hybridauth\Hybridauth;
 use Jose\Component\Core\AlgorithmManager;
@@ -31,7 +30,6 @@ use Slim\Factory\AppFactory;
 use Dotenv\Dotenv;
 use DI\Container;
 use Slim\App;
-use function DI\get;
 
 final class Bootstrapper {
 
@@ -343,6 +341,22 @@ final class Bootstrapper {
     }
 
     /**
+     * Configure templating engine (BladeOne)
+     * This is used for emails
+     *
+     * @return BladeOne
+     */
+    public static function configureTemplates(): BladeOne {
+        $isDev = getenv("DUPPY_DEVELOPMENT");
+        $pth = DUPPY_PATH . "/templates";
+
+        $views = $pth . "/views";
+        $cache = $pth . "/cache";
+
+        return new BladeOne($views, $cache, $isDev ? BladeOne::MODE_DEBUG : BladeOne::MODE_FAST);
+    }
+
+    /**
      * Build routes within Slim and run the app
      */
     public static function buildRoutes() {
@@ -368,15 +382,6 @@ final class Bootstrapper {
      */
     public static function getContainer(): Container {
         return Bootstrapper::$container;
-    }
-
-    /**
-     * EntityManager getter
-     *
-     * @return EntityManager
-     */
-    public static function getManager(): EntityManager {
-        return Bootstrapper::$manager;
     }
 
     /**
