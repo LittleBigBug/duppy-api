@@ -4,7 +4,10 @@ namespace Duppy\Endpoints;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\Bootstrapper\MailService;
+use Duppy\Bootstrapper\Settings;
 use Duppy\Bootstrapper\TokenManager;
 use Duppy\Bootstrapper\UserService;
 use Duppy\Entities\WebUser;
@@ -14,7 +17,7 @@ use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
-class Register {
+class Register extends AbstractEndpoint {
 
     /**
      * Set the URI to /register or /register/steam /register/google etc
@@ -41,7 +44,12 @@ class Register {
      * @throws NotFoundException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
-        $provider = $args["provider"];
+        $provider = Util::indArrayNull($args, "provider");
+
+        if (empty($provider)) {
+            $provider = "password";
+        }
+
         $providerEnabled = UserService::enabledProvider($provider);
         $postArgs = $request->getParsedBody();
 
@@ -54,43 +62,21 @@ class Register {
                 return Util::responseError($response, "No POST arguments using pwd auth");
             }
 
-            $username = $postArgs["username"];
-            $email = $postArgs["email"];
-            $pass = $postArgs["pass"];
-            $passConf = $postArgs["passConf"];
+            $email = Util::indArrayNull($postArgs, "email");
+            $pass = Util::indArrayNull($postArgs, "pass");
 
             $err = "";
 
-            if (empty($username)) {
-                $err = "Username is empty";
-            }
-
-            if (UserService::getUserByName($username) !== null) {
-                $err = "Username is taken";
-            }
-
             if (empty($email)) {
                 $err = "Email is empty";
-            }
-
-            if (UserService::getUserByEmail($email) !== null) {
+            } elseif (UserService::emailTaken($email)) {
                 $err = "Email is taken";
-            }
-
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $err = "Invalid email";
             }
 
             if (empty($pass)) {
                 $err = "Pass is empty";
-            }
-
-            if (empty($passConf)) {
-                $err = "Pass Conf is empty";
-            }
-
-            if ($passConf !== $pass) {
-                $err = "Pass Conf does not match pass";
             }
 
             if (!empty($err)) {
@@ -104,7 +90,25 @@ class Register {
 
             $uVerify->setEmail($email);
             $uVerify->setPassword($hash);
-            $uVerify->setUsername($username);
+
+            $code = $uVerify->genCode();
+
+            if (!$code) {
+                return Util::responseError($response, "There was an error generating a verification code");
+            }
+
+            $url = getenv("CLIENT_URL") . "#/login/verification";
+
+            $title = Settings::getSetting("title");
+            $subject = "Verify Your New $title Account";
+
+            MailService::sendMailTemplate($email, $subject, "verifyAccount", [
+                "url" => $url,
+                "code" => $code,
+                "title" => $subject,
+            ],
+            // todo - replace with localization system
+                "Your account is almost ready! Verify it by following this link $url/$code or by inputting this code: $code");
 
             $dbo->persist($uVerify);
             $dbo->flush();
