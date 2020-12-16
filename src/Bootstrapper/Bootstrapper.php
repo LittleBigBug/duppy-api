@@ -20,6 +20,9 @@ use Jose\Component\KeyManagement\JWKFactory;
 use Jose\Component\Signature\Algorithm\HS256;
 use Jose\Component\Signature\JWSBuilder;
 use Jose\Component\Signature\JWSVerifier;
+use PHPMailer\PHPMailer\Exception as PHPMailerException;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
 use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
@@ -28,6 +31,7 @@ use Slim\Factory\AppFactory;
 use Dotenv\Dotenv;
 use DI\Container;
 use Slim\App;
+use function DI\get;
 
 final class Bootstrapper {
 
@@ -100,6 +104,13 @@ final class Bootstrapper {
      * @var Hybridauth|null
      */
     public static ?Hybridauth $authHandler;
+
+    /**
+     * Mailer manager (PHPMailer)
+     *
+     * @var PHPMailer|null
+     */
+    public static ?PHPMailer $mailer;
 
     /**
      * Duppy Router instance
@@ -180,6 +191,11 @@ final class Bootstrapper {
         $hybridauth = self::configureHybridAuth();
         $container->set("authHandler", fn () => $hybridauth);
         self::setAuthHandler($hybridauth);
+
+        // PHPMailer
+        $mailer = self::configureMailer();
+        $container->set("mailer", fn () => $mailer);
+        self::setMailer($mailer);
 
         ModLoader::build();
         self::buildRoutes();
@@ -307,6 +323,56 @@ final class Bootstrapper {
     }
 
     /**
+     * Configure PHPMailer
+     * @throws PHPMailerException
+     */
+    public static function configureMailer(): PHPMailer {
+        $isDev = getenv("DUPPY_DEVELOPMENT");
+        $mailer = new PHPMailer($isDev);
+
+        $mailer->SMTPDebug = $isDev ? SMTP::DEBUG_SERVER : SMTP::DEBUG_OFF;
+
+        $smtp = getenv("SMTP");
+
+        if ($smtp) {
+            $mailer->isSMTP();
+            $mailer->Host = getenv("SMTP_HOST");
+            $mailer->Port = getenv("SMTP_PORT");
+
+            $user = getenv("SMTP_USER");
+
+            if (!empty($user)) {
+                $mailer->SMTPAuth = true;
+
+                $mailer->Username = $user;
+                $mailer->Password = getenv("SMTP_PASS");
+            }
+
+            $cfg = getenv("SMTP_SECURE");
+            $protocol = null;
+
+            switch ($cfg) {
+                case "tls":
+                    $protocol = PHPMailer::ENCRYPTION_STARTTLS;
+                    break;
+                case "ssl":
+                    $protocol = PHPMailer::ENCRYPTION_SMTPS;
+                    break;
+                default:
+                    break;
+            }
+
+            if (!empty($protocol)) {
+                $mailer->SMTPSecure = $protocol;
+            }
+        }
+
+        $mailer->setFrom(getenv("EMAIL_FROM"));
+
+        return $mailer;
+    }
+
+    /**
      * Build routes within Slim and run the app
      */
     public static function buildRoutes() {
@@ -413,6 +479,15 @@ final class Bootstrapper {
      */
     public static function setAuthHandler(Hybridauth $handler) {
         Bootstrapper::$authHandler = $handler;
+    }
+
+    /**
+     * Mailer setter
+     *
+     * @param PHPMailer $mailer
+     */
+    public static function setMailer(PHPMailer $mailer) {
+        Bootstrapper::$mailer = $mailer;
     }
 
 }
