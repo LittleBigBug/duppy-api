@@ -10,7 +10,8 @@
         "yosymfony/toml": "^1.0",
         "hybridauth/hybridauth": "^3.6",
         "web-token/jwt-framework": "^2.2",
-        "phpmailer/phpmailer": "^6.2"
+        "phpmailer/phpmailer": "^6.2",
+        "eftec/bladeone": "^3.47"
     },
     "autoload": {
         "psr-4": {
