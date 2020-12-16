@@ -158,12 +158,15 @@ final class UserService {
      * @param $checker
      * @param int $loopProtection
      * @return ?int
-     * @throws Exception
      */
     public static function generateUniqueTempCode($checker, int $loopProtection = 0): ?int {
-        $intGen = random_int(100000, 999999);
-
         if (++$loopProtection > 200) {
+            return null;
+        }
+
+        try {
+            $intGen = random_int(100000, 999999);
+        } catch (Exception) {
             return null;
         }
 

@@ -170,6 +170,10 @@ final class Bootstrapper {
         $mailer = null;
         $container->set("mailer", fn () => $mailer ?? $mailer = self::configureMailer());
 
+        // OneBlade Templating
+        $templateHandler = null;
+        $container->set("templateHandler", fn () => $templateHandler ?? $templateHandler = self::configureTemplates());
+
         ModLoader::build();
         self::buildRoutes();
     }
