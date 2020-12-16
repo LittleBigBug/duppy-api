@@ -57,7 +57,7 @@ class Login extends AbstractEndpoint {
             return Util::responseError($response, "Provider not enabled");
         }
 
-        $loggedIn = function ($userObj) use ($response) {
+        $loggedIn = function ($userObj, $redirect = false) use ($response) {
             if ($userObj == null) {
                 return Util::responseError($response, "No matching user");
             }
@@ -74,8 +74,18 @@ class Login extends AbstractEndpoint {
 
             $token = TokenManager::createTokenFill($data);
 
-            $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $data["id"];
-            return $response->withHeader("Location", $redirect)->withStatus(302);
+            if ($redirect) {
+                $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $data["id"];
+                return $response->withHeader("Location", $redirect)->withStatus(302);
+            } else {
+                return Util::responseJSON($response, [
+                    "success" => true,
+                    "data" => [
+                        "token" => $token,
+                        "user" => $data,
+                    ],
+                ]);
+            }
         };
 
         if ($provider == "password") {
@@ -146,7 +156,7 @@ class Login extends AbstractEndpoint {
             return Util::responseError($response, "Cant find user associated to provider auth");
         }
 
-        return $loggedIn($userObj);
+        return $loggedIn($userObj, true);
     }
 
 }
