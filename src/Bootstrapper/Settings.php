@@ -22,6 +22,13 @@ final class Settings {
     private static array $appSettings = [];
 
     /**
+     * Array of setting keys that are user settings (per-user preferences)
+     *
+     * @var array
+     */
+    private static array $userSettings = [];
+
+    /**
      * Array of categories and sub-categories
      *
      * @var array
@@ -149,7 +156,7 @@ final class Settings {
      * @return array
      */
     public static function getSettings(array $keys, array $defaults = []): array {
-        $manager = Bootstrapper::getManager();
+        $manager = Bootstrapper::getContainer()->get("database");
         $settings = $manager->getRepository("Duppy\Entities\Setting")->findBy(["settingKey" => $keys,]);
 
         $ret = [];
