@@ -5,8 +5,8 @@ namespace Duppy\Bootstrapper;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Entities\WebUser;
-use Hybridauth\Exception\InvalidArgumentException;
-use Hybridauth\Exception\UnexpectedValueException;
+use Duppy\Util;
+use Exception;
 use Hybridauth\User\Profile;
 
 final class UserService {
@@ -58,6 +58,22 @@ final class UserService {
     }
 
     /**
+     * Checks if an email address is in use by someone or not.
+     *
+     * @param string $email
+     * @return bool
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function emailTaken(string $email): bool {
+        $container = Bootstrapper::getContainer();
+        $dbo = $container->get("database");
+        $ct = $dbo->getRepository("Duppy\Entities\WebUser")->count([ 'email' => $email, ]);
+
+        return $ct > 0;
+    }
+
+    /**
      * Convenience function to get the current logged in user
      *
      * @return WebUser|null
@@ -100,10 +116,10 @@ final class UserService {
     public static function authenticateHybridAuth(string $provider, ?array $postArgs = []): Profile|string {
         $authHandler = Bootstrapper::getContainer()->get('authHandler');
 
-        $oAuthToken = $postArgs["oAuthToken"];
-        $oAuthTokenSecret = $postArgs["oAuthTokenSecret"];
-        $refreshToken = $postArgs["refreshToken"];
-        $expiry = $postArgs["tokenExpiry"];
+        $oAuthToken = Util::indArrayNull($postArgs, "oAuthToken");
+        $oAuthTokenSecret = Util::indArrayNull($postArgs, "oAuthTokenSecret");
+        $refreshToken = Util::indArrayNull($postArgs, "refreshToken");
+        $expiry = Util::indArrayNull($postArgs, "tokenExpiry");
 
         if ($authHandler::class !== "Hybridauth\Hybridauth") {
             return "Dependency error";
@@ -127,7 +143,36 @@ final class UserService {
             }
         }
 
-        return $adapter->getUserProfile();
+        $profile = null;
+
+        if ($adapter->isConnected()) {
+            $profile = $adapter->getUserProfile();
+        }
+
+        return $profile;
+    }
+
+    /**
+     * A unique 6-digit code for verifying registrations (or other things)
+     *
+     * @param $checker
+     * @param int $loopProtection
+     * @return ?int
+     * @throws Exception
+     */
+    public static function generateUniqueTempCode($checker, int $loopProtection = 0): ?int {
+        $intGen = random_int(100000, 999999);
+
+        if (++$loopProtection > 200) {
+            return null;
+        }
+
+        // elp
+        if (!$checker($intGen)) {
+            return UserService::generateUniqueTempCode($checker, $loopProtection);
+        }
+
+        return $intGen;
     }
 
 }
