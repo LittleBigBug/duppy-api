@@ -50,13 +50,6 @@ final class Bootstrapper {
     public static ?Container $container;
 
     /**
-     * Doctrine entity manager instance
-     *
-     * @var EntityManager|null
-     */
-    public static ?EntityManager $manager;
-
-    /**
      * JWS Key
      *
      * @var JWK|null
@@ -99,20 +92,6 @@ final class Bootstrapper {
     public static ?JWEDecrypter $jweDecrypter;
 
     /**
-     * Auth handler (Hybridauth)
-     *
-     * @var Hybridauth|null
-     */
-    public static ?Hybridauth $authHandler;
-
-    /**
-     * Mailer manager (PHPMailer)
-     *
-     * @var PHPMailer|null
-     */
-    public static ?PHPMailer $mailer;
-
-    /**
      * Duppy Router instance
      *
      * @var Router|null
@@ -149,9 +128,7 @@ final class Bootstrapper {
         (Dotenv::createImmutable(DUPPY_PATH))->load();
 
         // Database connection
-        $manager = self::configureDatabase();
-        self::setManager($manager);
-        return $manager;
+        return self::configureDatabase();
     }
 
     /**
@@ -180,22 +157,20 @@ final class Bootstrapper {
         $settingDefinitions->build();
 
         // Doctrine setup
-        $manager = self::configureDatabase();
-        $container->set("database", fn () => $manager);
-        self::setManager($manager);
+        $manager = null;
+        $container->set("database", fn () => $manager ?? $manager = self::configureDatabase());
 
         // JSON Web Token (JWS/JWE)
-        static::configureJWT();
+        // todo; please use DI container
+        Bootstrapper::configureJWT();
 
         // Hybridauth external login helper
-        $hybridauth = self::configureHybridAuth();
-        $container->set("authHandler", fn () => $hybridauth);
-        self::setAuthHandler($hybridauth);
+        $hybridauth = null;
+        $container->set("authHandler", fn () => $hybridauth ?? $hybridauth = self::configureHybridAuth());
 
         // PHPMailer
-        $mailer = self::configureMailer();
-        $container->set("mailer", fn () => $mailer);
-        self::setMailer($mailer);
+        $mailer = null;
+        $container->set("mailer", fn () => $mailer ?? $mailer = self::configureMailer());
 
         ModLoader::build();
         self::buildRoutes();
@@ -210,29 +185,24 @@ final class Bootstrapper {
     public static function configureDatabase(): EntityManager {
         Type::addType('uuid', UuidType::class);
 
-        if (!isset(self::$manager)) {
-            // Enable doctrine annotations
-            $config = Setup::createAnnotationMetadataConfiguration(
-                [__DIR__ . '/../'],
-                getenv('DUPPY_DEVELOPMENT'),
-                null,
-                null,
-                false
-            );
+        $config = Setup::createAnnotationMetadataConfiguration(
+            [__DIR__ . '/../'],
+            getenv('DUPPY_DEVELOPMENT'),
+            null,
+            null,
+            false
+        );
 
-            // Connection array
-            $conn = [
-                'dbname' => getenv('DB_DATABASE'),
-                'user' => getenv('DB_USER'),
-                'password' => getenv('DB_PASSWORD'),
-                'host' => getenv('DB_HOST'),
-                'driver' => 'pdo_mysql'
-            ];
+        // Connection array
+        $conn = [
+            'dbname' => getenv('DB_DATABASE'),
+            'user' => getenv('DB_USER'),
+            'password' => getenv('DB_PASSWORD'),
+            'host' => getenv('DB_HOST'),
+            'driver' => 'pdo_mysql'
+        ];
 
-            return EntityManager::create($conn, $config);
-        }
-
-        return self::$manager;
+        return EntityManager::create($conn, $config);
     }
 
     /**
@@ -461,33 +431,6 @@ final class Bootstrapper {
      */
     public static function getJWEDecrypter(): JWEDecrypter {
         return Bootstrapper::$jweDecrypter;
-    }
-
-    /**
-     * EntityManager setter
-     *
-     * @param EntityManager $manager
-     */
-    public static function setManager(EntityManager $manager) {
-        Bootstrapper::$manager = $manager;
-    }
-
-    /**
-     * Auth handler
-     *
-     * @param Hybridauth $handler
-     */
-    public static function setAuthHandler(Hybridauth $handler) {
-        Bootstrapper::$authHandler = $handler;
-    }
-
-    /**
-     * Mailer setter
-     *
-     * @param PHPMailer $mailer
-     */
-    public static function setMailer(PHPMailer $mailer) {
-        Bootstrapper::$mailer = $mailer;
     }
 
 }
