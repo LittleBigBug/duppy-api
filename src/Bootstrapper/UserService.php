@@ -69,8 +69,17 @@ final class UserService {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
         $ct = $dbo->getRepository("Duppy\Entities\WebUser")->count([ 'email' => $email, ]);
+        $ct += UserService::emailNeedsVerification($email);
 
         return $ct > 0;
+    }
+
+    public static function emailNeedsVerification(string $email): bool {
+        $container = Bootstrapper::getContainer();
+        $dbo = $container->get("database");
+        $vCt = $dbo->getRepository("Duppy\Entities\WebUserVerification")->count([ 'email' => $email, ]);
+
+        return $vCt > 0;
     }
 
     /**

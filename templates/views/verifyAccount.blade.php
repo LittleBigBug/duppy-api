@@ -55,10 +55,10 @@
         <div class="content">
             Your account is almost ready!<br>
             To activate it and log in, verify that you own this email by clicking
-            <a href="{{ $url }}"> here</a>
+            <a href="{!! $url !!}"> here</a>
             <br/> <br/>
 
-            Alternatively, you can copy and paste {{ $url }} into your browser and enter this code:<br/>
+            Alternatively, you can copy and paste {!! $url !!} into your browser and enter this code:<br/>
 
             <div class="code">
                 {{ $code }}

@@ -2,6 +2,8 @@
 
 namespace Duppy\Bootstrapper;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Duppy\Util;
 use JetBrains\PhpStorm\Pure;
 
@@ -95,10 +97,10 @@ final class Settings {
                 }
 
                 if ($class::$appSetting) {
-                    static::$appSettings[] = $key;
+                    Settings::$appSettings[] = $key;
                 }
 
-                static::$settings[$key] = $class;
+                Settings::$settings[$key] = $class;
             }
         } catch (\UnexpectedValueException $ex) { }
     }
@@ -131,6 +133,8 @@ final class Settings {
      * Returns all public app settings
      *
      * @return array
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function getAppSettings(): array {
         return Settings::getSettings(Settings::$appSettings);
@@ -142,6 +146,8 @@ final class Settings {
      * @param string $key
      * @param string $default
      * @return string
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function getSetting(string $key, $default = ""): string {
         $result = Settings::getSettings([ $key, ], [ $key => $default, ]);
@@ -154,6 +160,8 @@ final class Settings {
      * @param array $keys
      * @param array $defaults
      * @return array
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function getSettings(array $keys, array $defaults = []): array {
         $manager = Bootstrapper::getContainer()->get("database");

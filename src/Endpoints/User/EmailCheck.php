@@ -55,11 +55,15 @@ class EmailCheck extends AbstractEndpoint {
         }
 
         $taken = UserService::emailTaken($email);
+        $needsVerification = $taken ? UserService::emailNeedsVerification($email) : false;
 
         return Util::responseJSON($response, [
             'success' => true,
-            'email' => $email,
-            'available' => !$taken,
+            'data' => [
+                'email' => $email,
+                'available' => !$taken,
+                'needsVerify' => $needsVerification,
+            ],
         ]);
     }
 
