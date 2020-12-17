@@ -8,6 +8,7 @@ use Duppy\Entities\WebUser;
 use Duppy\Util;
 use Exception;
 use Hybridauth\User\Profile;
+use Slim\Psr7\Response;
 
 final class UserService {
 
@@ -58,6 +59,77 @@ final class UserService {
     }
 
     /**
+     * Create a new user with their email and hashed password.
+     * The username will automatically be created from the email before the @
+     *
+     * @param string $email
+     * @param string $password
+     * @param bool $persist
+     * @return WebUser
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function createUser(string $email, string $password, bool $persist = true): WebUser {
+        $user = new WebUser;
+
+        // Steam style
+        // bob.minecraft2006
+        $user->setUsername(strtok($email, "@"));
+
+        $user->setEmail($email);
+        $user->setPassword($password);
+
+        if ($persist) {
+            $container = Bootstrapper::getContainer();
+            $dbo = $container->get("database");
+
+            $dbo->persist($user);
+            $dbo->flush();
+        }
+
+        return $user;
+    }
+
+    /**
+     * Returns a response with the WebUser's credentials or a redirect to login
+     *
+     * @param Response $response
+     * @param WebUser $user
+     * @param bool $redirect
+     * @return Response
+     */
+    public static function loginUser(Response $response, WebUser $user, bool $redirect = false): Response {
+        if ($user == null) {
+            return Util::responseError($response, "No matching user");
+        }
+
+        $userId = $user->get("id");
+        $username = $user->get("username");
+        $avatar = $user->get("avatarUrl");
+
+        $data = [
+            "id" => $userId,
+            "username" => $username,
+            "avatarUrl" => $avatar,
+        ];
+
+        $token = TokenManager::createTokenFill($data);
+
+        if ($redirect) {
+            $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $data["id"];
+            return $response->withHeader("Location", $redirect)->withStatus(302);
+        } else {
+            return Util::responseJSON($response, [
+                "success" => true,
+                "data" => [
+                    "token" => $token,
+                    "user" => $data,
+                ],
+            ]);
+        }
+    }
+
+    /**
      * Checks if an email address is in use by someone or not.
      *
      * @param string $email
@@ -74,6 +146,14 @@ final class UserService {
         return $ct > 0;
     }
 
+    /**
+     * Checks if an email address is registered but needs verification.
+     *
+     * @param string $email
+     * @return bool
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
     public static function emailNeedsVerification(string $email): bool {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
@@ -100,10 +180,44 @@ final class UserService {
     }
 
     /**
+     * Gets the currently used EmailWhitelist class name, or null if its not enabled.
+     *
+     * @return ?string
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function getEmailWhitelist(): ?string {
+        $whitelistClass = Settings::getSetting("auth.emailWhitelist");
+        $subclass = is_subclass_of($whitelistClass, "Duppy\Abstracts\AbstractEmailWhitelist");
+
+        return $subclass ? $whitelistClass : null;
+    }
+
+    /**
+     * Returns if the user email is on the whitelist
+     * @param string $email
+     * @return bool
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function emailWhitelisted(string $email): bool {
+        $whitelistClass = UserService::getEmailWhitelist();
+
+        // Whitelist not enabled
+        if (!is_subclass_of($whitelistClass, "Duppy\Abstracts\AbstractEmailWhitelist")) {
+            return true;
+        }
+
+        return $whitelistClass::check($email);
+    }
+
+    /**
      * Takes a string reference to a provider name and corrects it, and also checks if it is enabled.
      *
      * @param string $provider
      * @return boolean
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function enabledProvider(string &$provider): bool {
         if (!isset($provider) || empty($provider)) {

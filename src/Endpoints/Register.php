@@ -83,40 +83,68 @@ class Register extends AbstractEndpoint {
                 return Util::responseError($response, $err);
             }
 
+            $whitelist = UserService::getEmailWhitelist();
+
+            $emailWhitelisted = false;
+            $bypassVerify = false;
+
+            if (is_subclass_of($whitelist, "Duppy\Abstracts\AbstractEmailWhitelist")) {
+                $emailWhitelisted = UserService::emailWhitelisted($email);
+                $emailWlSettings = Settings::getSettings([
+                    "auth.emailWhitelist.requiredRegister",
+                    "auth.emailWhitelist.bypassVerification",
+                ]);
+
+                $requiredRegister = $emailWlSettings["auth.emailWhitelist.requiredRegister"];
+                $bypassVerify = $emailWlSettings["auth.emailWhitelist.bypassVerification"];
+
+                if ($requiredRegister && !$emailWhitelisted) {
+                    $desc = $whitelist::getDescription();
+                    return Util::responseError($response, $desc ?? "Email is not in whitelist.");
+                }
+            }
+
             $hash = password_hash($pass, PASSWORD_DEFAULT);
             $dbo = Bootstrapper::getContainer()->get('database');
 
-            $uVerify = new WebUserVerification;
+            $canBypass = $emailWhitelisted && $bypassVerify;
 
-            $uVerify->setEmail($email);
-            $uVerify->setPassword($hash);
+            if (!$canBypass) {
+                $uVerify = new WebUserVerification;
 
-            $code = $uVerify->genCode();
+                $uVerify->setEmail($email);
+                $uVerify->setPassword($hash);
 
-            if (!$code) {
-                return Util::responseError($response, "There was an error generating a verification code");
+                $code = $uVerify->genCode();
+
+                if (!$code) {
+                    return Util::responseError($response, "There was an error generating a verification code");
+                }
+
+                $url = getenv("CLIENT_URL") . "#/login/verification";
+
+                $title = Settings::getSetting("title");
+                $subject = "Verify Your New $title Account";
+
+                MailService::sendMailTemplate($email, $subject, "verifyAccount", [
+                    "url" => $url,
+                    "code" => $code,
+                    "title" => $subject,
+                ],
+                    // todo - replace with localization system
+                    "Your account is almost ready! Verify it by following this link $url/$code or by inputting this code: $code");
+
+                $dbo->persist($uVerify);
+                $dbo->flush();
+
+                return Util::responseJSON($response, [
+                    "success" => true,
+                    "message" => "User needs to be verified",
+                ], 201);
             }
 
-            $url = getenv("CLIENT_URL") . "#/login/verification";
-
-            $title = Settings::getSetting("title");
-            $subject = "Verify Your New $title Account";
-
-            MailService::sendMailTemplate($email, $subject, "verifyAccount", [
-                "url" => $url,
-                "code" => $code,
-                "title" => $subject,
-            ],
-            // todo - replace with localization system
-                "Your account is almost ready! Verify it by following this link $url/$code or by inputting this code: $code");
-
-            $dbo->persist($uVerify);
-            $dbo->flush();
-
-            return Util::responseJSON($response, [
-                "success" => true,
-                "message" => "User needs to be verified",
-            ], 201);
+            $user = UserService::createUser($email, $hash);
+            return UserService::loginUser($response, $user);
         }
 
         $profile = UserService::authenticateHybridAuth($provider, $postArgs);

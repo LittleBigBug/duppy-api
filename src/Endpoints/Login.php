@@ -7,11 +7,8 @@ use Doctrine\Common\Collections\Criteria;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\Settings;
-use Duppy\Bootstrapper\TokenManager;
 use Duppy\Bootstrapper\UserService;
 use Duppy\Util;
-use Hybridauth\Exception\InvalidArgumentException;
-use Hybridauth\Exception\UnexpectedValueException;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -40,8 +37,6 @@ class Login extends AbstractEndpoint {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
-     * @throws InvalidArgumentException
-     * @throws UnexpectedValueException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $postArgs = $request->getParsedBody();
@@ -56,37 +51,6 @@ class Login extends AbstractEndpoint {
         if (!$providerEnabled) {
             return Util::responseError($response, "Provider not enabled");
         }
-
-        $loggedIn = function ($userObj, $redirect = false) use ($response) {
-            if ($userObj == null) {
-                return Util::responseError($response, "No matching user");
-            }
-
-            $userId = $userObj->get("id");
-            $username = $userObj->get("username");
-            $avatar = $userObj->get("avatarUrl");
-
-            $data = [
-                "id" => $userId,
-                "username" => $username,
-                "avatarUrl" => $avatar,
-            ];
-
-            $token = TokenManager::createTokenFill($data);
-
-            if ($redirect) {
-                $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $data["id"];
-                return $response->withHeader("Location", $redirect)->withStatus(302);
-            } else {
-                return Util::responseJSON($response, [
-                    "success" => true,
-                    "data" => [
-                        "token" => $token,
-                        "user" => $data,
-                    ],
-                ]);
-            }
-        };
 
         if ($provider == "password") {
             if ($request->getMethod() !== "POST") {
@@ -120,7 +84,7 @@ class Login extends AbstractEndpoint {
             ));
 
             $userObj = $dbo->getRepository("Duppy\Entities\WebUser")->matching($cr)->first();
-            return $loggedIn($userObj);
+            return UserService::loginUser($response, $userObj);
         }
 
         $profile = UserService::authenticateHybridAuth($provider, $postArgs);
@@ -156,7 +120,7 @@ class Login extends AbstractEndpoint {
             return Util::responseError($response, "Cant find user associated to provider auth");
         }
 
-        return $loggedIn($userObj, true);
+        return UserService::loginUser($response, $userObj, true);
     }
 
 }

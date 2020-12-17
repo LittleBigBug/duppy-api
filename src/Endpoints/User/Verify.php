@@ -6,7 +6,7 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\Entities\WebUser;
+use Duppy\Bootstrapper\UserService;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -60,24 +60,11 @@ class Verify extends AbstractEndpoint {
             return Util::responseError($response, "That code has either expired or is invalid");
         }
 
-        $user = new WebUser;
-
         $email = $userVerify->get("email");
+        $pass = $userVerify->get("password");
 
-        // Steam style
-        // bob.minecraft2006
-        $user->setUsername(strtok($email, "@"));
-
-        $user->setEmail($email);
-        $user->setPassword($userVerify->get("password"));
-
-        $dbo->persist($user);
-        $dbo->flush();
-
-        return Util::responseJSON($response, [
-            "success" => true,
-            "message" => "User created",
-        ], 201);
+        $user = UserService::createUser($email, $pass);
+        return UserService::loginUser($response, $user);
     }
 
 }
