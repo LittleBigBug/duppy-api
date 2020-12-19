@@ -84,6 +84,11 @@ class Login extends AbstractEndpoint {
             ));
 
             $userObj = $dbo->getRepository("Duppy\Entities\WebUser")->matching($cr)->first();
+
+            if ($userObj == false) {
+                return Util::responseError($response, "Email and password do not match");
+            }
+
             return UserService::loginUser($response, $userObj);
         }
 
