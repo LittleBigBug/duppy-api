@@ -61,11 +61,11 @@ class Login extends AbstractEndpoint {
                 return Util::responseError($response, "No POST arguments using pwd auth");
             }
 
-            $user = $postArgs["user"];
+            $email = $postArgs["email"];
             $pass = $postArgs["pass"];
 
-            if (empty($user)) {
-                return Util::responseError($response, "User is empty");
+            if (empty($email)) {
+                return Util::responseError($response, "Email is empty");
             }
 
             if (empty($pass)) {
@@ -80,7 +80,7 @@ class Login extends AbstractEndpoint {
             $cr = new Criteria();
             $cr->where($expr->eq("password", $hash));
             $cr->andWhere($expr->orX(
-                $expr->eq("email", $user),
+                $expr->eq("email", $email),
             ));
 
             $userObj = $dbo->getRepository("Duppy\Entities\WebUser")->matching($cr)->first();
