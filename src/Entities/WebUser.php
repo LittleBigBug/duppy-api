@@ -6,7 +6,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Bootstrapper\Settings;
 use Duppy\Bootstrapper\TokenManager;
+use Duppy\Bootstrapper\UserService;
 use Duppy\Util;
+use JsonSerializable;
 
 /**
  * WebUser Entity
@@ -14,7 +16,7 @@ use Duppy\Util;
  * @ORM\Entity
  * @ORM\Table(name="web_users")
  */
-class WebUser {
+class WebUser implements JsonSerializable {
 
     /**
      * @ORM\Id
@@ -240,4 +242,12 @@ class WebUser {
         return $this->get("id") == $authToken["id"];
     }
 
+    /**
+     * Serializes the user into a basic array of info
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array {
+        return UserService::getBasicInfo($this);
+    }
 }
