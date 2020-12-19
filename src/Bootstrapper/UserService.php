@@ -301,4 +301,26 @@ final class UserService {
         return $intGen;
     }
 
+    public static function getBasicInfo(WebUser $user): array {
+        $data = [
+            "success" => true,
+            "data" => [
+                "id" => $user->get("id"),
+                "username" => $user->get("username"),
+                "avatarUrl" => $user->get("avatarUrl"),
+            ],
+        ];
+
+        if ($user->isMe()) {
+            $merge = [
+                "email" => $user->get("email"),
+            ];
+
+            $newData = array_merge($data["data"], $merge);
+            $data["data"] = $newData;
+        }
+
+        return $data;
+    }
+
 }

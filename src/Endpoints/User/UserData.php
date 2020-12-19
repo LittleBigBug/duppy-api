@@ -102,23 +102,7 @@ class UserData extends AbstractEndpoint {
             return Util::responseError($response, "User not found.");
         }
 
-        $data = [
-            "success" => true,
-            "data" => [
-                "id" => $userId,
-                "username" => $user->get("username"),
-                "avatarUrl" => $user->get("avatarUrl"),
-            ],
-        ];
-
-        if ($user->isMe()) {
-            $merge = [
-              "email" => $user->get("email"),
-            ];
-
-            $newData = array_merge($data["data"], $merge);
-            $data["data"] = $newData;
-        }
+        $data = UserService::getBasicInfo($user);
 
         return Util::responseJSON($response, $data);
     }
