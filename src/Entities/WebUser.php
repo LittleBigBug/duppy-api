@@ -52,6 +52,11 @@ class WebUser implements JsonSerializable {
     protected $providerAuths;
 
     /**
+     * @ORM\Column(type="string")
+     */
+    protected string $currentSessionCrumb;
+
+    /**
      * @ORM\ManyToMany(targetEntity="UserGroup", inversedBy="users")
      * @ORM\JoinTable(name="web_user_group_map")
      */
@@ -100,6 +105,10 @@ class WebUser implements JsonSerializable {
 
     public function setAvatarUrl(string $url) {
         $this->avatarUrl = $url;
+    }
+
+    public function setCrumb(string $crumb) {
+        $this->currentSessionCrumb = $crumb;
     }
 
     public function addProviderAuth(WebUserProviderAuth $providerAuth) {

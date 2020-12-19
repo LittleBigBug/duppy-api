@@ -114,6 +114,13 @@ final class UserService {
         ];
 
         $token = TokenManager::createTokenFill($data);
+        $crumb = hash("sha256", $token);
+
+        $user->setCrumb($crumb);
+
+        $container = Bootstrapper::getContainer();
+        $dbo = $container->get("database");
+        $dbo->persist($user);
 
         if ($redirect) {
             $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $data["id"];
@@ -123,6 +130,7 @@ final class UserService {
                 "success" => true,
                 "data" => [
                     "token" => $token,
+                    "crumb" => $crumb,
                     "user" => $data,
                 ],
             ]);
