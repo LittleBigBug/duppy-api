@@ -4,4 +4,7 @@ vendor/
 .idea
 .env
 
+# Client api mod
+src/Mods/Airheads
+
 templates/cache/*.bladec
