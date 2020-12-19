@@ -9,7 +9,6 @@ use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\Settings;
 use Duppy\Bootstrapper\UserService;
 use Duppy\Util;
-use http\Client\Curl\User;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -77,9 +76,6 @@ class Login extends AbstractEndpoint {
 
             if (!password_verify($pass, $userObj->get("password"))) {
                 return Util::responseError($response, "Email and password do not match");
-            }
-
-            if ($userObj == false) {
             }
 
             return UserService::loginUser($response, $userObj);
