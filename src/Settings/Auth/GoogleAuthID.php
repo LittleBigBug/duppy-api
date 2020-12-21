@@ -12,6 +12,8 @@ class GoogleAuthID extends AbstractSetting {
 
     public static string $required = "notnull|string";
 
+    public static bool $appSetting = true;
+
     public static $defaultValue = "";
 
 }
