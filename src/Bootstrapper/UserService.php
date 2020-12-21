@@ -123,7 +123,7 @@ final class UserService {
         $dbo->persist($user);
 
         if ($redirect) {
-            $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $data["id"];
+            $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $crumb . "/" . $data["id"];
             return $response->withHeader("Location", $redirect)->withStatus(302);
         } else {
             return Util::responseJSON($response, [
