@@ -1,4 +1,11 @@
 {
+    "repositories":
+    [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Littlebigbug/hybridauth"
+        }
+    ],
     "require": {
         "php": "^8.0",
         "slim/slim": "^4.6",
@@ -8,7 +15,7 @@
         "doctrine/orm": "^2.8",
         "ramsey/uuid-doctrine": "^1.6",
         "yosymfony/toml": "^1.0",
-        "hybridauth/hybridauth": "^3.6",
+        "hybridauth/hybridauth": "dev-master",
         "web-token/jwt-framework": "^2.2",
         "phpmailer/phpmailer": "^6.2",
         "eftec/bladeone": "^3.47",
