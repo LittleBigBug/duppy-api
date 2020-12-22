@@ -2,6 +2,8 @@
 namespace Duppy\Entities;
 
 use DateTime;
+use DI\DependencyException;
+use DI\NotFoundException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Bootstrapper\Settings;
@@ -52,7 +54,7 @@ class WebUser implements JsonSerializable {
     protected $providerAuths;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string")
      */
     protected string $currentSessionCrumb = "";
 
@@ -158,6 +160,8 @@ class WebUser implements JsonSerializable {
      *
      * @param WebUser $otherUser
      * @return bool
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function weightCheck(WebUser $otherUser): bool {
         $oWeight = $otherUser->getWeight();
