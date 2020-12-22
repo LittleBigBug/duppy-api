@@ -54,7 +54,7 @@ class WebUser implements JsonSerializable {
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    protected string $currentSessionCrumb;
+    protected string $currentSessionCrumb = "";
 
     /**
      * @ORM\ManyToMany(targetEntity="UserGroup", inversedBy="users")
