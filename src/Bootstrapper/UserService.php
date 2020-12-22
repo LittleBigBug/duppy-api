@@ -78,6 +78,7 @@ final class UserService {
 
         $user->setEmail($email);
         $user->setPassword($password);
+        $user->setCrumb("");
 
         if ($persist) {
             $container = Bootstrapper::getContainer();

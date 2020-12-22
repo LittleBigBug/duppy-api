@@ -175,6 +175,7 @@ class Register extends AbstractEndpoint {
         $userObj->setEmail($email);
         $userObj->setUsername($username);
         $userObj->setAvatarUrl($avatar);
+        $userObj->setCrumb("");
 
         $registerAuth = new WebUserProviderAuth;
 

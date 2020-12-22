@@ -52,7 +52,7 @@ class WebUser implements JsonSerializable {
     protected $providerAuths;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      */
     protected string $currentSessionCrumb = "";
 
