@@ -124,6 +124,7 @@ final class UserService {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
         $dbo->persist($user);
+        $dbo->flush();
 
         if ($redirect) {
             $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $crumb . "/" . $data["id"];
