@@ -102,7 +102,10 @@ class UserData extends AbstractEndpoint {
             return Util::responseError($response, "User not found.");
         }
 
-        $data = UserService::getBasicInfo($user);
+        $data = [
+            "success" => true,
+            "data" => UserService::getBasicInfo($user),
+        ];
 
         return Util::responseJSON($response, $data);
     }
