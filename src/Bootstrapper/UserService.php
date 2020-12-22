@@ -16,11 +16,11 @@ final class UserService {
      * Convenience function to get a user by their ID
      *
      * @param $id
-     * @return WebUser
+     * @return ?WebUser
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getUser($id = null): WebUser {
+    public static function getUser($id = null): ?WebUser {
         if ($id == "me" || $id == null) {
             return UserService::getLoggedInUser();
         }
@@ -34,11 +34,11 @@ final class UserService {
      * Convenience function to get a user by their Username
      *
      * @param string $username
-     * @return WebUser
+     * @return ?WebUser
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getUserByName(string $username): WebUser {
+    public static function getUserByName(string $username): ?WebUser {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
         return $dbo->getRepository("Duppy\Entities\WebUser")->findBy([ "username" => $username ])->first();
@@ -48,11 +48,11 @@ final class UserService {
      * Convenience function to get a user by their Email
      *
      * @param string $email
-     * @return WebUser
+     * @return ?WebUser
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getUserByEmail(string $email): WebUser {
+    public static function getUserByEmail(string $email): ?WebUser {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
         return $dbo->getRepository("Duppy\Entities\WebUser")->findBy([ "email" => $email ])[0];
@@ -65,11 +65,11 @@ final class UserService {
      * @param string $email
      * @param string $password
      * @param bool $persist
-     * @return WebUser
+     * @return ?WebUser
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function createUser(string $email, string $password, bool $persist = true): WebUser {
+    public static function createUser(string $email, string $password, bool $persist = true): ?WebUser {
         $user = new WebUser;
 
         // Steam style
@@ -97,6 +97,8 @@ final class UserService {
      * @param WebUser $user
      * @param bool $redirect
      * @return Response
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function loginUser(Response $response, WebUser $user, bool $redirect = false): Response {
         if ($user == null) {
