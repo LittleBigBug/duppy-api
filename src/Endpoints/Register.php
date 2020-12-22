@@ -163,6 +163,10 @@ class Register extends AbstractEndpoint {
         $email = $profile->emailVerified ?? ""; // This email may not be provided but we can ask the user later
         $avatar = $profile->photoURL ?? "";
 
+        if (UserService::emailTaken($email)) {
+            return Util::responseError($response, "That email is being used already!");
+        }
+
         $dbo = Bootstrapper::getContainer()->get("database");
 
         // Create new account from provider info
