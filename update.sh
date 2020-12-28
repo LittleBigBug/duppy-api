@@ -1,14 +1,21 @@
 #!/bin/bash
 
 skipcomposer=0
+skipgit=0
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        -s|--skip-composer) skipcomposer=1 ;;
+        -sc|--skip-composer) skipcomposer=1 ;;
+        -sg|--skip-git) skipgit=1 ;;
+        -s|--skip-all) skipcomposer=1 skipgit=1 ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
 done
+
+if [ "$skipgit" -eq "0" ] ; then
+  git pull
+fi
 
 if [ "$skipcomposer" -eq "0" ] ; then
   composer update
