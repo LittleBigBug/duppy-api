@@ -10,9 +10,15 @@ use Duppy\Bootstrapper\Bootstrapper;
 $protocol = ((isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") ? 'https://' : 'http://');
 $prHost = $protocol . $_SERVER["HTTP_HOST"];
 
+$dirName = dirname($_SERVER['SCRIPT_NAME']);
+
+if ($dirName == "/") {
+    $dirName = "";
+}
+
 define("DUPPY_START", microtime(true));
 define("DUPPY_PATH", __DIR__);
-define("DUPPY_URI_PATH", dirname($_SERVER['SCRIPT_NAME']));
+define("DUPPY_URI_PATH", $dirName);
 define("DUPPY_URI", $prHost . DUPPY_URI_PATH);
 define("DUPPY_FULL_URL", $prHost . $_SERVER["REQUEST_URI"]);
 
