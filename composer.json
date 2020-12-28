@@ -1,4 +1,11 @@
 {
+    "repositories":
+    [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Littlebigbug/hybridauth"
+        }
+    ],
     "require": {
         "php": "^8.0",
         "slim/slim": "^4.6",
