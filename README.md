@@ -38,14 +38,20 @@ Most of it should be pretty self-explanatory, however here's some useful clarifi
 
 ### Using
 
-You can use the shell script to update composer and deploy DB migrations
+You can use the shell script to pull from git, update composer and deploy DB migrations
 
 ```shell script
 chmod +x update.sh
 ./update.sh
 
 # You can skip updating composer
-./update -s --skip-composer
+./update.sh -sc # or --skip-composer
+
+# You can skip pulling from git
+./update.sh -sg # or --skip-git
+
+# Skip both of those
+./update.sh -s # or --skip-all
 ```
 
 You can run update.bat on windows
