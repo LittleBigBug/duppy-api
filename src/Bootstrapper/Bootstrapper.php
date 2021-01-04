@@ -1,6 +1,8 @@
 <?php
 namespace Duppy\Bootstrapper;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\ORMException;
 use Duppy\Middleware\CORSMiddleware;
@@ -255,6 +257,8 @@ final class Bootstrapper {
      *
      * @return Hybridauth
      * @throws InvalidArgumentException
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function configureHybridAuth(): Hybridauth {
         $authSettings = Settings::getSettings([
