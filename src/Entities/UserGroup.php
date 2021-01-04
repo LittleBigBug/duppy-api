@@ -2,6 +2,7 @@
 
 namespace Duppy\Entities;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Util;
 
@@ -38,24 +39,24 @@ class UserGroup {
     /**
      * @ORM\ManyToMany(targetEntity="WebUser", mappedBy="groups")
      */
-    protected $users;
+    protected ArrayCollection $users;
 
     /**
      * @ORM\OneToMany(targetEntity="UserGroup", mappedBy="parent")
      */
-    protected $children;
+    protected ArrayCollection $children;
 
     /**
      * @ORM\ManyToOne(targetEntity="UserGroup", inversedBy="children")
      * @ORM\JoinColumn(name="parent_id", referencedColumnName="id")
      */
-    protected $parent;
+    protected ?UserGroup $parent = null;
 
     /**
      * @ORM\OneToMany(targetEntity="PermissionAssignment", mappedBy="groups")
      * @ORM\JoinColumn(name="permission_id", referencedColumnName="id")
      */
-    protected $permissions;
+    protected ArrayCollection $permissions;
 
     /**
      * Cached Dictionary array of full generated settings.
@@ -64,6 +65,12 @@ class UserGroup {
      * @var array
      */
     protected array $generatedPermissions;
+
+    public function __construct() {
+        $this->users = new ArrayCollection();
+        $this->children = new ArrayCollection();
+        $this->permissions = new ArrayCollection();
+    }
 
     // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
     /**
@@ -77,29 +84,79 @@ class UserGroup {
     }
 
     /**
+     * @param string $name
+     */
+    public function setName(string $name) {
+        $this->name = $name;
+    }
+
+    /**
+     * @param int $weight
+     */
+    public function setWeight(int $weight) {
+        $this->weight = $weight;
+    }
+
+    /**
+     * @param string $colour
+     */
+    public function setColour(string $colour) {
+        $this->colour = $colour;
+    }
+
+    /**
+     * @param UserGroup|null $parent
+     */
+    public function setParent(?UserGroup $parent) {
+        $this->parent = $parent;
+    }
+
+    /**
+     * @param PermissionAssignment $perm
+     */
+    public function addPermission(PermissionAssignment $perm) {
+        $this->permissions->add($perm);
+    }
+
+    /**
+     * @param PermissionAssignment $perm
+     */
+    public function removePermission(PermissionAssignment $perm) {
+        $this->permissions->removeElement($perm);
+    }
+
+    /**
      * Recursive function to fetch all nested parents of this group
      *
      * @param array $parents
      * @return array
      */
     public function getParents(array $parents = []): array {
-        $parent = $this;
+        $group = $this;
 
-        if ($key = array_key_last($parents) != null) {
-            $parent = $parents[$key];
+        if ($key = (array_key_last($parents) != null)) {
+            $group = $parents[$key];
         }
 
-        if (!is_subclass_of($parent, "Duppy\Entities\UserGroup")) {
+        if (!is_subclass_of($group, "Duppy\Entities\UserGroup")) {
             return $parents;
         }
 
-        $newParent = $parent->get("parent");
+        $newParent = $group->get("parent");
+
+        if ($newParent == null || !is_subclass_of($newParent, "Duppy\Entities\UserGroup")) {
+            return $parents;
+        }
+
         $parents[] = $newParent;
 
-        return $this->getParents($parents);
+        return $group->getParents($parents);
     }
 
-    public function getNonInheritedPermissions() {
+    /**
+     * @return ArrayCollection
+     */
+    public function getNonInheritedPermissions(): ArrayCollection {
         return $this->permissions;
     }
 
@@ -133,6 +190,10 @@ class UserGroup {
             foreach ($groupPerms as $perm) {
                 $key = $perm->getPermission();
                 $eval = $perm->getPermissionEval();
+
+                if (!$perm->inThisEnvironment()) {
+                    continue;
+                }
 
                 $perms[$key] = $eval;
             }

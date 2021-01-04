@@ -2,6 +2,8 @@
 namespace Duppy\Entities;
 
 use DateTime;
+use DI\DependencyException;
+use DI\NotFoundException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Bootstrapper\Settings;
@@ -91,36 +93,67 @@ class WebUser implements JsonSerializable {
         $this->permissions = new ArrayCollection();
     }
 
+    /**
+     * @param string $email
+     */
     public function setEmail(string $email) {
         $this->email = $email;
     }
 
+    /**
+     * @param string $password
+     */
     public function setPassword(string $password) {
         $this->password = $password;
     }
 
+    /**
+     * @param string $username
+     */
     public function setUsername(string $username) {
         $this->username = $username;
     }
 
+    /**
+     * @param string $url
+     */
     public function setAvatarUrl(string $url) {
         $this->avatarUrl = $url;
     }
 
+    /**
+     * @param string $crumb
+     */
     public function setCrumb(string $crumb) {
         $this->currentSessionCrumb = $crumb;
     }
 
+    /**
+     * @param WebUserProviderAuth $providerAuth
+     */
     public function addProviderAuth(WebUserProviderAuth $providerAuth) {
         $this->providerAuths->add($providerAuth);
     }
 
+    /**
+     * @param UserGroup $group
+     */
     public function addGroup(UserGroup $group) {
         $this->groups->add($group);
     }
 
+    /**
+     * @param PermissionAssignment $perm
+     */
     public function addPermission(PermissionAssignment $perm) {
         $this->permissions->add($perm);
+    }
+
+    /**
+     * @param PermissionAssignment $perm
+     */
+    public function removePermission(PermissionAssignment $perm) {
+        $this->permissions->removeElement($perm);
     }
 
     // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
@@ -158,14 +191,14 @@ class WebUser implements JsonSerializable {
      *
      * @param WebUser $otherUser
      * @return bool
-     * @throws \DI\DependencyException
-     * @throws \DI\NotFoundException
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function weightCheck(WebUser $otherUser): bool {
         $oWeight = $otherUser->getWeight();
         $myWeight = $this->getWeight();
 
-        $eq =  Settings::getSetting("equalWeightPasses") && ($myWeight >= $oWeight);
+        $eq = Settings::getSetting("equalWeightPasses") && ($myWeight >= $oWeight);
         return $eq || $myWeight > $oWeight;
     }
 
@@ -207,12 +240,21 @@ class WebUser implements JsonSerializable {
                 $ind = $perm->getPermission();
                 $eval = $perm->getPermissionEval();
 
+                if (!$perm->inThisEnvironment()) {
+                    continue;
+                }
+
                 $perms[$ind] = $eval;
             }
         }
 
         foreach ($this->permissions as $perm) {
             $ind = $perm->getPermission();
+
+            if (!$perm->inThisEnvironment()) {
+                continue;
+            }
+
             $perms[$ind] = $perm->getPermissionEval();
         }
 

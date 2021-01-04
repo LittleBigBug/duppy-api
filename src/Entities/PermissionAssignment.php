@@ -3,6 +3,8 @@
 namespace Duppy\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
+use Duppy\Bootstrapper\EnvironmentService;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * Setting Entity
@@ -23,19 +25,24 @@ class PermissionAssignment {
      * Permission node to assign
      *
      * @ORM\GeneratedValue
-     * @ORM\Column(type="integer", nullable=false)
+     * @ORM\Column(type="string", nullable=false)
      */
     protected string $permission;
 
     /**
+     * @ORM\ManyToOne(targetEntity="Environment")
+     */
+    protected Environment $environment;
+
+    /**
      * @ORM\ManyToOne(targetEntity="WebUser", inversedBy="permissions")
      */
-    protected $users;
+    protected WebUser $user;
 
     /**
      * @ORM\ManyToOne(targetEntity="UserGroup", inversedBy="permissions")
      */
-    protected $groups;
+    protected UserGroup $group;
 
     /**
      * Returns the permission string without any modifiers
@@ -57,6 +64,49 @@ class PermissionAssignment {
      */
     public function getPermissionEval(): bool {
         return !str_starts_with($this->permission, "-");
+    }
+
+    /**
+     * Returns if the permission is valid in this environment
+     * @return bool
+     */
+    #[Pure]
+    public function inThisEnvironment(): bool {
+        $environment = EnvironmentService::getEnvironment();
+
+        if ($environment == null) {
+            return true;
+        }
+
+        return $environment === $this->environment;
+    }
+
+    /**
+     * @param string $perm
+     */
+    public function setPermission(string $perm) {
+        $this->permission = $perm;
+    }
+
+    /**
+     * @param WebUser $user
+     */
+    public function setUser(WebUser $user) {
+        $this->user = $user;
+    }
+
+    /**
+     * @param UserGroup $group
+     */
+    public function setGroup(UserGroup $group) {
+        $this->group = $group;
+    }
+
+    /**
+     * @param Environment $environment
+     */
+    public function setEnvironment(Environment $environment) {
+        $this->environment = $environment;
     }
 
     // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
