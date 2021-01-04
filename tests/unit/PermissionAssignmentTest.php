@@ -5,11 +5,11 @@
  *                               -= * =-
  */
 
-namespace Duppy\Tests\unit;
+namespace Duppy\Tests\Tools\Tests\unit;
 
-use Duppy\Bootstrapper\EnvironmentService;
-use Duppy\Entities\Environment;
-use Duppy\Entities\PermissionAssignment;
+use Duppy\Tests\Tools\Bootstrapper\EnvironmentService;
+use Duppy\Tests\Tools\Entities\Environment;
+use Duppy\Tests\Tools\Entities\PermissionAssignment;
 use PHPUnit\Framework\TestCase;
 
 final class PermissionAssignmentTest extends TestCase {

@@ -5,9 +5,9 @@
  *                               -= * =-
  */
 
-namespace Duppy\Tests\unit;
+namespace Duppy\Tests\Tools\Tests\unit;
 
-use Duppy\Entities\UserGroup;
+use Duppy\Tests\Tools\Entities\UserGroup;
 use PHPUnit\Framework\TestCase;
 
 final class UserGroupTest extends TestCase {

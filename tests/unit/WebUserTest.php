@@ -5,14 +5,14 @@
  *                               -= * =-
  */
 
-namespace Duppy\Tests\unit;
+namespace Duppy\Tests\Tools\Tests\unit;
 
 use DI\Container;
-use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\DuppyTestCase;
-use Duppy\Entities\Setting;
-use Duppy\Entities\UserGroup;
-use Duppy\Entities\WebUser;
+use Duppy\Tests\Tools\Bootstrapper\Bootstrapper;
+use Duppy\Tests\Tools\DuppyTestCase;
+use Duppy\Tests\Tools\Entities\Setting;
+use Duppy\Tests\Tools\Entities\UserGroup;
+use Duppy\Tests\Tools\Entities\WebUser;
 use PHPUnit\Framework\TestCase;
 
 final class WebUserTest extends DuppyTestCase {
