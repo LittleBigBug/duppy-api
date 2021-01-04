@@ -1,0 +1,10 @@
+<phpunit bootstrap="tests/TestBootstrap.php">
+    <testsuites>
+        <testsuite name="unit">
+            <directory phpVersion="8.0.0" phpVersionOperator=">=">tests/unit</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory phpVersion="8.0.0" phpVersionOperator=">=">tests/integration</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>
