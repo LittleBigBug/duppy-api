@@ -5,6 +5,22 @@ API for the duppy client.
 This is a modular web app API server for the [Duppy Client](https://git.yasfu.net/duppy/client). 
 It can support enabling and disabling different **Mods** to extend and maintain custom functionality separately and easily.
 
+### License Info
+
+More information on individual licensing can be found [here](https://dup.drm.gg).
+
+This software is private and copyright 2021 (c) LittleBigBug (Ethan Jones)
+The state of the software's license may change at any time, and may be sub-licensed out to clients.
+For more information on each client's license please visit the above link
+
+'Mods' are extensions of Duppy API created with tools provided by the software.
+They are located in the Mods/ directory and each should have author and copyright information in the info.toml file or the top of the main PHP file
+Mods developed for the Duppy API are owned by the owner and are allowed to be sold and licensed separately.
+
+
+For example, the duppy base API and software can be licensed out but the Mod could be owned or separately licensed.
+Client mods will be completely owned solely by clients but the main Duppy software will only be under a limited license.
+
 ## Installing
 
 ### Requirements

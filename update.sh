@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set working directory to the script
+cd "${0%/*}"
+
 skipcomposer=0
 skipgit=0
 
