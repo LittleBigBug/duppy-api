@@ -1,9 +1,16 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
 namespace Duppy\Endpoints;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
-use Duppy\Bootstrapper\Settings;
+use Duppy\DuppyServices\Settings;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -24,9 +31,11 @@ class Info extends AbstractEndpoint {
      * @param Response $response
      * @param array $args
      * @return Response
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
-        $settings = Settings::getAppSettings();
+        $settings = (new Settings)->inst()->getAppSettings();
 
         return Util::responseJSON($response, [
             "success" => true,

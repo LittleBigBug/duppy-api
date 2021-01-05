@@ -5,28 +5,30 @@
  *                               -= * =-
  */
 
-namespace Duppy\Bootstrapper;
+namespace Duppy\DuppyServices;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Abstracts\AbstractService;
+use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Entities\Environment;
 
-final class EnvironmentService {
+final class EnvironmentService extends AbstractService {
 
-    protected static ?Environment $currentEnvironment;
+    protected ?Environment $currentEnvironment;
 
     /**
      * @param Environment|null $environment
      */
-    public static function setEnvironment(?Environment $environment = null) {
-        EnvironmentService::$currentEnvironment = $environment;
+    public function setEnvironment(?Environment $environment = null) {
+        $this->currentEnvironment = $environment;
     }
 
     /**
      * @return Environment|null
      */
-    public static function getEnvironment(): ?Environment {
-        return EnvironmentService::$currentEnvironment;
+    public function getEnvironment(): ?Environment {
+        return $this->currentEnvironment;
     }
 
     /**
@@ -37,7 +39,7 @@ final class EnvironmentService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function checkEnvironment(string $environment): Environment|bool {
+    public function checkEnvironment(string $environment): Environment|bool {
         $dbo = Bootstrapper::getContainer()->get("database");
         $repo = $dbo->getRepository("Duppy\Entities\Environment");
 

@@ -1,11 +1,18 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
-namespace Duppy\Bootstrapper;
+namespace Duppy\DuppyServices;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Abstracts\AbstractService;
+use Duppy\Bootstrapper\Bootstrapper;
 
-class MailService {
+final class MailService extends AbstractService {
 
     /**
      * Basic send mail function
@@ -18,7 +25,7 @@ class MailService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function sendMail(string|array $recipients, string $subject, string $content, string $altContent = "", bool $allowReply = false) {
+    public function sendMail(string|array $recipients, string $subject, string $content, string $altContent = "", bool $allowReply = false) {
         if (!is_array($recipients)) {
             $recipients = [ $recipients ];
         }
@@ -45,6 +52,20 @@ class MailService {
     }
 
     /**
+     * Renders a template for use of email sending
+     *
+     * @param string $template
+     * @param array $share
+     * @return string
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public function renderTemplate(string $template, array $share = []): string {
+        $blade = Bootstrapper::getContainer()->get("templateHandler");
+        return $blade->setView($template)->share($share)->run();
+    }
+
+    /**
      * Convenience function to render a template for an email
      *
      * @param string|array $recipients
@@ -56,11 +77,9 @@ class MailService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function sendMailTemplate(string|array $recipients, string $subject, string $template, array $share, string $altContent = "", bool $allowReply = false) {
-        $blade = Bootstrapper::getContainer()->get("templateHandler");
-
-        $res = $blade->setView($template)->share($share)->run();
-        MailService::sendMail($recipients, $subject, $res, $altContent, $allowReply);
+    public function sendMailTemplate(string|array $recipients, string $subject, string $template, array $share = [], string $altContent = "", bool $allowReply = false) {
+        $res = $this->renderTemplate($template, $share);
+        $this->sendMail($recipients, $subject, $res, $altContent, $allowReply);
     }
 
 }

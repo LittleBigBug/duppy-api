@@ -1,4 +1,10 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
+
 namespace Duppy\Entities;
 
 use Doctrine\ORM\Mapping as ORM;

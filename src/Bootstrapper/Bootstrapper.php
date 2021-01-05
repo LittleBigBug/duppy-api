@@ -1,10 +1,21 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ *                        Main App Bootstrapper
+ */
+
 namespace Duppy\Bootstrapper;
 
 use DI\DependencyException;
 use DI\NotFoundException;
-use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\ORM\ORMException;
+use Duppy\DuppyServices\Env;
+use Duppy\DuppyServices\ModLoader;
+use Duppy\DuppyServices\Settings;
+use Duppy\DuppyServices\TokenManager;
 use Duppy\Middleware\CORSMiddleware;
 use eftec\bladeone\BladeOne;
 use Hybridauth\Exception\InvalidArgumentException;
@@ -102,10 +113,12 @@ final class Bootstrapper {
      * Boots the application and loads any global dependencies
      *
      * @return void
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function boot() {
         // Load .env file for config
-        (Dotenv::createImmutable(DUPPY_PATH))->load();
+        (new Env)->inst()->start();
 
         // Create Container using PHP-DI
         self::$container = new Container;
@@ -135,6 +148,8 @@ final class Bootstrapper {
      * Configures Slim
      *
      * @return void
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function configure() {
         $app = self::getApp();
@@ -148,12 +163,15 @@ final class Bootstrapper {
 
     /**
      * Build dependencies into DI and other services
+     *
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function buildDependencies() {
         $container = self::getContainer();
 
         // User settings definitions
-        $settingDefinitions = new Settings;
+        $settingDefinitions = new SettingsBuilder;
         $settingDefinitions->build();
 
         // Doctrine setup
@@ -176,7 +194,7 @@ final class Bootstrapper {
         $templateHandler = null;
         $container->set("templateHandler", fn () => $templateHandler ?? $templateHandler = self::configureTemplates());
 
-        ModLoader::build();
+        (new ModLoader)->inst()->build();
         self::buildRoutes();
     }
 
@@ -218,7 +236,7 @@ final class Bootstrapper {
             'use' => 'sig',
         ]);
 
-        $encrypt = TokenManager::isEncryptionEnabled();
+        $encrypt = (new TokenManager)->inst()->isEncryptionEnabled();
 
         if ($encrypt) {
             self::$jweKey = JWKFactory::createFromSecret(getenv("JWT_SECRET"), [
@@ -261,7 +279,7 @@ final class Bootstrapper {
      * @throws NotFoundException
      */
     public static function configureHybridAuth(): Hybridauth {
-        $authSettings = Settings::getSettings([
+        $authSettings = (new Settings)->inst()->getSettings([
             "auth.steam.enable", "auth.steam.secret",
             "auth.facebook.enable", "auth.facebook.id", "auth.facebook.secret",
             "auth.google.enable", "auth.google.id", "auth.google.secret",

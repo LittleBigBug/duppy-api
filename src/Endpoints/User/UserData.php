@@ -1,13 +1,18 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
+
 namespace Duppy\Endpoints\User;
 
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\Bootstrapper\UserService;
+use Duppy\DuppyServices\UserService;
 use Duppy\Util;
-use http\Client\Curl\User;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -71,7 +76,7 @@ class UserData extends AbstractEndpoint {
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $userId = $args["id"];
-        $user = UserService::getUser($userId);
+        $user = (new UserService)->inst()->getUser($userId);
 
 
 
@@ -94,8 +99,10 @@ class UserData extends AbstractEndpoint {
         $userId = $args["id"];
         $user = null;
 
+        $userService = (new UserService)->inst();
+
         try {
-            $user = UserService::getUser($userId);
+            $user = $userService->getUser($userId);
         } catch (NotFoundException) { }
 
         if ($user == null) {
@@ -104,7 +111,7 @@ class UserData extends AbstractEndpoint {
 
         $data = [
             "success" => true,
-            "data" => UserService::getBasicInfo($user),
+            "data" => $userService->getBasicInfo($user),
         ];
 
         return Util::responseJSON($response, $data);

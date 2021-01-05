@@ -1,12 +1,17 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
 namespace Duppy\Middleware;
 
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractRouteMiddleware;
-use Duppy\Bootstrapper\Settings;
-use Duppy\Bootstrapper\UserService;
+use Duppy\DuppyServices\Settings;
+use Duppy\DuppyServices\UserService;
 use Duppy\Util;
 
 class AuthRequiredSettingMiddleware extends AbstractRouteMiddleware {
@@ -18,11 +23,12 @@ class AuthRequiredSettingMiddleware extends AbstractRouteMiddleware {
      */
     final public function handle(): ?bool {
         // Only process this middleware if the setting is enabled
-        if (!Settings::getSetting("requireAuthGeneralAccess")) {
+        $settingsMngr = (new Settings)->inst();
+        if (!$settingsMngr->getSetting("requireAuthGeneralAccess")) {
             return true;
         }
 
-        $user = UserService::getLoggedInUser();
+        $user = (new UserService)->getLoggedInUser();
 
         if ($user == null) {
             static::$response = Util::responseJSON(static::$response, [

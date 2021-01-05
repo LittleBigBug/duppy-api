@@ -1,10 +1,16 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
+
 namespace Duppy\Endpoints\User;
 
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
-use Duppy\Bootstrapper\UserService;
+use Duppy\DuppyServices\UserService;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -54,8 +60,9 @@ class EmailCheck extends AbstractEndpoint {
             }
         }
 
-        $taken = UserService::emailTaken($email);
-        $needsVerification = $taken ? UserService::emailNeedsVerification($email) : false;
+        $userService = (new UserService)->inst();
+        $taken = $userService->emailTaken($email);
+        $needsVerification = $taken ? $userService->emailNeedsVerification($email) : false;
 
         return Util::responseJSON($response, [
             'success' => true,

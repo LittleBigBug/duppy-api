@@ -1,24 +1,41 @@
 <?php
-namespace Duppy\Bootstrapper;
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
+namespace Duppy\DuppyServices;
+
+use DI\DependencyException;
+use DI\NotFoundException;
+use DirectoryIterator;
+use Duppy\Abstracts\AbstractService;
+use Duppy\Bootstrapper\ModCfg;
 use Duppy\Util;
 use Yosymfony\Toml\Exception\ParseException;
 use Yosymfony\Toml\Toml;
 
-final class ModLoader {
+final class ModLoader extends AbstractService {
 
     /**
      * Map of mods
      *
      * @var array
      */
-    public static array $mods = [];
+    public array $mods = [];
 
     /**
-     * Build mods
+     * Build Mods
+     *
+     * @throws DependencyException
+     * @throws NotFoundException
      */
-    public static function build() {
-        $iterator = new \DirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", "Mods"], true));
+    public function build() {
+        $iterator = new DirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", "Mods"], true));
+
+        // Static settings service instance
+        $settingsMngr = (new Settings)->inst();
 
         foreach ($iterator as $file) {
             // Check if file is a directory
@@ -70,16 +87,16 @@ final class ModLoader {
 
             $enabledName = "mods." . strtolower($name) . ".enable";
 
-            Settings::createSetting($enabledName, [
+            $settingsMngr->createSetting($enabledName, [
                 "category" => "system.mods",
                 "defaultValue" => true,
             ]);
 
-            $ct = Settings::getSetting($enabledName);
+            $ct = $settingsMngr->getSetting($enabledName);
 
             $modCfg->active = $ct;
 
-            self::$mods[] = $modCfg;
+            $this->mods[] = $modCfg;
             $class::$modInfo = $modCfg;
 
             if (!$ct) {

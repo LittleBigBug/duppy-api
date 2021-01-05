@@ -8,22 +8,22 @@
 namespace Duppy\Endpoints\User;
 
 use DI\DependencyException;
-use DI\NotFoundException;
-use Duppy\Abstracts\AbstractEndpoint;
-use Duppy\DuppyServices\UserService;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
-class Settings extends AbstractEndpoint {
+use Duppy\Abstracts\AbstractEndpoint;
+
+class Permissions extends AbstractEndpoint {
 
     /**
-     * Catch /settings /settings/get and /settings/set
+     * Catch /permissions /all and /basic-info
      *
-     * /user/me/settings /user/me/settings/set
+     * GET /user/0/permissions returns the user's set permissions
+     * GET /user/0/permissions/inherited returns ALL the user's permissions
      *
      * @var string[]
      */
-    public static ?array $uri = [ '/settings', '/settings/get', '/set' ];
+    public static ?array $uri = [ '/', '/all', '/basic' ];
 
     /**
      * Allow get and post
@@ -45,7 +45,7 @@ class Settings extends AbstractEndpoint {
      *
      * @var string[]
      */
-    public static ?array $uriFuncNames = [ 1 => 'getSettings', 2 => 'getSettings', 3 => 'setSettings' ];
+    public static ?array $uriFuncNames = [ 2 => 'basicInfo' ];
 
     /**
      * Set the parent group classname to 'GroupUser'
@@ -62,31 +62,6 @@ class Settings extends AbstractEndpoint {
     public static array $middleware = [ "Duppy\Middleware\AuthRequiredSettingMiddleware" ];
 
     /**
-     * Checks if the user has the right permissions or is themselves
-     *
-     * @param int $id
-     * @param string $perm
-     * @return bool
-     * @throws DependencyException
-     * @throws NotFoundException
-     */
-    private function checkPermission(int $id, string $perm): bool {
-        $userService = (new UserService)->inst();
-        $user = $userService->getUser($id);
-        $loggedInUser = $userService->getLoggedInUser();
-
-        if ($user->get("id") !== $loggedInUser->get("id")) {
-            $canCheckOther = $loggedInUser->hasPermission("admin") || $loggedInUser->hasPermission($perm);
-
-            if (!$canCheckOther || !$loggedInUser->weightCheck($user)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Default invoke method
      *
      * @param Request $request
@@ -96,13 +71,11 @@ class Settings extends AbstractEndpoint {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public function getSettings(Request $request, Response $response, array $args = []): Response {
+    public function __invoke(Request $request, Response $response, array $args = []): Response {
         $userId = $args["id"];
-        $perm = $this->checkPermission($userId, "usersettings.get.other");
+        $user = (new UserService)->inst()->getUser($userId);
 
-        if (!$perm) {
-            return $response->withStatus(401);
-        }
+
 
         return $response;
     }
@@ -118,17 +91,9 @@ class Settings extends AbstractEndpoint {
      * @param array $args
      * @return Response
      * @throws DependencyException
-     * @throws NotFoundException
      */
-    public function setSettings(Request $request, Response $response, array $args = []): Response {
-        $userId = $args["id"];
-        $perm = $this->checkPermission($userId, "usersettings.set.other");
+    public function basicInfo(Request $request, Response $response, array $args = []): Response {
 
-        if (!$perm) {
-            return $response->withStatus(401);
-        }
-
-        return $response;
     }
 
 }

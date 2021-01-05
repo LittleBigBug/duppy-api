@@ -1,9 +1,14 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
 namespace Duppy\Endpoints\Admin;
 
 use Duppy\Abstracts\AbstractEndpoint;
-use Duppy\Bootstrapper\Settings;
+use Duppy\DuppyServices\Settings;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -50,7 +55,7 @@ class AdminInfo extends AbstractEndpoint {
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         // Merge setting categories with built in categories
-        $categories = array_merge(Settings::$categories, static::$adminPages);
+        $categories = array_merge((new Settings)->inst()->getSettingsCategories(), static::$adminPages);
 
         return Util::responseJSON($response, [
             "success" => true,

@@ -1,4 +1,10 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
+
 namespace Duppy\Endpoints;
 
 use DI\DependencyException;
@@ -6,8 +12,8 @@ use DI\NotFoundException;
 use Doctrine\Common\Collections\Criteria;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\Bootstrapper\Settings;
-use Duppy\Bootstrapper\UserService;
+use Duppy\DuppyServices\Settings;
+use Duppy\DuppyServices\UserService;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -46,11 +52,13 @@ class Login extends AbstractEndpoint {
             $provider = "password";
         }
 
-        $providerEnabled = Settings::getSetting("auth.$provider.enable") == true;
+        $providerEnabled = (new Settings)->inst()->getSetting("auth.$provider.enable") == true;
 
         if (!$providerEnabled) {
             return Util::responseError($response, "Provider not enabled");
         }
+
+        $userService = (new UserService)->inst();
 
         if ($provider == "password") {
             if ($request->getMethod() !== "POST") {
@@ -72,16 +80,16 @@ class Login extends AbstractEndpoint {
                 return Util::responseError($response, "Pass is empty");
             }
 
-            $userObj = UserService::getUserByEmail($email);
+            $userObj = (new UserService)->inst()->getUserByEmail($email);
 
             if (!password_verify($pass, $userObj->get("password"))) {
                 return Util::responseError($response, "Email and password do not match");
             }
 
-            return UserService::loginUser($response, $userObj);
+            return $userService->loginUser($response, $userObj);
         }
 
-        $profile = UserService::authenticateHybridAuth($provider, $postArgs);
+        $profile = $userService->authenticateHybridAuth($provider, $postArgs);
 
         // Error
         if (is_string($profile)) {
@@ -114,7 +122,7 @@ class Login extends AbstractEndpoint {
             return Util::responseError($response, "Cant find user associated to provider auth");
         }
 
-        return UserService::loginUser($response, $userObj, true);
+        return (new UserService)->inst()->loginUser($response, $userObj, true);
     }
 
 }

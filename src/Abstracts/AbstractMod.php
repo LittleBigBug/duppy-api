@@ -1,9 +1,15 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
+
 namespace Duppy\Abstracts;
 
 use Duppy\Bootstrapper\ModCfg;
 use Duppy\Bootstrapper\Router;
-use Duppy\Bootstrapper\Settings;
+use Duppy\Bootstrapper\SettingsBuilder;
 use Duppy\Util;
 
 abstract class AbstractMod {
@@ -71,7 +77,7 @@ abstract class AbstractMod {
             $rootAppUri = static::$rootAppUri;
         }
 
-        $settingDefinitions = new Settings("/" . $rootAppUri);
+        $settingDefinitions = new SettingsBuilder("/" . $rootAppUri);
         $settingDefinitions->build();
     }
 

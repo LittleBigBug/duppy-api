@@ -1,4 +1,9 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
 namespace Duppy\Abstracts;
 

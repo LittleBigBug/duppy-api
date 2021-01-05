@@ -1,16 +1,23 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
-namespace Duppy\Bootstrapper;
+namespace Duppy\DuppyServices;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Abstracts\AbstractService;
+use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Entities\WebUser;
 use Duppy\Util;
 use Exception;
 use Hybridauth\User\Profile;
 use Slim\Psr7\Response;
 
-final class UserService {
+final class UserService extends AbstractService {
 
     /**
      * Convenience function to get a user by their ID
@@ -20,9 +27,9 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getUser($id = null): ?WebUser {
+    public function getUser($id = null): ?WebUser {
         if ($id == "me" || $id == null) {
-            return UserService::getLoggedInUser();
+            return (new UserService)->inst()->getLoggedInUser();
         }
 
         $container = Bootstrapper::getContainer();
@@ -38,7 +45,7 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getUserByName(string $username): ?WebUser {
+    public function getUserByName(string $username): ?WebUser {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
         return $dbo->getRepository("Duppy\Entities\WebUser")->findBy([ "username" => $username ])->first();
@@ -52,7 +59,7 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getUserByEmail(string $email): ?WebUser {
+    public function getUserByEmail(string $email): ?WebUser {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
         return $dbo->getRepository("Duppy\Entities\WebUser")->findBy([ "email" => $email ])[0];
@@ -69,12 +76,15 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function createUser(string $email, string $password, bool $persist = true): ?WebUser {
+    public function createUser(string $email, string $password, bool $persist = true): ?WebUser {
         $user = new WebUser;
 
         // Steam style
         // bob.minecraft2006
-        $user->setUsername(strtok($email, "@"));
+        $lastAt = strrpos($email, "@");
+        $genUsername = substr($email, 0, $lastAt);
+
+        $user->setUsername($genUsername);
 
         $user->setEmail($email);
         $user->setPassword($password);
@@ -101,7 +111,7 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function loginUser(Response $response, WebUser $user, bool $redirect = false): Response {
+    public function loginUser(Response $response, WebUser $user, bool $redirect = false): Response {
         if ($user == null) {
             return Util::responseError($response, "No matching user");
         }
@@ -116,7 +126,7 @@ final class UserService {
             "avatarUrl" => $avatar,
         ];
 
-        $token = TokenManager::createTokenFill($data);
+        $token = (new TokenManager)->inst()->createTokenFill($data);
         $crumb = hash("sha256", $token);
 
         $user->setCrumb($crumb);
@@ -149,11 +159,11 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function emailTaken(string $email): bool {
+    public function emailTaken(string $email): bool {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
         $ct = $dbo->getRepository("Duppy\Entities\WebUser")->count([ 'email' => $email, ]);
-        $ct += UserService::emailNeedsVerification($email);
+        $ct += (new UserService)->inst()->emailNeedsVerification($email);
 
         return $ct > 0;
     }
@@ -166,7 +176,7 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function emailNeedsVerification(string $email): bool {
+    public function emailNeedsVerification(string $email): bool {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
         $vCt = $dbo->getRepository("Duppy\Entities\WebUserVerification")->count([ 'email' => $email, ]);
@@ -181,14 +191,14 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getLoggedInUser(): ?WebUser {
-        $authToken = TokenManager::getAuthToken();
+    public function getLoggedInUser(): ?WebUser {
+        $authToken = (new TokenManager)->inst()->getAuthToken();
 
         if ($authToken == null || !array_key_exists("id", $authToken)) {
             return null;
         }
 
-        return UserService::getUser($authToken["id"]);
+        return $this->getUser($authToken["id"]);
     }
 
     /**
@@ -199,7 +209,7 @@ final class UserService {
      * @throws NotFoundException
      */
     public static function getEmailWhitelist(): ?string {
-        $whitelistClass = Settings::getSetting("auth.emailWhitelist");
+        $whitelistClass = (new Settings)->inst()->getSetting("auth.emailWhitelist");
         $subclass = is_subclass_of($whitelistClass, "Duppy\Abstracts\AbstractEmailWhitelist");
 
         return $subclass ? $whitelistClass : null;
@@ -212,8 +222,8 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function emailWhitelisted(string $email): bool {
-        $whitelistClass = UserService::getEmailWhitelist();
+    public function emailWhitelisted(string $email): bool {
+        $whitelistClass = $this->getEmailWhitelist();
 
         // Whitelist not enabled
         if (!is_subclass_of($whitelistClass, "Duppy\Abstracts\AbstractEmailWhitelist")) {
@@ -231,12 +241,12 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function enabledProvider(string &$provider): bool {
+    public function enabledProvider(string &$provider): bool {
         if (!isset($provider) || empty($provider)) {
             $provider = "password";
         }
 
-        return Settings::getSetting("auth.$provider.enable") == true;
+        return (new Settings)->inst()->getSetting("auth.$provider.enable") == true;
     }
 
     /**
@@ -248,7 +258,7 @@ final class UserService {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function authenticateHybridAuth(string $provider, ?array $postArgs = []): Profile|string {
+    public function authenticateHybridAuth(string $provider, ?array $postArgs = []): Profile|string {
         $authHandler = Bootstrapper::getContainer()->get('authHandler');
 
         $oAuthToken = Util::indArrayNull($postArgs, "oAuthToken");
@@ -294,7 +304,7 @@ final class UserService {
      * @param int $loopProtection
      * @return ?int
      */
-    public static function generateUniqueTempCode($checker, int $loopProtection = 0): ?int {
+    public function generateUniqueTempCode($checker = null, int $loopProtection = 0): ?int {
         if (++$loopProtection > 200) {
             return null;
         }
@@ -305,9 +315,15 @@ final class UserService {
             return null;
         }
 
+        if ($checker == null) {
+            $checker = function(int $check) {
+                return true;
+            };
+        }
+
         // elp
         if (!$checker($intGen)) {
-            return UserService::generateUniqueTempCode($checker, $loopProtection);
+            return $this->generateUniqueTempCode($checker, $loopProtection);
         }
 
         return $intGen;
@@ -319,7 +335,7 @@ final class UserService {
      * @param WebUser $user
      * @return array
      */
-    public static function getBasicInfo(WebUser $user): array {
+    public function getBasicInfo(WebUser $user): array {
         $data = [
             "id" => $user->get("id"),
             "username" => $user->get("username"),

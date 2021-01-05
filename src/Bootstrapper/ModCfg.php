@@ -1,6 +1,11 @@
 <?php
-namespace Duppy\Bootstrapper;
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
+namespace Duppy\Bootstrapper;
 
 class ModCfg {
 

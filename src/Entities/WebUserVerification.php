@@ -1,5 +1,9 @@
 <?php
-
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
 namespace Duppy\Entities;
 
@@ -8,8 +12,7 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\Bootstrapper\UserService;
-use Exception;
+use Duppy\DuppyServices\UserService;
 
 /**
  * WebUser Verification is a list of unverified users waiting to verify their emails.
@@ -85,7 +88,7 @@ class WebUserVerification {
             return $ct < 1;
         };
 
-        $code = UserService::generateUniqueTempCode($checker);
+        $code = (new UserService)->inst()->generateUniqueTempCode($checker);
 
         if ($code == null) {
             return false;

@@ -1,4 +1,10 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
+
 namespace Duppy\Entities;
 
 use DateTime;
@@ -6,9 +12,9 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use Duppy\Bootstrapper\Settings;
-use Duppy\Bootstrapper\TokenManager;
-use Duppy\Bootstrapper\UserService;
+use Duppy\DuppyServices\Settings;
+use Duppy\DuppyServices\TokenManager;
+use Duppy\DuppyServices\UserService;
 use Duppy\Util;
 use JsonSerializable;
 
@@ -71,7 +77,7 @@ class WebUser implements JsonSerializable {
     protected $permissions;
 
     /**
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string")
      */
     protected string $avatarUrl = "";
 
@@ -168,6 +174,16 @@ class WebUser implements JsonSerializable {
     }
 
     /**
+     * ID Setter
+     * This is an internal testing function and can be used elsewhere, but shouldn't.
+     *
+     * @param int $id
+     */
+    public function setId(int $id) {
+        $this->id = $id;
+    }
+
+    /**
      * Returns the user's weight. This is the highest weight out of any of their ranks
      *
      * @return integer
@@ -198,7 +214,7 @@ class WebUser implements JsonSerializable {
         $oWeight = $otherUser->getWeight();
         $myWeight = $this->getWeight();
 
-        $eq = Settings::getSetting("equalWeightPasses") && ($myWeight >= $oWeight);
+        $eq = (new Settings)->inst()->getSetting("equalWeightPasses") && ($myWeight >= $oWeight);
         return $eq || $myWeight > $oWeight;
     }
 
@@ -286,7 +302,7 @@ class WebUser implements JsonSerializable {
      * @return bool
      */
     public function isMe(): bool {
-        $authToken = TokenManager::getAuthToken();
+        $authToken = (new TokenManager)->inst()->getAuthToken();
 
         if ($authToken == null || !array_key_exists("id", $authToken)) {
             return false;
@@ -301,6 +317,6 @@ class WebUser implements JsonSerializable {
      * @return array
      */
     public function jsonSerialize(): array {
-        return UserService::getBasicInfo($this);
+        return (new UserService)->inst()->getBasicInfo($this);
     }
 }

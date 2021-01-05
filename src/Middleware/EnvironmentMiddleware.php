@@ -10,7 +10,7 @@ namespace Duppy\Middleware;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractRouteMiddleware;
-use Duppy\Bootstrapper\EnvironmentService;
+use Duppy\DuppyServices\EnvironmentService;
 
 class EnvironmentMiddleware extends AbstractRouteMiddleware {
 
@@ -20,6 +20,7 @@ class EnvironmentMiddleware extends AbstractRouteMiddleware {
      * @throws NotFoundException
      */
     public function handle(): ?bool {
+        $environmentService = (new EnvironmentService)->inst();
         $environmentStrs = static::$request->getHeader("X-Environment");
 
         if (count($environmentStrs) > 1) {
@@ -28,7 +29,7 @@ class EnvironmentMiddleware extends AbstractRouteMiddleware {
         }
 
         $envStr = $environmentStrs[0];
-        $environment = EnvironmentService::checkEnvironment($envStr);
+        $environment = $environmentService->checkEnvironment($envStr);
 
         if ($environment == false) {
             static::$response = static::$response->withStatus(400);
@@ -36,7 +37,8 @@ class EnvironmentMiddleware extends AbstractRouteMiddleware {
         }
 
         static::$request = static::$request->withAttribute("environment", $environment);
-        EnvironmentService::setEnvironment($environment);
+        $environmentService->setEnvironment($environment);
+        return null;
     }
 
 }

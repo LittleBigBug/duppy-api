@@ -1,9 +1,16 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
-namespace Duppy\Bootstrapper;
+namespace Duppy\DuppyServices;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Abstracts\AbstractService;
+use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Entities\WebUser;
 use Exception;
 use JetBrains\PhpStorm\Pure;
@@ -23,14 +30,20 @@ use Jose\Component\Signature\JWSTokenSupport;
 use Jose\Component\Signature\Serializer\CompactSerializer as SigCompactSerializer;
 use Jose\Component\Signature\Serializer\JWSSerializerManager;
 
-final class TokenManager {
+final class TokenManager extends AbstractService {
 
     /**
      * Decrypted and verified auth token (from JWT)
      *
      * @var array
      */
-    public static array $authToken = [];
+    public array $authToken = [];
+
+    /**
+     * Optional but allows overriding env
+     * @var bool|null
+     */
+    public ?bool $encryptionEnabled;
 
     /**
      * Creates a new signed and encrypted token with the payload
@@ -38,7 +51,7 @@ final class TokenManager {
      * @param array $payload
      * @return string
      */
-    public static function createToken(array $payload): string {
+    public function createToken(array $payload): string {
         $payload = json_encode($payload);
 
         $jwsBuilder = Bootstrapper::getJWSBuilder();
@@ -54,7 +67,7 @@ final class TokenManager {
 
         $signedToken = $signedSerializer->serialize($jws, 0);
 
-        $encrypt = TokenManager::isEncryptionEnabled();
+        $encrypt = $this->isEncryptionEnabled();
 
         // Encrypt
         if ($encrypt) {
@@ -84,7 +97,7 @@ final class TokenManager {
      * @param array $payload
      * @return string
      */
-    public static function createTokenFill(array $payload): string {
+    public function createTokenFill(array $payload): string {
         $defaults = [
             "iss" => DUPPY_URI,
             "aud" => getenv("CLIENT_URL"),
@@ -94,7 +107,7 @@ final class TokenManager {
         // Merge payload over defaults so it overwrites them
         $payload = array_merge($defaults, $payload);
 
-        return TokenManager::createToken($payload);
+        return $this->createToken($payload);
     }
 
     /**
@@ -103,14 +116,14 @@ final class TokenManager {
      * @param WebUser $user
      * @return string
      */
-    public static function createTokenFromUser(WebUser $user): string {
+    public function createTokenFromUser(WebUser $user): string {
         $data = [
             "id" => $user->get("id"),
             "username" => $user->get("username"),
             "avatarUrl" => $user->get("avatarUrl"),
         ];
 
-        return TokenManager::createTokenFill($data);
+        return $this->createTokenFill($data);
     }
 
     /**
@@ -121,9 +134,9 @@ final class TokenManager {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function createTokenFromUserId(int $userId): string {
-        $userObj = UserService::getUser($userId);
-        return TokenManager::createTokenFromUser($userObj);
+    public function createTokenFromUserId(int $userId): string {
+        $userObj = (new UserService)->inst()->getUser($userId);
+        return $this->createTokenFromUser($userObj);
     }
 
     /**
@@ -132,8 +145,8 @@ final class TokenManager {
      * @param string $token
      * @return array|null
      */
-    public static function loadToken(string $token): ?array {
-        $isEncrypted = TokenManager::isEncryptionEnabled();
+    public function loadToken(string $token): ?array {
+        $isEncrypted = $this->isEncryptionEnabled();
 
         $jwsToken = $token;
 
@@ -192,17 +205,17 @@ final class TokenManager {
      *
      * @return array|null
      */
-    public static function getAuthToken(): ?array {
+    public function getAuthToken(): ?array {
         if (!array_key_exists("authToken", $_POST)) {
             return null;
         }
 
-        if (!empty(TokenManager::$authToken)) {
-            return TokenManager::$authToken;
+        if (!empty($this->authToken)) {
+            return $this->authToken;
         }
 
         $token = $_POST["authToken"];
-        return TokenManager::$authToken = TokenManager::loadToken($token) ?? [];
+        return $this->authToken = $this->loadToken($token) ?? [];
     }
 
     /**
@@ -211,8 +224,8 @@ final class TokenManager {
      * @return bool
      */
     #[Pure]
-    public static function isEncryptionEnabled(): bool {
-        return getenv("JWT_ENCRYPT") !== "false";
+    public function isEncryptionEnabled(): bool {
+        return $this->encryptionEnabled != null ? $this->encryptionEnabled : getenv("JWT_ENCRYPT") !== "false";
     }
 
 }

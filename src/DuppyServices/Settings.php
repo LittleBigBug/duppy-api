@@ -1,48 +1,56 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
-namespace Duppy\Bootstrapper;
+namespace Duppy\DuppyServices;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Abstracts\AbstractService;
+use Duppy\Abstracts\AbstractSetting;
+use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Util;
 use JetBrains\PhpStorm\Pure;
 
-final class Settings {
+final class Settings extends AbstractService {
 
     /**
      * Array of classes extending AbstractSetting
      *
      * @var array
      */
-    public static array $settings = [];
+    public array $settings = [];
 
     /**
      * Array of setting keys that are public app settings
      *
      * @var array
      */
-    private static array $appSettings = [];
+    private array $appSettings = [];
 
     /**
      * Array of setting keys that are user settings (per-user preferences)
      *
      * @var array
      */
-    private static array $userSettings = [];
+    private array $userSettings = [];
 
     /**
      * Array of categories and sub-categories
      *
      * @var array
      */
-    public static array $categories = [];
+    public array $categories = [];
 
     /**
      * Array of allowed types for settings, with their respective 'casting' function
      *
      * @var array
      */
-    private static array $types = [
+    private array $types = [
         "boolean" => 'boolval',
         "string" => '', // Should already be a string
         "integer" => 'intval',
@@ -51,82 +59,58 @@ final class Settings {
     ];
 
     /**
-     * Path of settings to build
-     *
-     * @var string
-     */
-    public string $settingsSrc = "";
-
-    /**
-     * Settings builder constructor.
-     *
-     * @param string $settingsSrc
-     */
-    public function __construct(string $settingsSrc = "Settings") {
-        $this->settingsSrc = $settingsSrc;
-    }
-
-    /**
-     * Build settings
-     */
-    public function build() {
-        try {
-            $dirIterator = new \RecursiveDirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", $this->settingsSrc], true));
-            $iterator = new \RecursiveIteratorIterator($dirIterator);
-
-            foreach ($iterator as $file) {
-                if (!$file->isFile()) {
-                    continue;
-                }
-
-                // Get pathname
-                $path = $file->getRealPath() ?: $file->getPathname();
-                $path = str_replace(".php", "", $path);
-
-                $classPath = substr(Util::toProjectPath($path), strlen("src/"));
-                $class = "Duppy\\" . str_replace("/", "\\", $classPath);
-
-                if (!is_subclass_of($class, "Duppy\Abstracts\AbstractSetting")) {
-                    continue;
-                }
-
-                $key = $class::$key;
-
-                if (!isset($key)) {
-                    continue;
-                }
-
-                if ($class::$appSetting) {
-                    Settings::$appSettings[] = $key;
-                }
-
-                Settings::$settings[$key] = $class;
-            }
-        } catch (\UnexpectedValueException $ex) { }
-    }
-
-    /**
      * Build settings nested categories and return it
      *
      * @return array
      */
-    public static function getSettingsCategories(): array {
-        Settings::$categories = [];
+    public function getSettingsCategories(bool $addSettings = false): array {
+        $this->categories = [];
 
-        foreach (Settings::$settings as $key => $class) {
+        foreach ($this->settings as $key => $class) {
             $res = explode(".", $class::$category);
-            $tab = &Settings::$categories;
+            $endK = array_key_last($res);
+            $tab = &$this->categories;
 
-            foreach ($res as $category) {
+            foreach ($res as $cKey => $category) {
                 if (!array_key_exists($category, $tab)) {
                     $tab[$category] = [];
                 }
 
                 $tab = &$tab[$category];
+
+                if ($endK == $cKey && $addSettings) {
+                    $tab[] = $key;
+                }
             }
         }
 
-        return Settings::$categories;
+        return $this->categories;
+    }
+
+    /**
+     * Convenience function for getSettingsCategories(true);
+     *
+     * @return array
+     */
+    public function getSettingsCategoriesWithSettings(): array {
+        return $this->getSettingsCategories(true);
+    }
+
+    /**
+     * Marks a setting key as a public app setting
+     *
+     * @param string $key
+     */
+    public function addAppSetting(string $key) {
+        $this->appSettings[] = $key;
+    }
+
+    /**
+     * @param string $key
+     * @param AbstractSetting $setting
+     */
+    public function addSetting(string $key, AbstractSetting $setting) {
+        $this->settings[$key] = $setting;
     }
 
     /**
@@ -136,8 +120,8 @@ final class Settings {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getAppSettings(): array {
-        return Settings::getSettings(Settings::$appSettings);
+    public function getAppSettings(): array {
+        return $this->getSettings($this->appSettings);
     }
 
     /**
@@ -149,8 +133,8 @@ final class Settings {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getSetting(string $key, $default = ""): string {
-        $result = Settings::getSettings([ $key, ], [ $key => $default, ]);
+    public function getSetting(string $key, $default = ""): string {
+        $result = $this->getSettings([ $key, ], [ $key => $default, ]);
         return $result[$key];
     }
 
@@ -163,7 +147,7 @@ final class Settings {
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function getSettings(array $keys, array $defaults = []): array {
+    public function getSettings(array $keys, array $defaults = []): array {
         $manager = Bootstrapper::getContainer()->get("database");
         $settings = $manager->getRepository("Duppy\Entities\Setting")->findBy(["settingKey" => $keys,]);
 
@@ -173,11 +157,11 @@ final class Settings {
             $key = $setting->get("settingKey");
             $value = $setting->get("value");
 
-            $settingDef = Settings::$settings[$key];
-            $required = Settings::extractValueFromSetting($settingDef, "required");
-            $reqSettings = Settings::processSettingRequirements($required);
+            $settingDef = $this->settings[$key];
+            $required = $this->extractValueFromSetting($settingDef, "required");
+            $reqSettings = $this->processSettingRequirements($required);
             $type = array_key_exists("type", $reqSettings) ? $reqSettings["type"] : "string";
-            $typeFunc = Settings::$types[$type];
+            $typeFunc = $this->types[$type];
 
             if (!empty($typeFunc)) {
                 $ret[$key] = $typeFunc($setting->get("value"));
@@ -198,9 +182,9 @@ final class Settings {
                 continue;
             }
 
-            if (array_key_exists($key, Settings::$settings)) {
-                $settingDef = Settings::$settings[$key];
-                $ret[$key] = Settings::extractValueFromSetting($settingDef, "defaultValue");
+            if (array_key_exists($key, $this->settings)) {
+                $settingDef = $this->settings[$key];
+                $ret[$key] = $this->extractValueFromSetting($settingDef, "defaultValue");
                 continue;
             }
 
@@ -216,7 +200,7 @@ final class Settings {
      * @param $req
      * @return array
      */
-    public static function processSettingRequirements($req): array {
+    public function processSettingRequirements($req): array {
         $stgs = [];
         $sep = explode("|", $req);
 
@@ -226,7 +210,7 @@ final class Settings {
                 continue;
             }
 
-            if (array_key_exists($ea, static::$types)) {
+            if (array_key_exists($ea, $this->types)) {
                 $stgs["type"] = $ea;
                 continue;
             }
@@ -246,14 +230,14 @@ final class Settings {
      * @param string $key
      * @param array $settingValues
      */
-    public static function createSetting(string $key, array $settingValues) {
-        if (array_key_exists($key, Settings::$settings)) {
+    public function createSetting(string $key, array $settingValues) {
+        if (array_key_exists($key, $this->settings)) {
             throw new \OverflowException("setting already exists by that key");
         }
 
         $settingValues["dynamic"] = true;
 
-        Settings::$settings[$key] = $settingValues;
+        $this->settings[$key] = $settingValues;
     }
 
     /**
@@ -264,7 +248,7 @@ final class Settings {
      * @return mixed
      */
     #[Pure]
-    public static function extractValueFromSetting($setting, string $settingKey): mixed {
+    public function extractValueFromSetting($setting, string $settingKey): mixed {
         if (!is_subclass_of($setting, "Duppy\Abstracts\AbstractSetting") || is_array($setting)) {
             if (array_key_exists($settingKey, $setting)) {
                 return $setting[$settingKey];

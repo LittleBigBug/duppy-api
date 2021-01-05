@@ -1,11 +1,16 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
 namespace Duppy\Middleware;
 
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractRouteMiddleware;
-use Duppy\Bootstrapper\UserService;
+use Duppy\DuppyServices\UserService;
 
 class AdminAccessMiddleware extends AbstractRouteMiddleware {
 
@@ -15,7 +20,7 @@ class AdminAccessMiddleware extends AbstractRouteMiddleware {
      * @throws NotFoundException
      */
     final public function handle(): ?bool {
-        $user = UserService::getLoggedInUser();
+        $user = (new UserService)->inst()->getLoggedInUser();
 
         if ($user == null) {
             static::$response = static::$response->withStatus(401);

@@ -1,4 +1,9 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
 namespace Duppy\Endpoints;
 
@@ -6,10 +11,10 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\Bootstrapper\MailService;
-use Duppy\Bootstrapper\Settings;
-use Duppy\Bootstrapper\TokenManager;
-use Duppy\Bootstrapper\UserService;
+use Duppy\DuppyServices\MailService;
+use Duppy\DuppyServices\Settings;
+use Duppy\DuppyServices\TokenManager;
+use Duppy\DuppyServices\UserService;
 use Duppy\Entities\WebUser;
 use Duppy\Entities\WebUserProviderAuth;
 use Duppy\Entities\WebUserVerification;
@@ -50,7 +55,10 @@ class Register extends AbstractEndpoint {
             $provider = "password";
         }
 
-        $providerEnabled = UserService::enabledProvider($provider);
+        $userService = (new UserService)->inst();
+        $settingsMngr = (new Settings)->inst();
+
+        $providerEnabled = $userService->enabledProvider($provider);
         $postArgs = $request->getParsedBody();
 
         if (!$providerEnabled) {
@@ -69,7 +77,7 @@ class Register extends AbstractEndpoint {
 
             if (empty($email)) {
                 $err = "Email is empty";
-            } elseif (UserService::emailTaken($email)) {
+            } elseif ($userService->emailTaken($email)) {
                 $err = "Email is taken";
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $err = "Invalid email";
@@ -83,14 +91,14 @@ class Register extends AbstractEndpoint {
                 return Util::responseError($response, $err);
             }
 
-            $whitelist = UserService::getEmailWhitelist();
+            $whitelist = $userService->getEmailWhitelist();
 
             $emailWhitelisted = false;
             $bypassVerify = false;
 
             if (is_subclass_of($whitelist, "Duppy\Abstracts\AbstractEmailWhitelist")) {
-                $emailWhitelisted = UserService::emailWhitelisted($email);
-                $emailWlSettings = Settings::getSettings([
+                $emailWhitelisted = $userService->emailWhitelisted($email);
+                $emailWlSettings = $settingsMngr->getSettings([
                     "auth.emailWhitelist.requiredRegister",
                     "auth.emailWhitelist.bypassVerification",
                 ]);
@@ -123,10 +131,10 @@ class Register extends AbstractEndpoint {
 
                 $url = getenv("CLIENT_URL") . "#/login/verification";
 
-                $title = Settings::getSetting("title");
+                $title = $settingsMngr->getSetting("title");
                 $subject = "Verify Your New $title Account";
 
-                MailService::sendMailTemplate($email, $subject, "verifyAccount", [
+                (new MailService)->inst()->sendMailTemplate($email, $subject, "verifyAccount", [
                     "url" => $url,
                     "code" => $code,
                     "title" => $subject,
@@ -143,11 +151,11 @@ class Register extends AbstractEndpoint {
                 ], 201);
             }
 
-            $user = UserService::createUser($email, $hash);
-            return UserService::loginUser($response, $user);
+            $user = $userService->createUser($email, $hash);
+            return $userService->loginUser($response, $user);
         }
 
-        $profile = UserService::authenticateHybridAuth($provider, $postArgs);
+        $profile = $userService->authenticateHybridAuth($provider, $postArgs);
 
         // Error
         if (is_string($profile)) {
@@ -163,7 +171,7 @@ class Register extends AbstractEndpoint {
         $email = $profile->emailVerified ?? ""; // This email may not be provided but we can ask the user later
         $avatar = $profile->photoURL ?? "";
 
-        if (UserService::emailTaken($email)) {
+        if ((new UserService)->inst()->emailTaken($email)) {
             return Util::responseError($response, "That email is being used already!");
         }
 
@@ -197,7 +205,7 @@ class Register extends AbstractEndpoint {
         ];
 
         // Login Immediately
-        $token = TokenManager::createTokenFill($data);
+        $token = (new TokenManager)->inst()->createTokenFill($data);
 
         $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token  . "/" . $data["id"];
         return $response->withHeader("Location", $redirect)->withStatus(302);

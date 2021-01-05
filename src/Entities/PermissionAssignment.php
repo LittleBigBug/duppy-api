@@ -1,9 +1,14 @@
 <?php
+/*
+ *                  This file is part of Duppy Suite
+ *                         https://dup.drm.gg
+ *                               -= * =-
+ */
 
 namespace Duppy\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use Duppy\Bootstrapper\EnvironmentService;
+use Duppy\DuppyServices\EnvironmentService;
 use JetBrains\PhpStorm\Pure;
 
 /**
@@ -72,7 +77,7 @@ class PermissionAssignment {
      */
     #[Pure]
     public function inThisEnvironment(): bool {
-        $environment = EnvironmentService::getEnvironment();
+        $environment = (new EnvironmentService)->inst()->getEnvironment();
 
         if ($environment == null) {
             return true;
