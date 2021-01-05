@@ -52,9 +52,8 @@
         <mkdir dir="./build/phpcs" />
         <mkdir dir="./build/phpcs/html" />
 
-        <exec command="./tools/phpcs --report=checkstyle --report-file=./build/phpcs/output.xml --standard=PEAR --extensions=php --ignore=.git/,doc/,resources/,build ./src"
-                dir="${project.basedir}"
-                passthru="true"
+        <exec command="./tools/phpcs --report=checkstyle --report-file=./build/phpcs/output.xml --standard=PEAR --extensions=php ./src"
+                dir="${project.basedir}" passthru="true"
         />
 
         <xslt file="./build/phpcs/output.xml" tofile="./build/phpcs/html/index.html" style="resources/checkstyle.xsl"/>
@@ -81,6 +80,14 @@
         <exec command="./tools/phpdox" dir="${project.basedir}" passthru="true" />
     </target>
 
+    <target name="phploc">
+        <exec command="${phing} _phploc" passthru="true"/>
+    </target>
+    <target name="_phploc">
+        <mkdir dir="./build/phploc" />
+        <exec command="./tools/phploc ./src" dir="${project.basedir}" passthru="true" />
+    </target>
+
     <!--
         PHP_Depend (and PHPMD, being a fork) are disabled for now until PHP 8 Tokens are added
         https://github.com/pdepend/pdepend/issues/491
@@ -88,6 +95,6 @@
 
     <target name="all" depends="clean, clean-dependencies, update-dependencies, test, phpdox" />
     <target name="test" depends="report, phpunit" />
-    <target name="doc" depends="prepare, phpdox" />
-    <target name="report" depends="prepare, phpcs" />
+    <target name="doc" depends="prepare, phploc, phpdox" />
+    <target name="report" depends="prepare, phploc, phpcs" />
 </project>

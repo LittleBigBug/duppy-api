@@ -25,9 +25,3 @@ define("DUPPY_URI", $prHost . DUPPY_URI_PATH);
  */
 
 require DUPPY_PATH . '/vendor/autoload.php';
-
-/**
- * Bootstrap application
- */
-
-Bootstrapper::boot();

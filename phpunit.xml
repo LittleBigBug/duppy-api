@@ -1,4 +1,11 @@
 <phpunit bootstrap="tests/TestBootstrap.php">
+    <logging>
+        <log type="coverage-html" target="build/phpunit/coverage"/>
+        <log type="coverage-clover" target="build/phpunit/logs/clover.xml"/>
+        <log type="coverage-crap4j" target="build/phpunit/logs/crap4j.xml"/>
+        <log type="junit" target="build/phpunit/logs/junit.xml" logIncompleteSkipped="false"/>
+    </logging>
+
     <testsuites>
         <testsuite name="unit">
             <directory phpVersion="8.0.0" phpVersionOperator=">=">tests/unit</directory>

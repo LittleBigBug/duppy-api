@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <phpdox xmlns="http://xml.phpdox.net/config">
     <project name="Duppy-API" source="${basedir}/src" workdir="${basedir}/build/phpdox/xml">
-        <collector backend="parser" />
+        <collector backend="parser">
+            <include mask="*.php" />
+        </collector>
+
         <generator output="${basedir}/build/api">
-            <build engine="html" output="html"/>
+            <build engine="html" enabled="true" output="doc">
+                <file extension="html" />
+            </build>
         </generator>
     </project>
 </phpdox>
