@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Duppy-API" default="all" basedir="." description="Modular API for duppy clients">
+    <property file="./build.properties" />
+
+    <target name="clean">
+        <delete dir="./build" />
+    </target>
+    <target name="clean-dependencies">
+        <delete dir="${vendor}" />
+        <delete dir="./tools" />
+    </target>
+
+    <target name="update-dependencies">
+        <exec command="composer update" passthru="true" />
+        <exec command="phive update" passthru="true" />
+    </target>
+
+    <target name="deploy-migrations">
+        <exec command="vendor/bin/doctrine orm:schema-tool:update --force --dump-sql" passthru="true" />
+        <exec command="vendor/bin/doctrine orm:generate-proxies" passthru="true" />
+    </target>
+
+    <target name="prepare">
+        <mkdir dir="./build" />
+    </target>
+
+    <target name="phpunit">
+        <mkdir dir="./build/phpunit" />
+        <mkdir dir="./build/phpunit/html" />
+
+        <exec command="tools/phpunit" passthru="true" />
+        <xslt file="./build/phpunit/output.xml" tofile="./build/phpunit/html/index.html" style="resources/phpunit.xsl"/>
+    </target>
+
+    <target name="phpdepend">
+        <exec command="${phing} _phpdepend" passthru="true" />
+    </target>
+    <target name="_phpdepend">
+        <mkdir dir="./build/php-depend" />
+        <mkdir dir="./build/php-depend/html" />
+
+        <exec command="${vendor}/bin/pdepend --jdepend-xml=./build/php-depend/output.xml --jdepend-chart=./build/php-depend/html/pdepend.svg --ignore=.git,test/ --overview-pyramid=./build/php-depend/html/pyramid.svg ./src"
+              dir="./" passthru="true"
+        />
+        <xslt file="./build/php-depend/output.xml" tofile="./build/php-depend/html/index.html" style="resources/pdepend.xsl"/>
+    </target>
+
+    <target name="phpcs">
+        <exec command="${phing} _phpcs" passthru="true"/>
+    </target>
+    <target name="_phpcs">
+        <mkdir dir="./build/phpcs" />
+        <mkdir dir="./build/phpcs/html" />
+
+        <exec command="./tools/phpcs --report=checkstyle --report-file=./build/phpcs/output.xml --standard=PEAR --extensions=php --ignore=.git/,doc/,resources/,build ./src"
+                dir="${project.basedir}"
+                passthru="true"
+        />
+
+        <xslt file="./build/phpcs/output.xml" tofile="./build/phpcs/html/index.html" style="resources/checkstyle.xsl"/>
+    </target>
+
+    <target name="phpmd">
+        <exec command="${phing} _phpmd" passthru="true"/>
+    </target>
+    <target name="_phpmd">
+        <mkdir dir="./build/phpmd" />
+        <mkdir dir="./build/phpmd/html" />
+
+        <exec command="./tools/phpmd ./src xml rulesets/codesize.xml,rulesets/unusedcode.xml,rulesets/naming.xml --suffixes php --reportfile ./build/phpmd/output.xml"
+              dir="${project.basedir}" passthru="true"
+        />
+        <xslt file="./build/phpmd/output.xml" tofile="./build/phpmd/html/index.html" style="resources/phpmd.xsl"/>
+    </target>
+
+    <target name="phpdox">
+        <exec command="${phing} _phpdox" passthru="true"/>
+    </target>
+    <target name="_phpdox">
+        <mkdir dir="./build/phpdox" />
+        <exec command="./tools/phpdox" dir="${project.basedir}" passthru="true" />
+    </target>
+
+    <!--
+        PHP_Depend (and PHPMD, being a fork) are disabled for now until PHP 8 Tokens are added
+        https://github.com/pdepend/pdepend/issues/491
+     -->
+
+    <target name="all" depends="clean, clean-dependencies, update-dependencies, test, phpdox" />
+    <target name="test" depends="report, phpunit" />
+    <target name="doc" depends="prepare, phpdox" />
+    <target name="report" depends="prepare, phpcs" />
+</project>

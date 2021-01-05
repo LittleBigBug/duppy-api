@@ -5,6 +5,10 @@ tools/
 .idea
 .env
 
+# Build tools and testing
+build/
+.phpunit.result.cache
+
 # Client api mod
 src/Mods/Airheads
 
