@@ -9,6 +9,8 @@ pipeline {
                 sh "scripts/clean.sh"
                 sh "scripts/install-phive.sh --local"
 
+                sh "mkdir tools"
+
                 sh "composer update"
                 sh "tools/phive update"
             }
