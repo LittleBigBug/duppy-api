@@ -4,6 +4,8 @@ node {
 
     stage('Update Dependencies') {
 
+        chmod +x scripts/*
+
         scripts/clean.sh
         scripts/install-phive.sh --local
 
