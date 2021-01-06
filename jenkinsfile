@@ -4,9 +4,11 @@ node {
 
     stage('Update Dependencies') {
 
-        ./scripts/
+        ./scripts/clean.sh
+        ./scripts/install-phive.sh --local
+
         composer update
-        phive update
+        ./tools/phive update
 
     }
 

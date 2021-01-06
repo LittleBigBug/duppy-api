@@ -22,6 +22,7 @@
 
     <target name="prepare">
         <mkdir dir="./build" />
+        <exec command="cp ./resources/.htaccess ./build/.htaccess" />
     </target>
 
     <target name="phpunit">
@@ -93,8 +94,8 @@
         https://github.com/pdepend/pdepend/issues/491
      -->
 
-    <target name="all" depends="clean, clean-dependencies, update-dependencies, test, phpdox" />
+    <target name="all" depends="clean, clean-dependencies, update-dependencies, prepare, test, doc, report" />
     <target name="test" depends="report, phpunit" />
-    <target name="doc" depends="prepare, phploc, phpdox" />
-    <target name="report" depends="prepare, phploc, phpcs" />
+    <target name="doc" depends="phploc, phpdox" />
+    <target name="report" depends="phploc, phpcs" />
 </project>
