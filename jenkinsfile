@@ -7,9 +7,9 @@ pipeline {
                 sh "chmod +x scripts/*"
 
                 sh "scripts/clean.sh"
-                sh "scripts/install-phive.sh --local"
 
                 sh "mkdir tools"
+                sh "scripts/install-phive.sh --local"
 
                 sh "composer update"
                 sh "tools/phive update"
