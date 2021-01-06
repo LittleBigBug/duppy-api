@@ -9,14 +9,14 @@ pipeline {
                 sh "scripts/clean.sh"
                 sh "scripts/install-phive.sh --local"
 
-                composer update
-                tools/phive update
+                sh "composer update"
+                sh "tools/phive update"
             }
         }
 
         stage('Execute Phing Tasks') {
             steps {
-                vendor/bin/phing all
+                phing "all"
             }
         }
     }
