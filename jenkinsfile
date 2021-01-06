@@ -1,19 +1,23 @@
 pipeline {
-    agent any
+    agent { docker { image 'php' } }
 
     stages {
         stage('Update Dependencies') {
-            chmod +x scripts/*
+            steps {
+                chmod +x scripts/*
 
-            scripts/clean.sh
-            scripts/install-phive.sh --local
+                scripts/clean.sh
+                scripts/install-phive.sh --local
 
-            composer update
-            tools/phive update
+                composer update
+                tools/phive update
+            }
         }
 
         stage('Execute Phing Tasks') {
-            vendor/bin/phing all
+            steps {
+                vendor/bin/phing all
+            }
         }
     }
 }
