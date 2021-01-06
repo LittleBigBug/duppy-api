@@ -4,10 +4,10 @@ pipeline {
     stages {
         stage('Update Dependencies') {
             steps {
-                chmod +x 'scripts/*'
+                sh "chmod +x scripts/*"
 
-                scripts/clean.sh
-                scripts/install-phive.sh --local
+                sh "scripts/clean.sh"
+                sh "scripts/install-phive.sh --local"
 
                 composer update
                 tools/phive update
