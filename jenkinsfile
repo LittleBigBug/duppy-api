@@ -1,17 +1,19 @@
 pipeline {
     agent any
 
-    stage('Update Dependencies') {
-        chmod +x scripts/*
+    stages {
+        stage('Update Dependencies') {
+            chmod +x scripts/*
 
-        scripts/clean.sh
-        scripts/install-phive.sh --local
+            scripts/clean.sh
+            scripts/install-phive.sh --local
 
-        composer update
-        tools/phive update
-    }
+            composer update
+            tools/phive update
+        }
 
-    stage('Execute Phing Tasks') {
-        vendor/bin/phing all
+        stage('Execute Phing Tasks') {
+            vendor/bin/phing all
+        }
     }
 }
