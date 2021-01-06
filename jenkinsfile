@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Update Dependencies') {
             steps {
-                chmod +x scripts/*
+                chmod +x 'scripts/*'
 
                 scripts/clean.sh
                 scripts/install-phive.sh --local
@@ -20,4 +20,4 @@ pipeline {
             }
         }
     }
-}*
+}
