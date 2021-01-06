@@ -1,0 +1,19 @@
+#!/usr/bin/env groovy
+
+node {
+
+    stage('Update Dependencies') {
+
+        ./scripts/
+        composer update
+        phive update
+
+    }
+
+    stage('Execute Phing Tasks') {
+
+        vendor/bin/phing all
+
+    }
+
+}
