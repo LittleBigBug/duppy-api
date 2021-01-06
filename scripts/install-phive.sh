@@ -8,7 +8,7 @@ cd ../
 
 local=0
 
-while [[ "$#" -gt 0 ]]; do
+while [ "$#" -gt 0 ]; do
     case $1 in
         -l|--local) local=1 ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
