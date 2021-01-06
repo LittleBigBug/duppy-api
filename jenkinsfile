@@ -11,7 +11,9 @@ pipeline {
                 sh "mkdir tools"
                 sh "scripts/install-phive.sh --local"
 
-                sh "composer update"
+                sh "phive install composer"
+
+                sh "tools/composer update"
                 sh "tools/phive update"
             }
         }
