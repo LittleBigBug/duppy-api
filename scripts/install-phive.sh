@@ -6,12 +6,6 @@
 cd "${0%/*}"
 cd ../
 
-if [ ! `id -u` -eq 0 ]
-then
-        echo "This script should be ran with sudo or as root!"
-        exit 1
-fi
-
 local=0
 
 while [[ "$#" -gt 0 ]]; do
@@ -21,6 +15,12 @@ while [[ "$#" -gt 0 ]]; do
     esac
     shift
 done
+
+if [ "$local" -eq "0" ] && [ ! `id -u` -eq 0 ]
+then
+        echo "This script should be ran with sudo or as root!"
+        exit 1
+fi
 
 wget -O phive.phar "https://phar.io/releases/phive.phar"
 wget -O phive.phar.asc "https://phar.io/releases/phive.phar.asc"
