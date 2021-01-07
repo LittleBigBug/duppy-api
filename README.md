@@ -31,7 +31,16 @@ Client mods will be completely owned solely by clients but the main Duppy softwa
   - MBString extension
   - GMP extension
   - OpenSSL library & extension
-- Composer
+  - XML Extension
+- Phive (/scripts/install-phive.sh)
+  - PHPUnit
+  - PHPLOC
+  - PHPMD
+  - PHPCPD
+  - PHPDox
+  - PHPCS
+  - PHPCBF
+  - Composer
 - [URL Rewriting](https://gist.github.com/bramus/5332525)
 
 Install php dependencies on debian based OS:
