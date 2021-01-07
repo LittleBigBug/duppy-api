@@ -13,7 +13,7 @@ pipeline {
 
         stage('Execute Phing Tasks') {
             steps {
-                sh "phing all"
+                sh "vendor/bin/phing all"
             }
         }
     }
