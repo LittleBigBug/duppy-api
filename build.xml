@@ -12,7 +12,6 @@
 
     <target name="update-dependencies">
         <exec command="composer update" passthru="true" />
-        <exec command="phive update" passthru="true" />
     </target>
 
     <target name="deploy-migrations">
@@ -29,7 +28,7 @@
         <mkdir dir="./build/phpunit" />
         <mkdir dir="./build/phpunit/html" />
 
-        <exec command="tools/phpunit" passthru="true" />
+        <exec command="phpunit" passthru="true" />
         <xslt file="./build/phpunit/output.xml" tofile="./build/phpunit/html/index.html" style="resources/phpunit.xsl"/>
     </target>
 
@@ -53,7 +52,7 @@
         <mkdir dir="./build/phpcs" />
         <mkdir dir="./build/phpcs/html" />
 
-        <exec command="./tools/phpcs --report=checkstyle --report-file=./build/phpcs/output.xml --standard=PEAR --extensions=php ./src"
+        <exec command="phpcs --report=checkstyle --report-file=./build/phpcs/output.xml --standard=PEAR --extensions=php ./src"
                 dir="${project.basedir}" passthru="true"
         />
 
@@ -67,7 +66,7 @@
         <mkdir dir="./build/phpmd" />
         <mkdir dir="./build/phpmd/html" />
 
-        <exec command="./tools/phpmd ./src xml rulesets/codesize.xml,rulesets/unusedcode.xml,rulesets/naming.xml --suffixes php --reportfile ./build/phpmd/output.xml"
+        <exec command="phpmd ./src xml rulesets/codesize.xml,rulesets/unusedcode.xml,rulesets/naming.xml --suffixes php --reportfile ./build/phpmd/output.xml"
               dir="${project.basedir}" passthru="true"
         />
         <xslt file="./build/phpmd/output.xml" tofile="./build/phpmd/html/index.html" style="resources/phpmd.xsl"/>
@@ -78,7 +77,7 @@
     </target>
     <target name="_phpdox">
         <mkdir dir="./build/phpdox" />
-        <exec command="./tools/phpdox" dir="${project.basedir}" passthru="true" />
+        <exec command="phpdox" dir="${project.basedir}" passthru="true" />
     </target>
 
     <target name="phploc">
@@ -86,7 +85,7 @@
     </target>
     <target name="_phploc">
         <mkdir dir="./build/phploc" />
-        <exec command="./tools/phploc ./src" dir="${project.basedir}" passthru="true" />
+        <exec command="phploc ./src" dir="${project.basedir}" passthru="true" />
     </target>
 
     <!--
