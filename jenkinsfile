@@ -13,7 +13,7 @@ pipeline {
 
         stage('Execute Phing Tasks') {
             steps {
-                phing "all"
+                sh "phing all"
             }
         }
     }
