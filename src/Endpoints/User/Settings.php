@@ -62,31 +62,6 @@ class Settings extends AbstractEndpoint {
     public static array $middleware = [ "Duppy\Middleware\AuthRequiredSettingMiddleware" ];
 
     /**
-     * Checks if the user has the right permissions or is themselves
-     *
-     * @param int $id
-     * @param string $perm
-     * @return bool
-     * @throws DependencyException
-     * @throws NotFoundException
-     */
-    private function checkPermission(int $id, string $perm): bool {
-        $userService = (new UserService)->inst();
-        $user = $userService->getUser($id);
-        $loggedInUser = $userService->getLoggedInUser();
-
-        if ($user->get("id") !== $loggedInUser->get("id")) {
-            $canCheckOther = $loggedInUser->hasPermission("admin") || $loggedInUser->hasPermission($perm);
-
-            if (!$canCheckOther || !$loggedInUser->weightCheck($user)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Default invoke method
      *
      * @param Request $request
@@ -98,7 +73,7 @@ class Settings extends AbstractEndpoint {
      */
     public function getSettings(Request $request, Response $response, array $args = []): Response {
         $userId = $args["id"];
-        $perm = $this->checkPermission($userId, "usersettings.get.other");
+        $perm = (new UserService)->inst()->loggedInUserAgainstUserPerm($userId, "usersettings.get.other");
 
         if (!$perm) {
             return $response->withStatus(401);
@@ -122,7 +97,7 @@ class Settings extends AbstractEndpoint {
      */
     public function setSettings(Request $request, Response $response, array $args = []): Response {
         $userId = $args["id"];
-        $perm = $this->checkPermission($userId, "usersettings.set.other");
+        $perm = (new UserService)->inst()->loggedInUserAgainstUserPerm($userId, "usersettings.set.other");
 
         if (!$perm) {
             return $response->withStatus(401);

@@ -353,4 +353,37 @@ final class UserService extends AbstractService {
         return $data;
     }
 
+    /**
+     * Compares the logged in user to the other user $id. If they arent the same, it checks the logged in users permission and checks for
+     * 'admin', '*', and $overridePerm
+     *
+     * If the user $id is the same as the logged in user, it checks if they have $regPerm, if not set it just returns true
+     *
+     * @param int $id
+     * @param string $overridePerm
+     * @param string $regPerm
+     * @return bool
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public function loggedInUserAgainstUserPerm(int $id, string $overridePerm, string $regPerm = ""): bool {
+        $userService = (new UserService)->inst();
+        $user = $userService->getUser($id);
+        $loggedInUser = $userService->getLoggedInUser();
+
+        if ($user->get("id") !== $loggedInUser->get("id")) {
+            // Permission to check
+            $canCheckOther = $loggedInUser->hasPermission("admin") || $loggedInUser->hasPermission("*")
+                || $loggedInUser->hasPermission($overridePerm);
+
+            if (!$canCheckOther || !$loggedInUser->weightCheck($user)) {
+                return false;
+            }
+        } elseif ($regPerm != "" && !$loggedInUser->hasPermission($regPerm)) {
+            return false;
+        }
+
+        return true;
+    }
+
 }
