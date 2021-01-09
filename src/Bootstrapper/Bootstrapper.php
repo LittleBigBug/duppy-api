@@ -145,27 +145,52 @@ final class Bootstrapper {
     }
 
     /**
+     * Slim Testing Application
+     *
+     * @return App
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function test(): App {
+        // Create Container using PHP-DI
+        self::$container = new Container;
+        AppFactory::setContainer(self::getContainer());
+
+        // Boot Slim instance
+        self::$app = AppFactory::create();
+
+        self::configure();
+
+        return self::$app;
+    }
+
+    /**
      * Configures Slim
      *
+     * @param bool $skipDi
      * @return void
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public static function configure() {
+    public static function configure(bool $skipDi = false) {
         $app = self::getApp();
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
 
         $app->add(new CORSMiddleware);
 
-        self::buildDependencies();
+        if (!$skipDi) {
+            self::buildDependencies();
+        }
+
+        // Mod Loader service
+        (new ModLoader)->inst()->build();
+
+        self::buildRoutes();
     }
 
     /**
-     * Build dependencies into DI and other services
-     *
-     * @throws DependencyException
-     * @throws NotFoundException
+     * Build dependencies into DI
      */
     public static function buildDependencies() {
         $container = self::getContainer();
@@ -193,9 +218,6 @@ final class Bootstrapper {
         // OneBlade Templating
         $templateHandler = null;
         $container->set("templateHandler", fn () => $templateHandler ?? $templateHandler = self::configureTemplates());
-
-        (new ModLoader)->inst()->build();
-        self::buildRoutes();
     }
 
     /**
