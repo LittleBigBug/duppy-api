@@ -7,6 +7,8 @@
 
 namespace Duppy\Entities;
 
+use Duppy\Abstracts\AbstractApiClientCustomCheck;
+
 /**
  * ApiClient Entity
  *
@@ -66,19 +68,30 @@ class ApiClients {
     }
 
     /**
+     * Default mode 'token':
      * Hashes a raw token and sets it
+     *
+     * Mode 'custom':
+     * Uses a class name string Duppy\Class\Name and invokes it (__invoke)
+     *
      * Returns its success
      * @param string $token
      * @return bool
      */
     public function setToken(string $token): bool {
-        $hash = password_hash($token,  PASSWORD_DEFAULT);
+        $set = $token;
 
-        if ($hash == false) {
-            return false;
+        if ($this->method == null || $this->method == "token") {
+            $hash = password_hash($token, PASSWORD_DEFAULT);
+
+            if ($hash == false) {
+                return false;
+            }
+
+            $set = $hash;
         }
 
-        $this->token = $hash;
+        $this->token = $set;
         return true;
     }
 
@@ -89,6 +102,21 @@ class ApiClients {
      * @return bool
      */
     public function checkToken(string $oToken): bool {
+        if ($this->method != null) {
+            switch ($this->method) {
+                case "custom":
+                    $className = $this->token;
+
+                    if (!is_subclass_of($className, AbstractApiClientCustomCheck::class)) {
+                        return false;
+                    }
+
+                    $classInst = new $className;
+                    return $classInst($oToken);
+            }
+        }
+
+        // Default to Token style (hashed)
         return password_verify($oToken, $this->token);
     }
 
