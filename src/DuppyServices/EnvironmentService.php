@@ -15,7 +15,7 @@ use Duppy\Entities\Environment;
 
 final class EnvironmentService extends AbstractService {
 
-    protected ?Environment $currentEnvironment;
+    protected ?Environment $currentEnvironment = null;
 
     /**
      * @param Environment|null $environment
@@ -45,6 +45,29 @@ final class EnvironmentService extends AbstractService {
 
         $environment = $repo->findOneBy([ "name" => $environment, "enabled" => true, ]);
         return $environment == null ? false : $environment;
+    }
+
+    /**
+     * Compares if the second env is the first env
+     *
+     * @param ?Environment $firstEnv
+     * @param ?Environment $otherEnv
+     * @return bool
+     */
+    public function compareEnvironment(?Environment $firstEnv, ?Environment $otherEnv): bool {
+        $envNull = $firstEnv == null;
+        $oEnvNull = $otherEnv == null;
+
+        // In no environment, if the other env is null it will always return false
+        if ($envNull && !$oEnvNull) {
+            return false;
+        }
+
+        if ($oEnvNull) {
+            return true;
+        }
+
+        return $firstEnv === $otherEnv;
     }
 
 }

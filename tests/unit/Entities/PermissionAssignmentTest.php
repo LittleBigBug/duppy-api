@@ -5,14 +5,14 @@
  *                               -= * =-
  */
 
-namespace Duppy\Tests\unit;
+namespace Duppy\Tests\unit\Entities;
 
 use Duppy\DuppyServices\EnvironmentService;
 use Duppy\Entities\Environment;
 use Duppy\Entities\PermissionAssignment;
-use PHPUnit\Framework\TestCase;
+use Duppy\Tests\Tools\DuppyTestCase;
 
-final class PermissionAssignmentTest extends TestCase {
+final class PermissionAssignmentTest extends DuppyTestCase {
 
     public function testNegativeAssignment() {
         $positive = new PermissionAssignment;
@@ -21,8 +21,8 @@ final class PermissionAssignmentTest extends TestCase {
         $positive->setPermission("some.permission.type");
         $negative->setPermission("-another.permission.type");
 
-        $this->assertSame(true, $positive->getPermissionEval());
-        $this->assertSame(false, $negative->getPermissionEval());
+        $this->assertSameA(true, $positive->getPermissionEval());
+        $this->assertSameA(false, $negative->getPermissionEval());
     }
 
     public function testEnvironmentAssignment() {
@@ -49,9 +49,9 @@ final class PermissionAssignmentTest extends TestCase {
         $otherEnvPerm->setPermission("another.permission");
         $otherEnvPerm->setEnvironment($oEnv);
 
-        $this->assertSame(true, $noEnvPerm->inThisEnvironment());
-        $this->assertSame(true, $thisEnvPerm->inThisEnvironment());
-        $this->assertSame(false, $otherEnvPerm->inThisEnvironment());
+        $this->assertSameA(true, $noEnvPerm->inThisEnvironment());
+        $this->assertSameA(true, $thisEnvPerm->inThisEnvironment());
+        $this->assertSameA(false, $otherEnvPerm->inThisEnvironment());
     }
 
 }

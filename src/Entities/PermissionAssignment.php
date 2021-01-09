@@ -32,22 +32,22 @@ class PermissionAssignment {
      * @ORM\GeneratedValue
      * @ORM\Column(type="string", nullable=false)
      */
-    protected string $permission;
+    protected string $permission = "";
 
     /**
      * @ORM\ManyToOne(targetEntity="Environment")
      */
-    protected Environment $environment;
+    protected ?Environment $environment = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="WebUser", inversedBy="permissions")
      */
-    protected WebUser $user;
+    protected ?WebUser $user = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="UserGroup", inversedBy="permissions")
      */
-    protected UserGroup $group;
+    protected ?UserGroup $group = null;
 
     /**
      * Returns the permission string without any modifiers
@@ -77,13 +77,9 @@ class PermissionAssignment {
      */
     #[Pure]
     public function inThisEnvironment(): bool {
-        $environment = (new EnvironmentService)->inst()->getEnvironment();
-
-        if ($environment == null) {
-            return true;
-        }
-
-        return $environment === $this->environment;
+        $envService = (new EnvironmentService)->inst();
+        $environment = $envService->getEnvironment();
+        return $envService->compareEnvironment($environment, $this->environment);
     }
 
     /**
