@@ -8,6 +8,8 @@
 namespace Duppy\Bootstrapper;
 
 use Duppy\Util;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
@@ -145,7 +147,7 @@ final class Router {
      */
     private function loop(callable $fn) {
         $searchPath = Util::combinePaths([DUPPY_PATH, "src", $this->endpointsSrc]);
-        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($searchPath));
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($searchPath));
 
         foreach ($iterator as $file) {
             // Check if file is a valid file
