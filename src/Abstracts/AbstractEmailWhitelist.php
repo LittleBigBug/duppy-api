@@ -12,7 +12,7 @@ use JetBrains\PhpStorm\Pure;
 
 // Email whitelists where created for GoAirheads' need for no verification emails, however this can still
 // be used for restricting domains or something (forcing @gmail, yahoo, known etc)
-class AbstractEmailWhitelist {
+abstract class AbstractEmailWhitelist {
 
     protected static string $description = "";
 

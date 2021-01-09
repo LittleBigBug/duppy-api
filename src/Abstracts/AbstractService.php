@@ -7,8 +7,23 @@
 
 namespace Duppy\Abstracts;
 
-use Exception;
-
+/**
+ * Service classes are objects that are handled as singletons.
+ * but allow for tests to mock them and implement different functions
+ *
+ * $obj = new MyService;
+ * $obj->Singleton(); // Creates if non-existant and returns the singleton
+ * $obj->inst(); // Alias for above
+ *
+ * (new MyService)->inst()->aFunction();
+ *
+ * // Force a singleton to be recreated
+ * $obj = new MyService(true);
+ * $obj->aFunction();
+ *
+ * Class AbstractService
+ * @package Duppy\Abstracts
+ */
 class AbstractService {
 
     /**
@@ -28,7 +43,10 @@ class AbstractService {
      * @param bool $singleton
      */
     public function __construct(bool $singleton = false) {
-        static::SetSingleton($this);
+        // Set itself to be the new singleton if its specified
+        if ($singleton) {
+            static::SetSingleton($this);
+        }
     }
 
     /**
@@ -63,10 +81,13 @@ class AbstractService {
             $name = get_called_class();
         }
 
-        $service = new $name;
-        AbstractService::SetSingleton($service);
+        // Create a new service if the singleton doesn't exist
+        if (!array_key_exists($name, static::$singletons) || ($ret = static::$singletons[$name]) == null) {
+            $ret = new $name;
+            AbstractService::SetSingleton($ret);
+        }
 
-        return static::$singletons[$name] ?? $service;
+        return $ret;
     }
 
     /**
