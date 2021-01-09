@@ -43,7 +43,7 @@ final class TokenManager extends AbstractService {
      * Optional but allows overriding env
      * @var bool|null
      */
-    public ?bool $encryptionEnabled;
+    public ?bool $encryptionEnabled = null;
 
     /**
      * Creates a new signed and encrypted token with the payload
