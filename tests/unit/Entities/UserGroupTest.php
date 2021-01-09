@@ -5,12 +5,12 @@
  *                               -= * =-
  */
 
-namespace Duppy\Tests\Tools\Tests\unit;
+namespace Duppy\Tests\unit\Entities;
 
 use Duppy\Entities\UserGroup;
-use PHPUnit\Framework\TestCase;
+use Duppy\Tests\Tools\DuppyTestCase;
 
-final class UserGroupTest extends TestCase {
+final class UserGroupTest extends DuppyTestCase {
 
     public function testParents() {
         $users = new UserGroup;
@@ -37,11 +37,11 @@ final class UserGroupTest extends TestCase {
         $donatorsModsParents = [$members, $users];
         $adminsParents = [$mods, $members, $users];
 
-        $this->assertSame($userParents, $users->getParents());
-        $this->assertSame($membersParents, $members->getParents());
-        $this->assertSame($donatorsModsParents, $donators->getParents());
-        $this->assertSame($donatorsModsParents, $mods->getParents());
-        $this->assertSame($adminsParents, $admins->getParents());
+        $this->assertSameA($userParents, $users->getParents());
+        $this->assertSameA($membersParents, $members->getParents());
+        $this->assertSameA($donatorsModsParents, $donators->getParents());
+        $this->assertSameA($donatorsModsParents, $mods->getParents());
+        $this->assertSameA($adminsParents, $admins->getParents());
     }
 
 }

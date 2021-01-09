@@ -28,8 +28,8 @@ class UserServiceTest extends DuppyTestCase {
         $newUser1 = $userService->createUser("timmy.roblox2006@yahoo.com", "test", false);
         $newUser2 = $userService->createUser("timmy@roblox2006@yahoo.com", "test", false);
 
-        $this->assertSame("timmy.roblox2006", $newUser1->get("username"));
-        $this->assertSame("timmy@roblox2006", $newUser2->get("username"));
+        $this->assertSameA("timmy.roblox2006", $newUser1->get("username"));
+        $this->assertSameA("timmy@roblox2006", $newUser2->get("username"));
     }
 
     public function testGenUniqueTempCode() {
@@ -50,8 +50,8 @@ class UserServiceTest extends DuppyTestCase {
             return false;
         });
 
-        $this->assertSame(6, strlen((string) $setTo));
-        $this->assertSame(6, strlen((string) $new));
+        $this->assertSameA(6, strlen((string) $setTo));
+        $this->assertSameA(6, strlen((string) $new));
 
         $this->assertNotSame($new, $setTo);
 
@@ -114,23 +114,23 @@ class UserServiceTest extends DuppyTestCase {
         // Implement Mock TokenManager
         AbstractService::MockService(TokenManager::class, $mockToken1);
 
-        $this->assertSame($user1Private, $userService->getBasicInfo($user1));
-        $this->assertSame($user2Details, $userService->getBasicInfo($user2));
+        $this->assertSameA($user1Private, $userService->getBasicInfo($user1));
+        $this->assertSameA($user2Details, $userService->getBasicInfo($user2));
 
         AbstractService::MockService(TokenManager::class, $mockToken2);
 
-        $this->assertSame($user1Details, $userService->getBasicInfo($user1));
-        $this->assertSame($user2Private, $userService->getBasicInfo($user2));
+        $this->assertSameA($user1Details, $userService->getBasicInfo($user1));
+        $this->assertSameA($user2Private, $userService->getBasicInfo($user2));
 
         AbstractService::MockService(TokenManager::class, $mockToken3);
 
-        $this->assertSame($user1Details, $userService->getBasicInfo($user1));
-        $this->assertSame($user2Details, $userService->getBasicInfo($user2));
+        $this->assertSameA($user1Details, $userService->getBasicInfo($user1));
+        $this->assertSameA($user2Details, $userService->getBasicInfo($user2));
 
         AbstractService::MockService(TokenManager::class, $mockToken4);
 
-        $this->assertSame($user1Details, $userService->getBasicInfo($user1));
-        $this->assertSame($user2Details, $userService->getBasicInfo($user2));
+        $this->assertSameA($user1Details, $userService->getBasicInfo($user1));
+        $this->assertSameA($user2Details, $userService->getBasicInfo($user2));
     }
 
 }
