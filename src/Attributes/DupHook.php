@@ -8,7 +8,10 @@
 namespace Duppy\Attributes;
 
 use Attribute;
+use Duppy\Enum\DuppyError;
 use Duppy\Util;
+use ReflectionException;
+use ReflectionFunction;
 
 #[Attribute]
 class DupHook {
@@ -46,6 +49,7 @@ class DupHook {
     /**
      * @param string $eventName
      * @return array
+     * @throws ReflectionException
      */
     private static function GetHooks(string $eventName): array {
         $cache = Util::indArrayNull(static::$hookCache, $eventName);
@@ -54,7 +58,8 @@ class DupHook {
             $funcs = get_defined_functions();
             $userFuncs = $funcs["user"];
 
-            foreach ($userFuncs as $func) {
+            foreach ($userFuncs as $function) {
+                $func = new ReflectionFunction($function);
                 $attributes = $func->getAttributes();
 
                 if (count($attributes) < 1) {
@@ -62,7 +67,7 @@ class DupHook {
                 }
 
                 foreach ($attributes as $attribute) {
-                    if (!is_subclass_of($attribute, "Duppy\Attributes\DupHook")) {
+                    if (!is_subclass_of($attribute, DupHook::class)) {
                         continue;
                     }
 
@@ -79,6 +84,7 @@ class DupHook {
                 }
             }
 
+            // Sort newly found hooks by priority
             if (count($cache) > 0) {
                 $cmp = function($hookA, $hookB) {
                     $a = $hookA["priority"];
@@ -97,25 +103,40 @@ class DupHook {
     }
 
     /**
+     * Calls all hook functions by the event name with the arguments.
+     * Hooks will stop being called in the order of their priority (descending) until a function returns something.
+     * That value is then immediately returned.
+     *
      * @param string $eventName
      * @param mixed $args
      * @return mixed
+     * @throws ReflectionException
      */
     public static function CallHook(string $eventName, ...$args): mixed {
         $hooks = static::GetHooks($eventName);
 
         if (count($hooks) < 1) {
-            return false;
+            return DuppyError::noneFound();
         }
 
+        $ret = null;
+
         foreach ($hooks as $hook) {
-            $func = $hooks["func"];
+            $func = $hook["function"];
+
+            if (!is_subclass_of($func, ReflectionFunction::class)) {
+                continue;
+            }
+
             $return = $func->invoke(...$args);
 
             if ($return != null) {
-                return $return;
+                $ret = $return;
+                break;
             }
         }
+
+        return $ret;
     }
 
 }
