@@ -81,7 +81,7 @@ class WebUserVerification {
     public function genCode(): int|bool {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        $repo = $dbo->getRepository("Duppy\Entities\WebUserVerification");
+        $repo = $dbo->getRepository(WebUserVerification::class);
 
         $checker = function($int) use($repo) {
             $ct = $repo->count([ 'code' => $int, ]);

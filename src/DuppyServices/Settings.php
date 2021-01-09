@@ -12,6 +12,7 @@ use DI\NotFoundException;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Abstracts\AbstractSetting;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\Entities\Setting;
 use Duppy\Util;
 use JetBrains\PhpStorm\Pure;
 
@@ -149,7 +150,7 @@ final class Settings extends AbstractService {
      */
     public function getSettings(array $keys, array $defaults = []): array {
         $manager = Bootstrapper::getContainer()->get("database");
-        $settings = $manager->getRepository("Duppy\Entities\Setting")->findBy(["settingKey" => $keys,]);
+        $settings = $manager->getRepository(Setting::class)->findBy(["settingKey" => $keys,]);
 
         $ret = [];
 
@@ -249,7 +250,7 @@ final class Settings extends AbstractService {
      */
     #[Pure]
     public function extractValueFromSetting($setting, string $settingKey): mixed {
-        if (!is_subclass_of($setting, "Duppy\Abstracts\AbstractSetting") || is_array($setting)) {
+        if (!is_subclass_of($setting, AbstractSetting::class) || is_array($setting)) {
             if (array_key_exists($settingKey, $setting)) {
                 return $setting[$settingKey];
             }

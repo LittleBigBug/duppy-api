@@ -12,6 +12,7 @@ use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyServices\UserService;
+use Duppy\Entities\WebUserVerification;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -59,7 +60,7 @@ class Verify extends AbstractEndpoint {
 
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        $userVerify = $dbo->getRepository("Duppy\Entities\WebUserVerification")->findBy([ "code" => $code ])->first();
+        $userVerify = $dbo->getRepository(WebUserVerification::class)->findBy([ "code" => $code ])->first();
 
         if ($userVerify == null) {
             return Util::responseError($response, "That code has either expired or is invalid");

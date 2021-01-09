@@ -41,7 +41,7 @@ final class EnvironmentService extends AbstractService {
      */
     public function checkEnvironment(string $environment): Environment|bool {
         $dbo = Bootstrapper::getContainer()->get("database");
-        $repo = $dbo->getRepository("Duppy\Entities\Environment");
+        $repo = $dbo->getRepository(Environment::class);
 
         $environment = $repo->findOneBy([ "name" => $environment, "enabled" => true, ]);
         return $environment == null ? false : $environment;

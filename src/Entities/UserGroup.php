@@ -143,13 +143,13 @@ class UserGroup {
             $group = $parents[$key];
         }
 
-        if (!is_subclass_of($group, "Duppy\Entities\UserGroup")) {
+        if (!is_subclass_of($group, UserGroup::class)) {
             return $parents;
         }
 
         $newParent = $group->get("parent");
 
-        if ($newParent == null || !is_subclass_of($newParent, "Duppy\Entities\UserGroup")) {
+        if ($newParent == null || !is_subclass_of($newParent, UserGroup::class)) {
             return $parents;
         }
 
@@ -207,6 +207,10 @@ class UserGroup {
         return $perms;
     }
 
+    /**
+     * @param string $perm
+     * @return bool
+     */
     public function hasPermission(string $perm): bool {
         $perms = $this->getPermissions();
         return $perms[$perm] == true;

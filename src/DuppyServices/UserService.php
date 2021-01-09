@@ -9,9 +9,11 @@ namespace Duppy\DuppyServices;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Entities\WebUser;
+use Duppy\Entities\WebUserVerification;
 use Duppy\Util;
 use Exception;
 use Hybridauth\User\Profile;
@@ -34,7 +36,7 @@ final class UserService extends AbstractService {
 
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        return $dbo->find("Duppy\Entities\WebUser", $id);
+        return $dbo->find(WebUser::class, $id);
     }
 
     /**
@@ -48,7 +50,7 @@ final class UserService extends AbstractService {
     public function getUserByName(string $username): ?WebUser {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        return $dbo->getRepository("Duppy\Entities\WebUser")->findBy([ "username" => $username ])->first();
+        return $dbo->getRepository(WebUser::class)->findBy([ "username" => $username ])->first();
     }
 
     /**
@@ -62,7 +64,7 @@ final class UserService extends AbstractService {
     public function getUserByEmail(string $email): ?WebUser {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        return $dbo->getRepository("Duppy\Entities\WebUser")->findBy([ "email" => $email ])[0];
+        return $dbo->getRepository(WebUser::class)->findBy([ "email" => $email ])[0];
     }
 
     /**
@@ -162,7 +164,7 @@ final class UserService extends AbstractService {
     public function emailTaken(string $email): bool {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        $ct = $dbo->getRepository("Duppy\Entities\WebUser")->count([ 'email' => $email, ]);
+        $ct = $dbo->getRepository(WebUser::class)->count([ 'email' => $email, ]);
         $ct += (new UserService)->inst()->emailNeedsVerification($email);
 
         return $ct > 0;
@@ -179,7 +181,7 @@ final class UserService extends AbstractService {
     public function emailNeedsVerification(string $email): bool {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        $vCt = $dbo->getRepository("Duppy\Entities\WebUserVerification")->count([ 'email' => $email, ]);
+        $vCt = $dbo->getRepository(WebUserVerification::class)->count([ 'email' => $email, ]);
 
         return $vCt > 0;
     }
@@ -210,7 +212,7 @@ final class UserService extends AbstractService {
      */
     public static function getEmailWhitelist(): ?string {
         $whitelistClass = (new Settings)->inst()->getSetting("auth.emailWhitelist");
-        $subclass = is_subclass_of($whitelistClass, "Duppy\Abstracts\AbstractEmailWhitelist");
+        $subclass = is_subclass_of($whitelistClass, AbstractEmailWhitelist::class);
 
         return $subclass ? $whitelistClass : null;
     }
@@ -226,7 +228,7 @@ final class UserService extends AbstractService {
         $whitelistClass = $this->getEmailWhitelist();
 
         // Whitelist not enabled
-        if (!is_subclass_of($whitelistClass, "Duppy\Abstracts\AbstractEmailWhitelist")) {
+        if (!is_subclass_of($whitelistClass, AbstractEmailWhitelist::class)) {
             return true;
         }
 
@@ -309,15 +311,18 @@ final class UserService extends AbstractService {
             return null;
         }
 
+        $min = 100000;
+        $max = 999999;
+
         try {
-            $intGen = random_int(100000, 999999);
+            $intGen = random_int($min, $max);
         } catch (Exception) {
             return null;
         }
 
         if ($checker == null) {
-            $checker = function(int $check) {
-                return true;
+            $checker = function(int $check) use ($min, $max) {
+                return $check >= $min && $check <= $max;
             };
         }
 

@@ -9,6 +9,7 @@ namespace Duppy\Endpoints;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyServices\MailService;
@@ -96,7 +97,7 @@ class Register extends AbstractEndpoint {
             $emailWhitelisted = false;
             $bypassVerify = false;
 
-            if (is_subclass_of($whitelist, "Duppy\Abstracts\AbstractEmailWhitelist")) {
+            if (is_subclass_of($whitelist, AbstractEmailWhitelist::class)) {
                 $emailWhitelisted = $userService->emailWhitelisted($email);
                 $emailWlSettings = $settingsMngr->getSettings([
                     "auth.emailWhitelist.requiredRegister",

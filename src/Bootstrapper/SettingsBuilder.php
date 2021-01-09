@@ -7,6 +7,7 @@
 
 namespace Duppy\Bootstrapper;
 
+use Duppy\Abstracts\AbstractSetting;
 use Duppy\DuppyServices\Settings;
 use Duppy\Util;
 use RecursiveDirectoryIterator;
@@ -53,7 +54,7 @@ final class SettingsBuilder {
                 $classPath = substr(Util::toProjectPath($path), strlen("src/"));
                 $class = "Duppy\\" . str_replace("/", "\\", $classPath);
 
-                if (!is_subclass_of($class, "Duppy\Abstracts\AbstractSetting")) {
+                if (!is_subclass_of($class, AbstractSetting::class)) {
                     continue;
                 }
 

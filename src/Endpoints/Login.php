@@ -14,6 +14,7 @@ use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyServices\Settings;
 use Duppy\DuppyServices\UserService;
+use Duppy\Entities\WebUserProviderAuth;
 use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -109,7 +110,7 @@ class Login extends AbstractEndpoint {
         $cr->where($expr->eq("providername", $provider));
         $cr->andWhere($expr->eq("providerid", $providerId));
 
-        $userAuth = $dbo->getRepository("Duppy\Entities\WebUserProviderAuth")->matching($cr)->first();
+        $userAuth = $dbo->getRepository(WebUserProviderAuth::class)->matching($cr)->first();
 
         if ($userAuth === false) {
             $rg = new Register;
