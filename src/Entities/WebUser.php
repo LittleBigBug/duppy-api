@@ -192,7 +192,7 @@ class WebUser implements JsonSerializable {
         $mx = 0;
 
         foreach ($this->get("groups") as $group) {
-            $w = $group->getWeight();
+            $w = $group->get("weight");
 
             if ($w > $mx) {
                 $mx = $w;
@@ -243,8 +243,8 @@ class WebUser implements JsonSerializable {
 
         // Sort groups by weight ascending to apply heaviest last
         usort($groups, function($a, $b) {
-           $aW = $a->getWeight();
-           $bW = $b->getWeight();
+           $aW = $a->get("weight");
+           $bW = $b->get("weight");
 
            return $aW <=> $bW;
         });

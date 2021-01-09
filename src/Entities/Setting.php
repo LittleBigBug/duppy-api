@@ -39,4 +39,20 @@ class Setting {
         return $this->$property;
     }
 
+    /**
+     * @param string $key
+     */
+    public function setSettingKey(string $key) {
+        $this->settingKey = $key;
+    }
+
+    /**
+     * Sets the value (Cast to string)
+     *
+     * @param mixed $value
+     */
+    public function setValue(mixed $value) {
+        $this->value = (string) $value;
+    }
+
 }
