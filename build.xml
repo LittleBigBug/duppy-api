@@ -29,7 +29,6 @@
         <mkdir dir="./build/phpunit/html" />
 
         <exec command="phpunit" passthru="true" />
-        <xslt file="./build/phpunit/output.xml" tofile="./build/phpunit/html/index.html" style="resources/phpunit.xsl"/>
     </target>
 
     <target name="phpdepend">
