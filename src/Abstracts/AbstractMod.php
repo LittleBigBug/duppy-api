@@ -8,8 +8,8 @@
 namespace Duppy\Abstracts;
 
 use Duppy\Bootstrapper\ModCfg;
-use Duppy\Bootstrapper\Router;
-use Duppy\Bootstrapper\SettingsBuilder;
+use Duppy\Builders\Router;
+use Duppy\Builders\SettingsBuilder;
 use Duppy\Util;
 
 abstract class AbstractMod {
@@ -60,8 +60,9 @@ abstract class AbstractMod {
             $rootAppUri = static::$rootAppUri;
         }
 
-        static::$router = new Router('/' . $rootAppUri);
-        static::$router->endpointsSrc = Util::combinePath(static::$modInfo->srcPath, $endpointsFolder);
+        $src = Util::combinePath(static::$modInfo->srcPath, $endpointsFolder);
+
+        static::$router = new Router('/' . $rootAppUri, $src);
         static::$router->build();
 
         return static::$router;
@@ -77,8 +78,7 @@ abstract class AbstractMod {
             $rootAppUri = static::$rootAppUri;
         }
 
-        $settingDefinitions = new SettingsBuilder("/" . $rootAppUri);
-        $settingDefinitions->build();
+        (new SettingsBuilder("/" . $rootAppUri))->build();
     }
 
 }
