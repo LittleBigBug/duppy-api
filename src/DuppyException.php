@@ -9,6 +9,7 @@ namespace Duppy;
 
 use Duppy\Enum\DuppyError;
 use Exception;
+use JetBrains\PhpStorm\Pure;
 use Throwable;
 
 /**
@@ -26,7 +27,8 @@ class DuppyException extends Exception {
      * @param DuppyError|null $errorCode
      * @param Throwable|null $previous
      */
-    public function __construct(string $message = "", ?DuppyError $errorCode = null, Throwable $previous = null) {
+    #[Pure]
+    public function __construct(?DuppyError $errorCode = null, string $message = "", Throwable $previous = null) {
         $codeUse = DuppyError::unknown();
 
         if ($errorCode != null) {
@@ -40,8 +42,17 @@ class DuppyException extends Exception {
     /**
      * @return DuppyError
      */
+    #[Pure]
     public function getErrorCode(): DuppyError {
         return $this->errorCode;
+    }
+
+    /**
+     * @return DuppyError
+     */
+    #[Pure]
+    public function err(): DuppyError {
+        return $this->getErrorCode();
     }
 
 }

@@ -14,6 +14,7 @@ use Spatie\Enum\Enum;
  *
  * @method static self unknown()
  * @method static self noneFound()
+ * @method static self alreadyExists()
  *
  * @package Duppy\Enum
  */
