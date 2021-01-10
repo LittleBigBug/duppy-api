@@ -63,10 +63,16 @@ class WebUserVerification {
         return $this->$property;
     }
 
+    /**
+     * @param string $email
+     */
     public function setEmail(string $email) {
         $this->email = $email;
     }
 
+    /**
+     * @param string $password
+     */
     public function setPassword(string $password) {
         $this->password = $password;
     }
