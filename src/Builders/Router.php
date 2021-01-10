@@ -5,15 +5,24 @@
  *                               -= * =-
  */
 
-namespace Duppy\Bootstrapper;
+namespace Duppy\Builders;
 
+use Duppy\Abstracts\AbstractEndpoint;
+use Duppy\Abstracts\AbstractEndpointGroup;
+use Duppy\Abstracts\AbstractFileBuilder;
+use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Util;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use JetBrains\PhpStorm\Pure;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
-final class Router {
+/**
+ * Build app endpoints and endpoint groups
+ *
+ * Class Router
+ * @package Duppy\Builders
+ */
+final class Router extends AbstractFileBuilder {
 
     /**
      * Map of routes
@@ -23,27 +32,42 @@ final class Router {
     public array $routes = [];
 
     /**
-     * Path of endpoint sources
-     *
-     * @var string
-     */
-    public string $endpointsSrc;
-
-    /**
      * Prefix to put before all URIs in this Router
      *
      * @var string
      */
-    public string $uriPrefix = '';
+    public string $uriPrefix = "";
 
     /**
      * Router constructor.
      *
      * @param string $uriPrefix
+     * @param string $endpointsSrc
      */
-    public function __construct(string $uriPrefix = '') {
-        $this->endpointsSrc = 'Endpoints';
+    #[Pure]
+    public function __construct(string $uriPrefix = "", string $endpointsSrc = "Endpoints") {
         $this->uriPrefix = $uriPrefix;
+        parent::__construct($endpointsSrc);
+    }
+
+    /**
+     * @param mixed $obj
+     * @return bool
+     */
+    #[Pure]
+    public function isEndpointGroup(mixed $obj): bool {
+        $epClass = AbstractEndpointGroup::class;
+        return is_subclass_of($obj, $epClass);
+    }
+
+    /**
+     * @param mixed $obj
+     * @return bool
+     */
+    #[Pure]
+    public function isEndpoint(mixed $obj): bool {
+        $epClass = AbstractEndpoint::class;
+        return is_subclass_of($obj, $epClass);
     }
 
     /**
@@ -53,12 +77,28 @@ final class Router {
         $endPoints = [];
         $endPointGroups = [];
 
-        // Get all the endpoints & groups from filesystem
-        $this->loop(function (array $endpoint) use(&$endPoints, &$endPointGroups) {
-            $class = $endpoint['class'];
+        $callback = function (string $class, string $path) use (&$endPoints, &$endPointGroups) {
+            $uri = $class::getUri();
+
+            if ($uri == null) {
+                $uri = [ $this->resolveUri($path) ];
+                $class::setUri($uri);
+            }
+
+            $isEndpoint = $this->isEndpoint($class);
+
+            if (!is_array($uri) && $isEndpoint) {
+                $uri = [ $uri ];
+            }
+
             $parent = $class::getParentGroupEndpoint();
 
-            $endpoint['parent'] = $parent;
+            $endpoint = [
+                "class" => $class,
+                "uri" => $uri,
+                "type" => $isEndpoint ? "endpoint" : "group",
+                "parent" => $parent,
+            ];
 
             switch ($endpoint['type']) {
                 case 'endpoint':
@@ -68,7 +108,15 @@ final class Router {
                     $endPointGroups[] = $endpoint;
                     break;
             }
-        });
+
+            $uri = null;
+        };
+
+        $filter = function (string $className, string $path): bool {
+            return $this->isEndpoint($className) || $this->isEndpointGroup($className);
+        };
+
+        $this->directoryIterator(true, $callback, $filter);
 
         // Sort the endpoint groups to properly create parent hierarchy
         $endPointGroups = self::sortByParentLoadOrder($endPointGroups);
@@ -141,69 +189,13 @@ final class Router {
     }
 
     /**
-     * Resolves all endpoints
-     *
-     * @param callable $fn
-     */
-    private function loop(callable $fn) {
-        $searchPath = Util::combinePaths([DUPPY_PATH, "src", $this->endpointsSrc]);
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($searchPath));
-
-        foreach ($iterator as $file) {
-            // Check if file is a valid file
-            if (!$file->isFile()) {
-                continue;
-            }
-
-            // Get pathname
-            $path = $file->getRealPath() ?: $file->getPathname();
-
-            // Check file extension
-            if ('php' !== pathinfo($path, PATHINFO_EXTENSION)) {
-                continue;
-            }
-
-            // Resolve class
-            $path = str_replace(".php", "", $path);
-            $path = substr(Util::toProjectPath($path), strlen("src/"));
-            $class = "Duppy\\" . str_replace("/", "\\", $path);
-
-            $isEndpoint = is_subclass_of($class, 'Duppy\Abstracts\AbstractEndpoint');
-            $isEndpointGroup = is_subclass_of($class, 'Duppy\Abstracts\AbstractEndpointGroup');
-
-            if (!$isEndpoint && !$isEndpointGroup) {
-                continue;
-            }
-
-            $uri = $class::getUri();
-
-            if ($uri == null) {
-                $uri = [ $this->resolveUri($path) ];
-                $class::setUri($uri);
-            }
-
-            if (!is_array($uri) && $isEndpoint) {
-                $uri = [ $uri ];
-            }
-
-            $fn([
-                "class" => $class,
-                "uri" => $uri,
-                "type" => $isEndpoint ? "endpoint" : "group",
-            ]);
-
-            $uri = null;
-        }
-    }
-
-    /**
      * Resolves the endpoint URI from the class path
      *
      * @param string $path
      * @return string
      */
     private function resolveUri(string $path): string {
-        $path = substr($path, strlen($this->endpointsSrc));
+        $path = substr($path, strlen($this->buildSrc));
         $uri = str_replace("\\", "/", $path);
 
         // Add dashes between words

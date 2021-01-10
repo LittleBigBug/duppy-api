@@ -12,6 +12,8 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\ORM\ORMException;
+use Duppy\Builders\Router;
+use Duppy\Builders\SettingsBuilder;
 use Duppy\DuppyServices\Env;
 use Duppy\DuppyServices\ModLoader;
 use Duppy\DuppyServices\Settings;
@@ -103,7 +105,7 @@ final class Bootstrapper {
     public static ?JWEDecrypter $jweDecrypter;
 
     /**
-     * Duppy Router instance
+     * Duppy Router Builder instance
      *
      * @var Router|null
      */
@@ -159,7 +161,7 @@ final class Bootstrapper {
         // Boot Slim instance
         self::$app = AppFactory::create();
 
-        self::configure();
+        self::configure(true);
 
         return self::$app;
     }
@@ -183,6 +185,9 @@ final class Bootstrapper {
             self::buildDependencies();
         }
 
+        // Settings definitions
+        (new SettingsBuilder)->build();
+
         // Mod Loader service
         (new ModLoader)->inst()->build();
 
@@ -194,10 +199,6 @@ final class Bootstrapper {
      */
     public static function buildDependencies() {
         $container = self::getContainer();
-
-        // User settings definitions
-        $settingDefinitions = new SettingsBuilder;
-        $settingDefinitions->build();
 
         // Doctrine setup
         $manager = null;
