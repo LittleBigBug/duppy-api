@@ -12,8 +12,9 @@ use DI\NotFoundException;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Abstracts\AbstractSetting;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\DuppyException;
 use Duppy\Entities\Setting;
-use Duppy\Util;
+use Duppy\Enum\DuppyError;
 use JetBrains\PhpStorm\Pure;
 
 final class Settings extends AbstractService {
@@ -62,6 +63,7 @@ final class Settings extends AbstractService {
     /**
      * Build settings nested categories and return it
      *
+     * @param bool $addSettings
      * @return array
      */
     public function getSettingsCategories(bool $addSettings = false): array {
@@ -227,13 +229,15 @@ final class Settings extends AbstractService {
 
     /**
      * Creates a setting dynamically
+     * Throws a DuppyException->alreadyExists if the settingKey is created already
      *
      * @param string $key
      * @param array $settingValues
+     * @throws DuppyException
      */
     public function createSetting(string $key, array $settingValues) {
         if (array_key_exists($key, $this->settings)) {
-            throw new \OverflowException("setting already exists by that key");
+            throw new DuppyException(DuppyError::alreadyExists());
         }
 
         $settingValues["dynamic"] = true;
