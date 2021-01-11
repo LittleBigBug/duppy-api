@@ -15,6 +15,11 @@ use JetBrains\PhpStorm\Pure;
 class JsonType extends AbstractSettingType {
 
     /**
+     * @var string
+     */
+    public string $name = "json";
+
+    /**
      * @param mixed $value
      * @return string
      */

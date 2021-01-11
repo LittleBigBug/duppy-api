@@ -10,7 +10,7 @@ namespace Duppy\SettingTypes;
 use Duppy\Abstracts\AbstractSettingType;
 use JetBrains\PhpStorm\Pure;
 
-class BoolType extends AbstractSettingType {
+class BooleanType extends AbstractSettingType {
 
     /**
      * @var string
