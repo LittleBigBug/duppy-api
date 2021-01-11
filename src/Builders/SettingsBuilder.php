@@ -11,10 +11,7 @@ use Duppy\Abstracts\AbstractFileBuilder;
 use Duppy\Abstracts\AbstractSetting;
 use Duppy\Abstracts\AbstractSettingType;
 use Duppy\DuppyServices\Settings;
-use Duppy\Util;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use UnexpectedValueException;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * Class SettingsBuilder
@@ -35,6 +32,7 @@ final class SettingsBuilder extends AbstractFileBuilder {
      * @param string $settingsSrc
      * @param string|null $settingTypesSrc
      */
+    #[Pure]
     public function __construct(string $settingsSrc = "Settings", ?string $settingTypesSrc = null) {
         parent::__construct($settingsSrc);
 
@@ -51,10 +49,14 @@ final class SettingsBuilder extends AbstractFileBuilder {
         $this->buildSettingTypes();
     }
 
+    /**
+     * Setting Definitions in Settings/
+     */
     private function buildSettingDefinitions() {
         $settingsMngr = (new Settings)->inst();
 
         $callback = function (string $class, string $path) use ($settingsMngr) {
+            if (!is_subclass_of($class, AbstractSetting::class)) { return; } // For IDE
             $key = $class::$key;
 
             if (!isset($key)) {
@@ -75,17 +77,25 @@ final class SettingsBuilder extends AbstractFileBuilder {
         $this->directoryIterator(true, $callback, $filter);
     }
 
+    /**
+     * Setting Types in SettingTypes/
+     *
+     * ; Memory/time *could* be saved here if instead of being instantiated, a lazy load would be put in place instead
+     */
     private function buildSettingTypes() {
         $settingsMngr = (new Settings)->inst();
 
         $callback = function (string $class, string $path) use ($settingsMngr) {
-            $name = $class::$name;
+            if (!is_subclass_of($class, AbstractSettingType::class)) { return; } // For IDE
+
+            $settingType = new $class;
+            $name = $settingType->name;
 
             if (!isset($name)) {
                 return;
             }
 
-            $settingsMngr->addSettingType($name, $class);
+            $settingsMngr->addSettingType($name, $settingType);
         };
 
         $filter = function (string $className, string $path): bool {
