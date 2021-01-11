@@ -12,6 +12,7 @@ use DI\NotFoundException;
 use DirectoryIterator;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\ModCfg;
+use Duppy\DuppyException;
 use Duppy\Util;
 use Yosymfony\Toml\Exception\ParseException;
 use Yosymfony\Toml\Toml;
@@ -55,7 +56,7 @@ final class ModLoader extends AbstractService {
             }
 
             if (!is_array($modInfo) || empty($modInfo) || !array_key_exists('mod', $modInfo)) {
-                error_log('AbstractMod info.toml not found or invalid', 0);
+                error_log('AbstractMod info.toml not found or invalid (Array / Array key gone)', 0);
                 continue;
             }
 
@@ -87,10 +88,15 @@ final class ModLoader extends AbstractService {
 
             $enabledName = "mods." . strtolower($name) . ".enable";
 
-            $settingsMngr->createSetting($enabledName, [
-                "category" => "system.mods",
-                "defaultValue" => true,
-            ]);
+            try {
+                $settingsMngr->createSetting($enabledName, [
+                    "category" => "system.mods",
+                    "defaultValue" => true,
+                ]);
+            } catch (DuppyException) {
+                error_log("Setting conflict when trying to create $enabledName", 0);
+                continue;
+            }
 
             $ct = $settingsMngr->getSetting($enabledName);
 
