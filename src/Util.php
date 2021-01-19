@@ -21,6 +21,7 @@ class Util {
      * @param bool $trailingSlash
      * @return string
      */
+    #[Pure]
     public static function combinePath(string $basePath, string $combPath, bool $trailingSlash = false): string {
         return self::combinePaths([$basePath, $combPath], $trailingSlash);
     }
@@ -32,6 +33,7 @@ class Util {
      * @param bool $trailingSlash
      * @return string
      */
+    #[Pure]
     public static function combinePaths(array $paths, bool $trailingSlash = false): string {
         $sl = DIRECTORY_SEPARATOR;
 
@@ -66,6 +68,7 @@ class Util {
      * @param string $path
      * @return string
      */
+    #[Pure]
     public static function toProjectPath(string $path): string {
         $newPath = str_replace(DUPPY_PATH, '', $path);
         return trim($newPath, DIRECTORY_SEPARATOR);
@@ -99,7 +102,7 @@ class Util {
      * @return Response
      */
     public static function responseError(ResponseInterface &$resp, string $error, int $status = 200): ResponseInterface {
-        return static::responseJSON($resp, ["success" => false, "err" => $error]);
+        return static::responseJSON($resp, ["success" => false, "err" => $error], $status);
     }
 
     /**
@@ -108,6 +111,7 @@ class Util {
      * @param array $dict
      * @return array
      */
+    #[Pure]
     public static function boolDictToNormal(array $dict): array {
         $new = [];
 
@@ -120,6 +124,26 @@ class Util {
         }
 
         return $new;
+    }
+
+    /**
+     * Validates a $permission against the given $permsDict
+     *
+     * @param array $permsDict
+     * @param string $permission
+     * @return bool
+     */
+    #[Pure]
+    public static function evaluatePermissionDict(array $permsDict, string $permission): bool {
+        $eval = static::indArrayNull($permsDict, $permission);
+
+        $evalAll = static::indArrayNull($permsDict, "*") == true ||
+            static::indArrayNull($permsDict, "admin") == true;
+
+        $permEval = $eval === false; // Specifically set to false
+        $allApplies = $evalAll && !$permEval;
+
+        return $eval == true || $allApplies;
     }
 
     /**
@@ -140,6 +164,24 @@ class Util {
         }
 
         return $array[$key];
+    }
+
+    /**
+     * Returns if the $object is or is a derivative of $class
+     *
+     * @param object $object
+     * @param object|string $class Can be a ::class string or object
+     * @return bool
+     */
+    #[Pure]
+    public static function is(object $object, object|string $class): bool {
+        $className = $class;
+
+        if (is_object($class)) {
+            $className = $class::class;
+        }
+
+        return is_subclass_of($object, $className) || $className == $object::class;
     }
 
 }
