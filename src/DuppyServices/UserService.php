@@ -12,8 +12,13 @@ use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\DuppyException;
+use Duppy\Entities\Environment;
+use Duppy\Entities\PermissionAssignment;
+use Duppy\Entities\UserGroup;
 use Duppy\Entities\WebUser;
 use Duppy\Entities\WebUserVerification;
+use Duppy\Enum\DuppyError;
 use Duppy\Util;
 use Exception;
 use Hybridauth\User\Profile;
@@ -359,6 +364,41 @@ final class UserService extends AbstractService {
     }
 
     /**
+     * Creates a new PermissionAssignment and adds it to a group or user
+     *
+     * @param WebUser|UserGroup $userOrGroup
+     * @param string $permission
+     * @param Environment|null $environment
+     * @param bool $persistNow
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public function givePermission(WebUser|UserGroup $userOrGroup, string $permission, ?Environment $environment = null, bool $persistNow = true) {
+        $permissionA = new PermissionAssignment;
+        $permissionA->setPermission($permission);
+
+        if ($environment != null) {
+            $permissionA->setEnvironment($environment);
+        }
+
+        if (Util::is($userOrGroup, WebUser::class)) {
+            $permissionA->setUser($userOrGroup);
+        } else {
+            $permissionA->setGroup($userOrGroup);
+        }
+
+        // Both classes implement this function
+        $userOrGroup->addPermission($permissionA);
+
+        if ($persistNow) {
+            $dbo = Bootstrapper::getContainer()->get("database");
+
+            $dbo->persist($permissionA);
+            $dbo->flush();
+        }
+    }
+
+    /**
      * Compares the logged in user to the other user $id. If they arent the same, it checks the logged in users permission and checks for
      * 'admin', '*', and $overridePerm
      *
@@ -370,18 +410,27 @@ final class UserService extends AbstractService {
      * @return bool
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException ErrType noneFound if the $id is not associated with an existing user
      */
     public function loggedInUserAgainstUserPerm(int $id, string $overridePerm, string $regPerm = ""): bool {
+        // Don't use $this here, this code is tested and needs to use the singleton for the below functions.
+        // See AbstractService.php
         $userService = (new UserService)->inst();
         $user = $userService->getUser($id);
         $loggedInUser = $userService->getLoggedInUser();
 
+        if ($user == null) {
+            throw new DuppyException(DuppyError::noneFound());
+        }
+
+        // Nobody is logged in
+        if ($loggedInUser == null) {
+            return false;
+        }
+
         if ($user->get("id") !== $loggedInUser->get("id")) {
             // Permission to check
-            $canCheckOther = $loggedInUser->hasPermission("admin") || $loggedInUser->hasPermission("*")
-                || $loggedInUser->hasPermission($overridePerm);
-
-            if (!$canCheckOther || !$loggedInUser->weightCheck($user)) {
+            if (!$loggedInUser->hasPermission($overridePerm) || !$loggedInUser->weightCheck($user)) {
                 return false;
             }
         } elseif ($regPerm != "" && !$loggedInUser->hasPermission($regPerm)) {
