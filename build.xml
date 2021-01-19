@@ -19,7 +19,7 @@
         <exec command="vendor/bin/doctrine orm:generate-proxies" passthru="true" />
     </target>
 
-    <target name="prepare">
+    <target name="prepare-build">
         <mkdir dir="./build" />
         <exec command="cp ./resources/.htaccess ./build/.htaccess" />
     </target>
@@ -92,8 +92,12 @@
         https://github.com/pdepend/pdepend/issues/491
      -->
 
-    <target name="all" depends="clean, clean-dependencies, update-dependencies, prepare, test, doc, report" />
+    <target name="all" depends="clean, clean-dependencies, update-dependencies, prepare-build, test, doc, report" />
+    <target name="prepare" depends="update-dependencies, deploy-migrations" />
     <target name="test" depends="report, phpunit" />
     <target name="doc" depends="phploc, phpdox" />
     <target name="report" depends="phploc, phpcs" />
+
+    <target name="update" depends="update-dependencies" />
+    <target name="migrations" depends="deploy-migrations" />
 </project>
