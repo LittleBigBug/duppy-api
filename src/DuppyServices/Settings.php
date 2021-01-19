@@ -92,7 +92,8 @@ final class Settings extends AbstractService {
         $this->categories = [];
 
         foreach ($this->settings as $key => $class) {
-            $res = explode(".", $class::$category);
+            $category = $this->extractValueFromSetting($class, "category");
+            $res = explode(".", $category);
             $endK = array_key_last($res);
 
             // tab is always a reference to directly modify recursively
