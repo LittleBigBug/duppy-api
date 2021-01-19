@@ -119,7 +119,7 @@ class UserGroup {
     /**
      * @param PermissionAssignment $perm
      */
-    public function addPermission(PermissionAssignment $perm) {
+    public function addPermissionAssignment(PermissionAssignment $perm) {
         $this->permissions->add($perm);
     }
 
@@ -137,19 +137,19 @@ class UserGroup {
      * @return array
      */
     public function getParents(array $parents = []): array {
-        $group = $this;
-
-        if ($key = (array_key_last($parents) != null)) {
+        if (($key = array_key_last($parents)) !== null) {
             $group = $parents[$key];
+        } else {
+            $group = $this;
         }
 
-        if (!is_subclass_of($group, UserGroup::class)) {
+        if (!Util::is($group, UserGroup::class)) {
             return $parents;
         }
 
         $newParent = $group->get("parent");
 
-        if ($newParent == null || !is_subclass_of($newParent, UserGroup::class)) {
+        if ($newParent == null || !Util::is($newParent, UserGroup::class)) {
             return $parents;
         }
 
@@ -208,12 +208,13 @@ class UserGroup {
     }
 
     /**
+     * Returns if the user has the permission or not
      * @param string $perm
      * @return bool
      */
     public function hasPermission(string $perm): bool {
         $perms = $this->getPermissions();
-        return $perms[$perm] == true;
+        return Util::evaluatePermissionDict($perms, $perm);
     }
 
 }
