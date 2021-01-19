@@ -21,6 +21,12 @@ namespace Duppy\Abstracts;
  * $obj = new MyService(true);
  * $obj->aFunction();
  *
+ * When writing Services, in order to increase testability, code that you want tested that access functions within
+ * itself, it's a good idea to use the above method to access the singleton.
+ *
+ * This way, the test can still mock the singleton and the (ex: database) specific functions within while still being able to
+ * instantiate a local service to run the code to test.
+ *
  * Class AbstractService
  * @package Duppy\Abstracts
  */
