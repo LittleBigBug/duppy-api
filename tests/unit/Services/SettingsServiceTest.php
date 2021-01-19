@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /*
  *                  This file is part of Duppy Suite
  *                         https://dup.drm.gg
@@ -165,7 +165,7 @@ class SettingsServiceTest extends DuppyTestCase {
         $testArray = [
             "test" => "a",
             "test2" => 123,
-            "test3" => [ "a", "b", "c", ]
+            "test3" => [ "a", "b", 2, ]
         ];
 
         $setting5->setSettingKey("item5");

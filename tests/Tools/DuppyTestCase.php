@@ -57,48 +57,38 @@ class DuppyTestCase extends TestCase {
      */
     public function doctrineMock(?string $repoMockEnt = null, array $findByReturn = [], array $dboMethods = [], array $repoMethods = []): EntityManager|MockObject {
         $defaultReturn = function(InvocationMocker $object) use ($findByReturn) {
-            return $object->with($this->any())
-                    ->will($this->returnValue($findByReturn));
+            return $object->with($this->any())->willReturn($findByReturn);
         };
 
         $defaultReturnSingle = function(InvocationMocker $object) use ($findByReturn) {
-            return $object->with($this->any())
-                ->will($this->returnValue($findByReturn[0]));
+            return $object->with($this->any())->willReturn($findByReturn[0]);
         };
 
-        $repoMethods[] = [
-            "findBy" => $defaultReturn,
-            "findOneBy" => $defaultReturnSingle,
-        ];
+        $repoMethods["findBy"] = $defaultReturn;
+        $repoMethods["findOneBy"] = $defaultReturnSingle;
 
         if ($repoMockEnt != null) {
+            $t = array_keys($repoMethods);
             $repoMock = $this->getMockBuilder(EntityRepository::class)
                 ->disableOriginalConstructor()
-                ->onlyMethods(array_merge([
+                ->onlyMethods(array_unique(array_merge([
                     "findBy",
                     "findOneBy",
-                ], $repoMethods))->getMock();
+                ], $t)))->getMock();
 
-            $thisCl = $this;
-
-            $dboMethods[] = [
-                "getRepository" => function (InvocationMocker $object) use ($thisCl, $repoMockEnt, $repoMock) {
-                    $object->with($repoMockEnt)
-                        ->will($thisCl->returnValue($repoMock));
-                },
-            ];
+            $dboMethods["getRepository"] = function (InvocationMocker $object) use ($repoMockEnt, $repoMock) {
+                $object->with($repoMockEnt)->willReturn($repoMock);
+            };
         }
-        $dboMethodNames[] = "getRepository";
 
         $dboMock = $this->getMockBuilder(EntityManager::class)
             ->disableOriginalConstructor()
-            ->onlyMethods($dboMethodNames)->getMock();
+            ->onlyMethods(array_keys($dboMethods))->getMock();
 
         foreach ($dboMethods as $key => $method) {
-            $dboMock->expects($this->any())
-                ->method($key);
+            $inv = $dboMock->expects($this->any())->method($key);
 
-            return $method($dboMock);
+            $method($inv);
         }
 
         return $dboMock;

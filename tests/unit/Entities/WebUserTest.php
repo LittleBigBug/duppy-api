@@ -1,11 +1,11 @@
-<?php
+<?php declare(strict_types=1);
 /*
  *                  This file is part of Duppy Suite
  *                         https://dup.drm.gg
  *                               -= * =-
  */
 
-namespace Duppy\Tests\Tools\Tests\unit;
+namespace Duppy\Tests\unit\Entities;
 
 use Duppy\Abstracts\AbstractService;
 use Duppy\DuppyServices\TokenManager;
@@ -48,13 +48,13 @@ final class WebUserTest extends DuppyTestCase {
         $user2->addGroup($donator);
 
         $user3->setUsername("User3");
-        $user2->addGroup($donator);
+        $user3->addGroup($donator);
         $user3->addGroup($moderator);
 
         $user5->setUsername("User5");
         $user5->addGroup($moderator);
 
-        $user3->setUsername("User4");
+        $user4->setUsername("User4");
         $user4->addGroup($admin);
 
         // Check if the group inheritance works
@@ -70,8 +70,8 @@ final class WebUserTest extends DuppyTestCase {
         $notPassesSetting->setSettingKey("equalWeightPasses");
         $notPassesSetting->setValue(false);
 
-        $mockDbPasses = $this->doctrineMock(Setting::class, [ [ $passesSetting ] ]);
-        $mockDbNotPasses = $this->doctrineMock(Setting::class, [ [ $notPassesSetting ] ]);
+        $mockDbPasses = $this->doctrineMock(Setting::class, [ $passesSetting ]);
+        $mockDbNotPasses = $this->doctrineMock(Setting::class, [ $notPassesSetting ]);
 
         // Mock equalWeightPasses true
         $this->databaseTest($mockDbPasses);
