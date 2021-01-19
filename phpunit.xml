@@ -9,9 +9,11 @@
     <testsuites>
         <testsuite name="unit">
             <directory phpVersion="8.0.0" phpVersionOperator=">=">tests/unit</directory>
+            <directory phpVersion="8.0.0" phpVersionOperator=">=">src/Mods/**/tests/unit</directory>
         </testsuite>
         <testsuite name="integration">
             <directory phpVersion="8.0.0" phpVersionOperator=">=">tests/integration</directory>
+            <directory phpVersion="8.0.0" phpVersionOperator=">=">src/Mods/**/tests/integration</directory>
         </testsuite>
     </testsuites>
 </phpunit>
