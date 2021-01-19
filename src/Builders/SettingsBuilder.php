@@ -43,10 +43,12 @@ final class SettingsBuilder extends AbstractFileBuilder {
 
     /**
      * Build settings
+     * @param bool $onlyTypes Default false, if true it will skip building definitions
      */
-    public function build() {
-        $this->buildSettingDefinitions();
+    public function build(bool $onlyTypes = false) {
         $this->buildSettingTypes();
+        if ($onlyTypes) { return; }
+        $this->buildSettingDefinitions();
     }
 
     /**
