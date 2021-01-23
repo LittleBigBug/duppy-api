@@ -153,9 +153,9 @@ final class UserService {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
         $ct = $dbo->getRepository("Duppy\Entities\WebUser")->count([ 'email' => $email, ]);
-        $ct += UserService::emailNeedsVerification($email);
+        $verify = UserService::emailNeedsVerification($email);
 
-        return $ct > 0;
+        return $verify || ($ct > 0);
     }
 
     /**
