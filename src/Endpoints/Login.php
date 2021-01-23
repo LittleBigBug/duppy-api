@@ -40,7 +40,7 @@ class Login extends AbstractEndpoint {
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $postArgs = $request->getParsedBody();
-        $provider = $args["provider"];
+        $provider = Util::indArrayNull($args, "provider");
 
         if (!isset($provider) || empty($provider)) {
             $provider = "password";

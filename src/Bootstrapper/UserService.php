@@ -55,7 +55,7 @@ final class UserService {
     public static function getUserByEmail(string $email): ?WebUser {
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        return $dbo->getRepository("Duppy\Entities\WebUser")->findBy([ "email" => $email ])[0];
+        return Util::indArrayNull($dbo->getRepository("Duppy\Entities\WebUser")->findBy([ "email" => $email ]), 0);
     }
 
     /**
