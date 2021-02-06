@@ -9,10 +9,52 @@ namespace Duppy\DuppyServices;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Abstracts\AbstractMailEngine;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\Builders\MailEngineBuilder;
+use Duppy\Util;
 
 final class MailService extends AbstractService {
+
+    /**
+     * Current mail engine (cache)
+     * @var ?AbstractMailEngine
+     */
+    protected ?AbstractMailEngine $mailEngine = null;
+
+    /**
+     * Dictionary of AbstractMailEngine (string) by their ::$name
+     * @var array
+     */
+    protected array $mailEngines = [];
+
+    /**
+     * @return AbstractMailEngine
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public function getMailEngine(): AbstractMailEngine {
+        if ($this->mailEngine != null) {
+            return $this->mailEngine;
+        }
+
+        (new MailEngineBuilder)->buildOnce();
+
+        $useEngine = (new Settings)->getSetting("email.engine", "smtp");
+        $val = Util::indArrayNull($this->mailEngines, $useEngine);
+
+        $engine = new $val;
+        return $this->mailEngine = $engine;
+    }
+
+    /**
+     * @param string $name
+     * @param string $className
+     */
+    public function addMailEngine(string $name, string $className) {
+        $this->mailEngines[$name] = $className;
+    }
 
     /**
      * Basic send mail function
@@ -26,29 +68,8 @@ final class MailService extends AbstractService {
      * @throws NotFoundException
      */
     public function sendMail(string|array $recipients, string $subject, string $content, string $altContent = "", bool $allowReply = false) {
-        if (!is_array($recipients)) {
-            $recipients = [ $recipients ];
-        }
-
-        $mailer = Bootstrapper::getContainer()->get("mailer");
-
-        foreach ($recipients as $recipient) {
-            $mailer->addAddress($recipient);
-        }
-
-        if ($allowReply) {
-            $mailer->addReplyTo(getenv("EMAIL_REPLYTO"));
-        }
-
-        if (str_contains($content, "<") || !empty($altContent)) {
-            $mailer->isHTML(true);
-        }
-
-        $mailer->Subject = $subject;
-        $mailer->Body = $content;
-        $mailer->AltBody = $altContent ?? $content;
-
-        $mailer->send();
+        $mailEngine = $this->getMailEngine();
+        $mailEngine->sendMail($recipients, $subject, $content, $altContent, $allowReply);
     }
 
     /**
@@ -61,8 +82,8 @@ final class MailService extends AbstractService {
      * @throws NotFoundException
      */
     public function renderTemplate(string $template, array $share = []): string {
-        $blade = Bootstrapper::getContainer()->get("templateHandler");
-        return $blade->setView($template)->share($share)->run();
+        $mailEngine = $this->getMailEngine();
+        return $mailEngine->renderTemplate($template, $share);
     }
 
     /**
