@@ -7,6 +7,8 @@
 
 namespace Duppy\DuppyServices;
 
+use DateInterval;
+use DateTime;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEmailWhitelist;
@@ -14,6 +16,7 @@ use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyException;
 use Duppy\Entities\Environment;
+use Duppy\Entities\PasswordResetRequest;
 use Duppy\Entities\PermissionAssignment;
 use Duppy\Entities\UserGroup;
 use Duppy\Entities\WebUser;
@@ -438,6 +441,69 @@ final class UserService extends AbstractService {
         }
 
         return true;
+    }
+
+    /**
+     * Checks all matching password requests.
+     * This deletes any matching request and returns if any request was valid
+     *
+     * @param string $code
+     * @param string|int|null $userId
+     * @return bool
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws DuppyException ErrType noneFound if the userId doesnt belong to anyone, or incorrectType if the setting somehow returns something other than a DateInterval
+     */
+    public function checkPasswordResetCode(string $code, string|int $userId = null): bool {
+        $user = $this->inst()->getUser($userId);
+
+        if ($user == null) {
+            throw new DuppyException(DuppyError::noneFound());
+        }
+
+        $container = Bootstrapper::getContainer();
+        $dbo = $container->get("database");
+        $repo = $dbo->getRepository(PasswordResetRequest::class);
+
+        $requests = $repo->findBy([ "user" => $user, "code" => $code, ]);
+
+        if (count($requests) < 1) {
+            return false;
+        }
+
+        $expireTime = (new Settings)->inst()->getSetting("auth.password.expire", "2H");
+
+        if (!Util::is($expireTime, DateInterval::class)) {
+            throw new DuppyException(DuppyError::incorrectType());
+        }
+
+        $foundValid = false;
+
+        foreach ($requests as $request) {
+            if (!Util::is($request, PasswordResetRequest::class)) {
+                continue;
+            }
+
+            // Mark any matching request for removal
+            $dbo->remove($request);
+
+            $time = $request->get("time");
+
+            if (!Util::is($time, DateInterval::class)) {
+                continue;
+            }
+
+            $now = new DateTime;
+            $expire = $time->add($expireTime);
+
+            if ($now > $expire) {
+                continue;
+            }
+
+            $foundValid = true;
+        }
+
+        return $foundValid;
     }
 
 }
