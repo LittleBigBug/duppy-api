@@ -5,7 +5,7 @@
  *                               -= * =-
  */
 
-namespace Duppy\Endpoints\User;
+namespace Duppy\Endpoints\Users;
 
 use DI\DependencyException;
 use DI\NotFoundException;
@@ -16,7 +16,7 @@ use Duppy\Util;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
-class UserData extends AbstractEndpoint {
+class Get extends AbstractEndpoint {
 
     /**
      * Catch / and /get
@@ -66,46 +66,17 @@ class UserData extends AbstractEndpoint {
      * @throws NotFoundException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
-        $userId = $args["id"];
-        $user = (new UserService)->inst()->getUser($userId);
+        $criteria = Util::indArrayNull($args, "criteria");
 
-
-
-        return $response;
-    }
-
-    /**
-     * This function will be called when /basic-info is requested.
-     * This is because we specified the 2nd index of $uriFuncNames (same index as /basic-info in $uri)
-     * to "BasicInfo". If we specified multiple types of Request types, then it would be prepended to the func name
-     * getBasicInfo, postBasicInfo (unless we specify those request types to be mapped)
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param array $args
-     * @return Response
-     * @throws DependencyException
-     */
-    public function basicInfo(Request $request, Response $response, array $args = []): Response {
-        $userId = $args["id"];
-        $user = null;
-
-        $userService = (new UserService)->inst();
-
-        try {
-            $user = $userService->getUser($userId);
-        } catch (NotFoundException) { }
-
-        if ($user == null) {
-            return Util::responseError($response, "User not found.");
+        if ($criteria) {
+            
         }
 
-        $data = [
-            "success" => true,
-            "data" => $userService->getBasicInfo($user),
-        ];
+        $user = (new UserService)->inst()->getUser($userId);
 
-        return Util::responseJSON($response, $data);
+    
+
+        return $response;
     }
 
 }
