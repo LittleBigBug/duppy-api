@@ -26,6 +26,11 @@ abstract class AbstractFileBuilder {
     protected string $buildSrc = "";
 
     /**
+     * @var bool[]
+     */
+    protected static array $builtOnce = [];
+
+    /**
      * AbstractFileBuilder constructor.
      * @param string $buildSrc
      */
@@ -34,6 +39,24 @@ abstract class AbstractFileBuilder {
     }
 
     abstract public function build();
+
+    /**
+     * Only allow one build
+     */
+    public function buildOnce() {
+        $val = Util::indArrayNull(AbstractFileBuilder::$builtOnce, $this::class) ?? false;
+
+        if ($val) {
+            return;
+        }
+
+        $this->build();
+        AbstractFileBuilder::$builtOnce[$this::class] = true;
+    }
+
+    public function resetBuildOnce() {
+        AbstractFileBuilder::$builtOnce[$this::class] = false;
+    }
 
     /**
      * DirectoryIterator helper
