@@ -14,6 +14,7 @@ use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\ORM\ORMException;
 use Duppy\Builders\Router;
 use Duppy\Builders\SettingsBuilder;
+use Duppy\DuppyException;
 use Duppy\DuppyServices\Env;
 use Duppy\DuppyServices\ModLoader;
 use Duppy\DuppyServices\Settings;
@@ -115,55 +116,50 @@ final class Bootstrapper {
      * Boots the application and loads any global dependencies
      *
      * @return void
-     * @throws DependencyException
-     * @throws NotFoundException
      */
     public static function boot() {
         // Load .env file for config
         (new Env)->inst()->start();
 
         // Create Container using PHP-DI
-        self::$container = new Container;
-        AppFactory::setContainer(self::getContainer());
+        Bootstrapper::$container = new Container;
+        AppFactory::setContainer(Bootstrapper::getContainer());
 
         // Boot Slim instance
-        self::$app = AppFactory::create();
+        Bootstrapper::$app = AppFactory::create();
 
-        self::configure();
+        Bootstrapper::configure();
     }
 
     /**
      * Boots smaller app for Doctrine CLI
      *
      * @return EntityManager
-     * @throws ORMException|DBALException
      */
     public static function cli(): EntityManager {
         // Load .env file for config
         (Dotenv::createImmutable(DUPPY_PATH))->load();
 
         // Database connection
-        return self::configureDatabase();
+        return Bootstrapper::configureDatabase();
     }
 
     /**
      * Slim Testing Application
      *
      * @return App
-     * @throws DependencyException
-     * @throws NotFoundException
      */
     public static function test(): App {
         // Create Container using PHP-DI
-        self::$container = new Container;
-        AppFactory::setContainer(self::getContainer());
+        Bootstrapper::$container = new Container;
+        AppFactory::setContainer(Bootstrapper::getContainer());
 
         // Boot Slim instance
-        self::$app = AppFactory::create();
+        Bootstrapper::$app = AppFactory::create();
 
-        self::configure(true);
+        Bootstrapper::configure(true);
 
-        return self::$app;
+        return Bootstrapper::$app;
     }
 
     /**
@@ -175,14 +171,14 @@ final class Bootstrapper {
      * @throws NotFoundException
      */
     public static function configure(bool $skipDi = false) {
-        $app = self::getApp();
+        $app = Bootstrapper::getApp();
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
 
         $app->add(new CORSMiddleware);
 
         if (!$skipDi) {
-            self::buildDependencies();
+            Bootstrapper::buildDependencies();
         }
 
         // Settings definitions
@@ -191,18 +187,18 @@ final class Bootstrapper {
         // Mod Loader service
         (new ModLoader)->inst()->build();
 
-        self::buildRoutes();
+        Bootstrapper::buildRoutes();
     }
 
     /**
      * Build dependencies into DI
      */
     public static function buildDependencies() {
-        $container = self::getContainer();
+        $container = Bootstrapper::getContainer();
 
         // Doctrine setup
         $manager = null;
-        $container->set("database", fn () => $manager ?? $manager = self::configureDatabase());
+        $container->set("database", fn () => $manager ?? $manager = Bootstrapper::configureDatabase());
 
         // JSON Web Token (JWS/JWE)
         // todo; please use DI container
@@ -210,22 +206,23 @@ final class Bootstrapper {
 
         // Hybridauth external login helper
         $hybridauth = null;
-        $container->set("authHandler", fn () => $hybridauth ?? $hybridauth = self::configureHybridAuth());
+        $container->set("authHandler", fn () => $hybridauth ?? $hybridauth = Bootstrapper::configureHybridAuth());
 
         // PHPMailer
         $mailer = null;
-        $container->set("mailer", fn () => $mailer ?? $mailer = self::configureMailer());
+        $container->set("mailer", fn () => $mailer ?? $mailer = Bootstrapper::configureMailer());
 
         // OneBlade Templating
         $templateHandler = null;
-        $container->set("templateHandler", fn () => $templateHandler ?? $templateHandler = self::configureTemplates());
+        $container->set("templateHandler", fn () => $templateHandler ?? $templateHandler = Bootstrapper::configureTemplates());
     }
 
     /**
      * Configures the database
      *
      * @return EntityManager
-     * @throws ORMException|DBALException
+     * @throws DBALException
+     * @throws ORMException
      */
     public static function configureDatabase(): EntityManager {
         Type::addType('uuid', UuidType::class);
@@ -254,7 +251,7 @@ final class Bootstrapper {
      * Configures jwt-framework and sets up the Signing and Encryption token builders
      */
     public static function configureJWT() {
-        self::$jwsKey = JWKFactory::createFromSecret(getenv('JWT_SECRET'), [
+        Bootstrapper::$jwsKey = JWKFactory::createFromSecret(getenv('JWT_SECRET'), [
             'alg' => 'HS256',
             'use' => 'sig',
         ]);
@@ -262,7 +259,7 @@ final class Bootstrapper {
         $encrypt = (new TokenManager)->inst()->isEncryptionEnabled();
 
         if ($encrypt) {
-            self::$jweKey = JWKFactory::createFromSecret(getenv("JWT_SECRET"), [
+            Bootstrapper::$jweKey = JWKFactory::createFromSecret(getenv("JWT_SECRET"), [
                 'alg' => 'HS256',
                 'use' => 'enc',
             ]);
@@ -272,8 +269,8 @@ final class Bootstrapper {
             new HS256(),
         ]);
 
-        self::$jwsBuilder = new JWSBuilder($algorithmManager);
-        self::$jwsVerifier = new JWSVerifier($algorithmManager);
+        Bootstrapper::$jwsBuilder = new JWSBuilder($algorithmManager);
+        Bootstrapper::$jwsVerifier = new JWSVerifier($algorithmManager);
 
         if ($encrypt) {
             $keyEncryptionManager = new AlgorithmManager([
@@ -288,8 +285,8 @@ final class Bootstrapper {
                 new Deflate(),
             ]);
 
-            self::$jweBuilder = new JWEBuilder($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
-            self::$jweDecrypter = new JWEDecrypter($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
+            Bootstrapper::$jweBuilder = new JWEBuilder($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
+            Bootstrapper::$jweDecrypter = new JWEDecrypter($keyEncryptionManager, $contentEncryptionManager, $compressionManager);
         }
     }
 
@@ -300,6 +297,7 @@ final class Bootstrapper {
      * @throws InvalidArgumentException
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public static function configureHybridAuth(): Hybridauth {
         $authSettings = (new Settings)->inst()->getSettings([
@@ -409,10 +407,10 @@ final class Bootstrapper {
      * Build routes within Slim and run the app
      */
     public static function buildRoutes() {
-        self::$router = new Router;
-        self::$router->build();
+        Bootstrapper::$router = new Router;
+        Bootstrapper::$router->build();
 
-        self::getApp()->run();
+        Bootstrapper::getApp()->run();
     }
 
     /**
