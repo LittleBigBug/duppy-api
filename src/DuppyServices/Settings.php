@@ -166,20 +166,6 @@ final class Settings extends AbstractService {
     }
 
     /**
-     * Return a single setting by key
-     *
-     * @param string $key
-     * @param string $default
-     * @return string
-     * @throws DependencyException
-     * @throws NotFoundException
-     */
-    public function getSetting(string $key, $default = ""): string {
-        $result = $this->getSettings([ $key, ], [ $key => $default, ]);
-        return $result[$key];
-    }
-
-    /**
      * Gets a setting's definition
      *
      * @param string $key
@@ -214,6 +200,7 @@ final class Settings extends AbstractService {
      * @return array
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException ErrType nonefound if a setting's type is missing
      */
     public function getSettings(array $keys, array $defaults = []): array {
         $manager = Bootstrapper::getContainer()->get("database");
@@ -240,23 +227,44 @@ final class Settings extends AbstractService {
                 continue;
             }
 
+            $setDef = "";
+
             // Argument default overrides
             if (array_key_exists($key, $defaults) && !empty($defaults[$key])) {
-                $ret[$key] = $defaults[$key];
-                continue;
+                $setDef = $defaults[$key];
             }
-
             // Defaults in setting definition
-            if (array_key_exists($key, $this->settings)) {
+            elseif (array_key_exists($key, $this->settings)) {
                 $settingDef = $this->settings[$key];
-                $ret[$key] = $this->extractValueFromSetting($settingDef, "defaultValue");
-                continue;
+                $setDef = $this->extractValueFromSetting($settingDef, "defaultValue");
             }
 
-            $ret[$key] = "";
+            // Assure the default is the right type
+            $typeClass = $this->getSettingType($key);
+
+            if (!$typeClass->checkIsOfType($setDef)) {
+                $setDef = $typeClass->parse($setDef);
+            }
+
+            $ret[$key] = $setDef;
         }
 
         return $ret;
+    }
+
+    /**
+     * Return a single setting by key
+     *
+     * @param string $key
+     * @param string $default
+     * @return mixed
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws DuppyException ErrType nonefound if a setting's type is missing
+     */
+    public function getSetting(string $key, $default = ""): mixed {
+        $result = $this->getSettings([ $key, ], [ $key => $default, ]);
+        return $result[$key];
     }
 
     /**
