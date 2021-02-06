@@ -56,13 +56,6 @@ class AbstractService {
     }
 
     /**
-     * @return AbstractService
-     */
-    public function inst(): AbstractService {
-        return static::Singleton($this::class);
-    }
-
-    /**
      * Magic call missing functions primarily used for testing
      *
      * @param string $name
@@ -80,20 +73,53 @@ class AbstractService {
 
     /**
      * @param string|null $name
-     * @return $this
+     * @return AbstractService
      */
-    public static function Singleton(?string $name = null): AbstractService {
+    public static function StaticSingleton(?string $name = null): AbstractService {
         if (empty($name)) {
             $name = get_called_class();
         }
 
+        $ret = new $name;
+        $ret->Singleton();
+
         // Create a new service if the singleton doesn't exist
-        if (!array_key_exists($name, static::$singletons) || ($ret = static::$singletons[$name]) == null) {
-            $ret = new $name;
+        if (!array_key_exists($name, AbstractService::$singletons) || AbstractService::$singletons[$name] == null) {
             AbstractService::SetSingleton($ret);
         }
 
         return $ret;
+    }
+
+    /**
+     * @param bool $useNew = false  If 'false' and the singleton is missing, the current object will become the singleton
+     * @return $this
+     */
+    public function Singleton(bool $useNew = false): AbstractService {
+        $name = $this::class;
+
+        // Create a new service if the singleton doesn't exist
+        if (!array_key_exists($name, AbstractService::$singletons) || ($ret = AbstractService::$singletons[$name]) == null) {
+            $use = $this;
+
+            if ($useNew) {
+                $use = new $name;
+            }
+
+            AbstractService::SetSingleton($use);
+            $ret = $use;
+        }
+
+        return $ret;
+    }
+
+    /**
+     * Shorter function
+     *
+     * @return AbstractService
+     */
+    public function inst(): AbstractService {
+        return $this->Singleton($this::class);
     }
 
     /**
