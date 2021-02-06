@@ -19,10 +19,10 @@ class FloatType extends AbstractSettingType {
 
     /**
      * @param mixed $value
-     * @return int
+     * @return float
      */
     #[Pure]
-    public function parse(mixed $value): int {
+    public function parse(mixed $value): float {
         return floatval($value);
     }
 
