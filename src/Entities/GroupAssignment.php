@@ -12,7 +12,7 @@ use Duppy\DuppyServices\EnvironmentService;
 use JetBrains\PhpStorm\Pure;
 
 /**
- * Setting Entity
+ * GroupAssignment Entity
  *
  * @ORM\Entity
  * @ORM\Table(name="group_assignment")
@@ -49,6 +49,20 @@ class GroupAssignment {
         }
 
         return $environment === $this->environment;
+    }
+
+    /**
+     * @param Environment $environment
+     */
+    public function setEnvironment(Environment $environment) {
+        $this->environment = $environment;
+    }
+
+    /**
+     * @param WebUser $user
+     */
+    public function setUser(WebUser $user) {
+        $this->user = $user;
     }
 
     // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
