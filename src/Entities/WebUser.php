@@ -12,6 +12,7 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Duppy\DuppyException;
 use Duppy\DuppyServices\Settings;
 use Duppy\DuppyServices\TokenManager;
 use Duppy\DuppyServices\UserService;
@@ -71,7 +72,13 @@ class WebUser implements JsonSerializable {
     protected $groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="PermissionAssignment", mappedBy="users")
+     * @ORM\OneToMany(targetEntity="Ban", inversedBy="user")
+     * @ORM\JoinColumn(name="ban_id", referencedColumnName="id")
+     */
+    protected $bans;
+
+    /**
+     * @ORM\OneToMany(targetEntity="PermissionAssignment", mappedBy="user")
      * @ORM\JoinColumn(name="permission_id", referencedColumnName="id")
      */
     protected $permissions;
@@ -97,6 +104,7 @@ class WebUser implements JsonSerializable {
         $this->providerAuths = new ArrayCollection();
         $this->groups = new ArrayCollection();
         $this->permissions = new ArrayCollection();
+        $this->bans = new ArrayCollection();
     }
 
     /**
@@ -312,6 +320,47 @@ class WebUser implements JsonSerializable {
     }
 
     /**
+     * Check if the user has an active global ban (Uses UserService)
+     *
+     * @return bool
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws DuppyException
+     */
+    public function globalBanned(): bool {
+        return (new UserService)->inst()->checkGlobalBan($this);
+    }
+
+    /**
+     * Check if the user has an active ban within the environment
+     *
+     * @return bool
+     */
+    public function environmentBanned(): bool {
+        foreach ($this->bans as $ban) {
+            if (!$ban->isActive() || !$ban->inThisEnvironment()) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * If the user is banned at all (within the current environment or globally)
+     *
+     * @return bool
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
+     */
+    public function banned(): bool {
+        return $this->environmentBanned() || $this->globalBanned();
+    }
+
+    /**
      * Serializes the user into a basic array of info
      *
      * @return array
@@ -319,4 +368,5 @@ class WebUser implements JsonSerializable {
     public function jsonSerialize(): array {
         return (new UserService)->inst()->getBasicInfo($this);
     }
+
 }

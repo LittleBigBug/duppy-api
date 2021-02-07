@@ -15,6 +15,7 @@ use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyException;
+use Duppy\Entities\Ban;
 use Duppy\Entities\Environment;
 use Duppy\Entities\PasswordResetRequest;
 use Duppy\Entities\PermissionAssignment;
@@ -27,6 +28,12 @@ use Exception;
 use Hybridauth\User\Profile;
 use Slim\Psr7\Response;
 
+/**
+ * User helper and utility functions
+ *
+ * Class UserService
+ * @package Duppy\DuppyServices
+ */
 final class UserService extends AbstractService {
 
     /**
@@ -504,6 +511,36 @@ final class UserService extends AbstractService {
         }
 
         return $foundValid;
+    }
+
+    /**
+     * Checks global ban status against a user and the app's settings
+     *
+     * @param WebUser $user
+     * @return bool
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
+     */
+    function checkGlobalBan(WebUser $user): bool {
+        $bans = $user->get("bans");
+
+        $active = 0;
+
+        foreach ($bans as $ban) {
+            if (!Util::is($ban, Ban::class) || !$ban->isActive()) { continue; }
+
+            // Any global bans will just immediately return true
+            if ($ban->isGlobal()) {
+                return true;
+            }
+
+            $active++;
+        }
+
+        // If the amount of active bans (on this environment + others)
+        $max = (new Settings)->inst()->getSetting("autoGlobalBan", 2);
+        return $active >= $max;
     }
 
 }
