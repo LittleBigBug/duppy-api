@@ -543,4 +543,22 @@ final class UserService extends AbstractService {
         return $active >= $max;
     }
 
+    /**
+     * Checks if the current logged in user is banned in the current context.
+     *
+     * @return bool
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
+     */
+    function imBanned(): bool {
+        $me = $this->getLoggedInUser();
+
+        if ($me == null) {
+            return false;
+        }
+
+        return $me->banned();
+    }
+
 }
