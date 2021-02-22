@@ -523,20 +523,14 @@ final class UserService extends AbstractService {
      * @throws NotFoundException
      */
     function checkGlobalBan(WebUser $user): bool {
-        $bans = $user->get("bans");
+        $anyGlobal = $user->hasDirectGlobalBan();
 
-        $active = 0;
-
-        foreach ($bans as $ban) {
-            if (!Util::is($ban, Ban::class) || !$ban->isActive()) { continue; }
-
-            // Any global bans will just immediately return true
-            if ($ban->isGlobal()) {
-                return true;
-            }
-
-            $active++;
+        if ($anyGlobal) {
+            return true;
         }
+
+        $activeBans = $user->getActiveBans();
+        $active = count($activeBans);
 
         // If the amount of active bans (on this environment + others)
         $max = (new Settings)->inst()->getSetting("autoGlobalBan", 2);

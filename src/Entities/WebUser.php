@@ -332,6 +332,33 @@ class WebUser implements JsonSerializable {
     }
 
     /**
+     * @return bool
+     */
+    public function hasDirectGlobalBan(): bool {
+        foreach ($this->bans as $ban) {
+            if ($ban->isGlobal()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return Ban[]
+     */
+    public function getActiveBans(): array {
+        $bans = [];
+
+        foreach ($this->bans as $ban) {
+            if (!$ban->isActive()) { continue; }
+            $bans[] = $ban;
+        }
+
+        return $bans;
+    }
+
+    /**
      * Check if the user has an active ban within the environment
      *
      * @return bool
@@ -358,6 +385,58 @@ class WebUser implements JsonSerializable {
      */
     public function banned(): bool {
         return $this->environmentBanned() || $this->globalBanned();
+    }
+
+    /**
+     * If the user has any permanent bans.
+     *
+     * @return bool
+     */
+    public function permaBanned(): bool {
+        foreach ($this->getActiveBans() as $ban) {
+            if ($ban->isPermanent()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Gets the date when this user's ban will be lifted. (In this environment, not global)
+     * Will return null if the user is permanently banned (or has no ban)
+     *
+     * @return ?DateTime
+     */
+    public function unbanTime(): ?DateTime {
+        if ($this->permaBanned()) {
+            return null;
+        }
+
+        $date = null;
+        $bans = $this->getActiveBans();
+
+        foreach ($bans as $ban) {
+            $expiry = $ban->get("expiry");
+
+            // Use this ban's date if it is within the current environment (not global)
+            // and only use it if its bigger (or the first) than the stored $date (latest they can be unbanned)
+            if ($ban->inThisEnvironment() && !$ban->isGlobal() && ($date == null || $expiry > $date)) {
+                $date = $expiry;
+            }
+        }
+
+        return $date;
+    }
+
+    /**
+     * Gets the date when this user's ban will be lifted. (Globally)
+     * Will return null if the user is permanently banned (or has no ban)
+     *
+     * @return ?DateTime
+     */
+    public function globalUnbanTime(): ?DateTime {
+
     }
 
     /**

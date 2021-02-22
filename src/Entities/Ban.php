@@ -12,6 +12,7 @@ use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\DuppyServices\EnvironmentService;
 use JetBrains\PhpStorm\Pure;
+use JsonSerializable;
 
 /**
  * Ban Entity
@@ -19,7 +20,7 @@ use JetBrains\PhpStorm\Pure;
  * @ORM\Entity
  * @ORM\Table(name="bans")
  */
-class Ban {
+class Ban implements JsonSerializable {
 
     /**
      * @ORM\Id
@@ -39,6 +40,11 @@ class Ban {
     protected WebUser $user;
 
     /**
+     * @ORM\ManyToOne(targetEntity="WebUser", nullable=true)
+     */
+    protected ?WebUser $banningUser = null;
+
+    /**
      * @ORM\Column(type="datetime", nullable=false)
      * @ORM\Version
      */
@@ -48,6 +54,11 @@ class Ban {
      * @ORM\Column(type="datetime", nullable=true)
      */
     protected ?DateTime $expiry = null;
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     */
+    protected ?string $reason = null;
 
     /**
      * Returns if the ban is valid in this environment
@@ -103,6 +114,13 @@ class Ban {
     }
 
     /**
+     * @param WebUser $user
+     */
+    public function setBanningUser(WebUser $user) {
+        $this->banningUser = $user;
+    }
+
+    /**
      * @param DateTime $time
      */
     public function setTime(DateTime $time) {
@@ -114,6 +132,13 @@ class Ban {
      */
     public function setExpiry(DateTime $expiry) {
         $this->expiry = $expiry;
+    }
+
+    /**
+     * @param string $reason
+     */
+    public function setReason(string $reason) {
+        $this->reason = $reason;
     }
 
     /**
@@ -135,6 +160,13 @@ class Ban {
         return $this->environment == null;
     }
 
+    /**
+     * @return bool
+     */
+    public function isPermanent(): bool {
+        return $this->expiry == null;
+    }
+
     // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
     /**
      * Return a property
@@ -146,4 +178,23 @@ class Ban {
         return $this->$property;
     }
 
+    /**
+     * @return array
+     */
+    public function jsonSerialize(): array {
+        return [
+            "id" => $this->id,
+            "user" => $this->user,
+            "banningUser" => $this->banningUser,
+            "time" => $this->time,
+            "expiry" => $this->expiry,
+            "reason" => $this->reason,
+            "environment" => $this->environment,
+
+            // Generated
+            "active" => $this->isActive(),
+            "global" => $this->isGlobal(),
+            "permanent" => $this->isPermanent(),
+        ];
+    }
 }
