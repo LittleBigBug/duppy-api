@@ -13,6 +13,7 @@ use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyException;
+use Duppy\DuppyServices\Env;
 use Duppy\DuppyServices\MailService;
 use Duppy\DuppyServices\Settings;
 use Duppy\DuppyServices\TokenManager;
@@ -139,7 +140,7 @@ class Register extends AbstractEndpoint {
                     return Util::responseError($response, "There was an error generating a verification code");
                 }
 
-                $url = getenv("CLIENT_URL") . "#/login/verification";
+                $url = Env::G("CLIENT_URL") . "#/login/verification";
 
                 $title = $settingsMngr->getSetting("title");
                 $subject = "Verify Your New $title Account";
@@ -217,7 +218,7 @@ class Register extends AbstractEndpoint {
         // Login Immediately
         $token = (new TokenManager)->inst()->createTokenFill($data);
 
-        $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token  . "/" . $data["id"];
+        $redirect = Env::G("CLIENT_URL") . "#/login/success/" . $token  . "/" . $data["id"];
         return $response->withHeader("Location", $redirect)->withStatus(302);
     }
 

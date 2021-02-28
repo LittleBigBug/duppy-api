@@ -25,9 +25,9 @@ class Env extends AbstractService {
      * Static alias allowed to be called anywhere and redirects to (possibly mocked) service
      *
      * @param string $key
-     * @return bool|array|string
+     * @return mixed
      */
-    public static function G(string $key): bool|array|string {
+    public static function G(string $key): mixed {
         return (new Env)->inst()->realGet($key);
     }
 
@@ -35,9 +35,9 @@ class Env extends AbstractService {
      * Easier functions allowed to be called anywhere and redirects to (possibly mocked) service
      *
      * @param string $key
-     * @return bool|array|string
+     * @return mixed
      */
-    public function Get(string $key): bool|array|string {
+    public function Get(string $key): mixed {
         return $this->inst()->realGet($key);
     }
 
@@ -61,11 +61,11 @@ class Env extends AbstractService {
      * Function to be overridden in case of testing
      *
      * @param string $key
-     * @return bool|array|string
+     * @return mixed
      */
     #[Pure]
-    public function realGet(string $key): bool|array|string {
-        return getenv($key);
+    public function realGet(string $key): mixed {
+        return $_ENV[$key];
     }
 
 }

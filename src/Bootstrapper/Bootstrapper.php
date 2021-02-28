@@ -50,7 +50,6 @@ use Doctrine\ORM\Tools\Setup;
 use Doctrine\DBAL\Types\Type;
 use RKA\Middleware\IpAddress;
 use Slim\Factory\AppFactory;
-use Dotenv\Dotenv;
 use DI\Container;
 use Slim\App;
 
@@ -132,6 +131,7 @@ final class Bootstrapper {
      * @return void
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public static function boot() {
         // Load .env file for config
@@ -156,7 +156,7 @@ final class Bootstrapper {
      */
     public static function cli(): EntityManager {
         // Load .env file for config
-        (Dotenv::createImmutable(DUPPY_PATH))->load();
+        (new Env)->inst()->start();
 
         // Database connection
         return Bootstrapper::configureDatabase();
@@ -168,6 +168,7 @@ final class Bootstrapper {
      * @return App
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public static function test(): App {
         // Create Container using PHP-DI
@@ -189,11 +190,13 @@ final class Bootstrapper {
      * @return void
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public static function configure(bool $skipDi = false) {
         $app = Bootstrapper::getApp();
+
         $app->addRoutingMiddleware();
-        $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
+        $app->addErrorMiddleware(Env::G('DUPPY_DEVELOPMENT'), true, true);
 
         // Default Duppy global middlewares
         $app->add(new IpAddress);
@@ -258,7 +261,7 @@ final class Bootstrapper {
 
         $config = Setup::createAnnotationMetadataConfiguration(
             [__DIR__ . '/../'],
-            getenv('DUPPY_DEVELOPMENT'),
+            Env::G('DUPPY_DEVELOPMENT'),
             null,
             null,
             false
@@ -266,10 +269,10 @@ final class Bootstrapper {
 
         // Connection array
         $conn = [
-            'dbname' => getenv('DB_DATABASE'),
-            'user' => getenv('DB_USER'),
-            'password' => getenv('DB_PASSWORD'),
-            'host' => getenv('DB_HOST'),
+            'dbname' => Env::G('DB_DATABASE'),
+            'user' => Env::G('DB_USER'),
+            'password' => Env::G('DB_PASSWORD'),
+            'host' => Env::G('DB_HOST'),
             'driver' => 'pdo_mysql'
         ];
 
@@ -280,7 +283,7 @@ final class Bootstrapper {
      * Configures jwt-framework and sets up the Signing and Encryption token builders
      */
     public static function configureJWT() {
-        Bootstrapper::$jwsKey = JWKFactory::createFromSecret(getenv('JWT_SECRET'), [
+        Bootstrapper::$jwsKey = JWKFactory::createFromSecret(Env::G('JWT_SECRET'), [
             'alg' => 'HS256',
             'use' => 'sig',
         ]);
@@ -288,7 +291,7 @@ final class Bootstrapper {
         $encrypt = (new TokenManager)->inst()->isEncryptionEnabled();
 
         if ($encrypt) {
-            Bootstrapper::$jweKey = JWKFactory::createFromSecret(getenv("JWT_SECRET"), [
+            Bootstrapper::$jweKey = JWKFactory::createFromSecret(Env::G("JWT_SECRET"), [
                 'alg' => 'HS256',
                 'use' => 'enc',
             ]);
@@ -371,28 +374,28 @@ final class Bootstrapper {
      * @throws PHPMailerException
      */
     public static function configureMailer(): PHPMailer {
-        $isDev = getenv("DUPPY_DEVELOPMENT");
+        $isDev = Env::G("DUPPY_DEVELOPMENT");
         $mailer = new PHPMailer($isDev);
 
         $mailer->SMTPDebug = $isDev ? SMTP::DEBUG_SERVER : SMTP::DEBUG_OFF;
 
-        $smtp = getenv("SMTP");
+        $smtp = Env::G("SMTP");
 
         if ($smtp) {
             $mailer->isSMTP();
-            $mailer->Host = getenv("SMTP_HOST");
-            $mailer->Port = getenv("SMTP_PORT");
+            $mailer->Host = Env::G("SMTP_HOST");
+            $mailer->Port = Env::G("SMTP_PORT");
 
-            $user = getenv("SMTP_USER");
+            $user = Env::G("SMTP_USER");
 
             if (!empty($user)) {
                 $mailer->SMTPAuth = true;
 
                 $mailer->Username = $user;
-                $mailer->Password = getenv("SMTP_PASS");
+                $mailer->Password = Env::G("SMTP_PASS");
             }
 
-            $cfg = getenv("SMTP_SECURE");
+            $cfg = Env::G("SMTP_SECURE");
             $protocol = null;
 
             switch ($cfg) {
@@ -411,7 +414,7 @@ final class Bootstrapper {
             }
         }
 
-        $mailer->setFrom(getenv("EMAIL_FROM"));
+        $mailer->setFrom(Env::G("EMAIL_FROM"));
 
         return $mailer;
     }
@@ -423,7 +426,7 @@ final class Bootstrapper {
      * @return BladeOne
      */
     public static function configureTemplates(): BladeOne {
-        $isDev = getenv("DUPPY_DEVELOPMENT");
+        $isDev = Env::G("DUPPY_DEVELOPMENT");
         $pth = DUPPY_PATH . "/templates";
 
         $views = $pth . "/views";

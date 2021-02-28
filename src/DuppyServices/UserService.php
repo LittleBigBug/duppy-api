@@ -155,7 +155,7 @@ final class UserService extends AbstractService {
         (new Logging)->inst()->UserAction($user, "Login");
 
         if ($redirect) {
-            $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $crumb . "/" . $data["id"];
+            $redirect = Env::G("CLIENT_URL") . "#/login/success/" . $token . "/" . $crumb . "/" . $data["id"];
             return $response->withHeader("Location", $redirect)->withStatus(302);
         } else {
             return Util::responseJSON($response, [

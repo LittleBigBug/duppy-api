@@ -7,8 +7,11 @@
 
 namespace Duppy\MailEngines;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Abstracts\AbstractMailEngine;
+use Duppy\DuppyServices\Env;
 
 class SMTPMailEngine extends AbstractMailEngine {
 
@@ -24,6 +27,8 @@ class SMTPMailEngine extends AbstractMailEngine {
      * @param string $content
      * @param string $altContent
      * @param bool $allowReply
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     function sendMail(array|string $recipients, string $subject, string $content, string $altContent = "", bool $allowReply = false) {
         if (!is_array($recipients)) {
@@ -37,7 +42,7 @@ class SMTPMailEngine extends AbstractMailEngine {
         }
 
         if ($allowReply) {
-            $mailer->addReplyTo(getenv("EMAIL_REPLYTO"));
+            $mailer->addReplyTo(Env::G("EMAIL_REPLYTO"));
         }
 
         if (str_contains($content, "<") || !empty($altContent)) {

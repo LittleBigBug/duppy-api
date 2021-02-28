@@ -11,6 +11,7 @@ use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Abstracts\AbstractEndpointGroup;
 use Duppy\Abstracts\AbstractFileBuilder;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\DuppyServices\Env;
 use Duppy\Util;
 use JetBrains\PhpStorm\Pure;
 use Slim\App;
@@ -317,7 +318,7 @@ final class Router extends AbstractFileBuilder {
 
                     if (str_contains($redirectTo, $envVar)) {
                         $arg = substr($redirectTo, strlen($envVar));
-                        $redirectTo = getenv($arg);
+                        $redirectTo = Env::G($arg);
                     }
 
                     $app->redirect($uri, $redirectTo, $responseCode);
