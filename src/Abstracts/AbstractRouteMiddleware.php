@@ -12,6 +12,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 abstract class AbstractRouteMiddleware {
+
     /**
      * Request obj
      *
@@ -46,9 +47,22 @@ abstract class AbstractRouteMiddleware {
 
         static::$response = new \Slim\Psr7\Response;
 
-        $continue = $this->handle() ?? true;
+        $didNext = false;
 
-        if ($continue) {
+        $next = function() use ($handler, $request, &$didNext) {
+            if ($didNext) {
+                return;
+            }
+
+            $response = $handler->handle($request);
+            static::setResponse($response);
+
+            $didNext = true;
+        };
+
+        $continue = $this->handle($next) ?? true;
+
+        if ($continue && !$didNext) {
             static::$response = $handler->handle($request);
         }
 
@@ -58,9 +72,10 @@ abstract class AbstractRouteMiddleware {
     /**
      * Handles the middleware
      *
+     * @param callable $next Call Next middleware. Doesn't need to be called. It will be called if it hasn't and this function returns true.
      * @return ?bool
      */
-    abstract public function handle(): ?bool;
+    abstract public function handle(callable $next): ?bool;
 
     /**
      * Get request obj
@@ -88,4 +103,14 @@ abstract class AbstractRouteMiddleware {
     final protected static function getResponse(): Response {
         return static::$response;
     }
+
+    /**
+     * Set the immutable response
+     *
+     * @param Response $response
+     */
+    final protected static function setResponse(Response $response) {
+        static::$response = $response;
+    }
+
 }
