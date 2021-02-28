@@ -43,7 +43,7 @@ final class MailService extends AbstractService {
 
         (new MailEngineBuilder)->buildOnce();
 
-        $useEngine = (new Settings)->getSetting("email.engine", "smtp");
+        $useEngine = (new Settings)->inst()->getSetting("email.engine", "smtp");
         $val = Util::indArrayNull($this->mailEngines, $useEngine);
 
         $engine = new $val;
