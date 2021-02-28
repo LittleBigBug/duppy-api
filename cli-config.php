@@ -14,4 +14,4 @@ define('DUPPY_PATH', __DIR__);
  * Configure doctrine CLI
  */
 
-return ConsoleRunner::createHelperSet(Bootstrapper::cli());
+return ConsoleRunner::createHelperSet(Bootstrapper::doctrineCli());

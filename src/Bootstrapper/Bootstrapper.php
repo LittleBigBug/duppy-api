@@ -154,7 +154,7 @@ final class Bootstrapper {
      * @throws DBALException
      * @throws ORMException
      */
-    public static function cli(): EntityManager {
+    public static function doctrineCli(): EntityManager {
         // Load .env file for config
         (new Env)->inst()->start();
 
@@ -371,6 +371,11 @@ final class Bootstrapper {
 
     /**
      * Configure PHPMailer
+     *
+     * @return PHPMailer
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      * @throws PHPMailerException
      */
     public static function configureMailer(): PHPMailer {
@@ -379,20 +384,23 @@ final class Bootstrapper {
 
         $mailer->SMTPDebug = $isDev ? SMTP::DEBUG_SERVER : SMTP::DEBUG_OFF;
 
-        $smtp = Env::G("SMTP");
+        $emailSettings = (new Settings)->inst()->getSettings([
+            "email.engine", "email.from",
+            "email.smtp.host", "email.smtp.port",
+        ]);
 
-        if ($smtp) {
+        if ($emailSettings["email.engine"] === "smtp") {
             $mailer->isSMTP();
-            $mailer->Host = Env::G("SMTP_HOST");
-            $mailer->Port = Env::G("SMTP_PORT");
+            $mailer->Host = $emailSettings["email.smtp.host"];
+            $mailer->Port = $emailSettings["email.smtp.port"];
 
-            $user = Env::G("SMTP_USER");
+            $user = Env::G("SMTP_USERNAME");
 
             if (!empty($user)) {
                 $mailer->SMTPAuth = true;
 
                 $mailer->Username = $user;
-                $mailer->Password = Env::G("SMTP_PASS");
+                $mailer->Password = Env::G("SMTP_PASSWORD");
             }
 
             $cfg = Env::G("SMTP_SECURE");
@@ -414,7 +422,7 @@ final class Bootstrapper {
             }
         }
 
-        $mailer->setFrom(Env::G("EMAIL_FROM"));
+        $mailer->setFrom($emailSettings["email.from"]);
 
         return $mailer;
     }
