@@ -11,8 +11,9 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractMailEngine;
 use Duppy\Abstracts\AbstractService;
-use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Builders\MailEngineBuilder;
+use Duppy\DuppyException;
+use Duppy\Enum\LogType;
 use Duppy\Util;
 
 final class MailService extends AbstractService {
@@ -33,6 +34,7 @@ final class MailService extends AbstractService {
      * @return AbstractMailEngine
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function getMailEngine(): AbstractMailEngine {
         if ($this->mailEngine != null) {
@@ -66,10 +68,14 @@ final class MailService extends AbstractService {
      * @param bool $allowReply
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function sendMail(string|array $recipients, string $subject, string $content, string $altContent = "", bool $allowReply = false) {
         $mailEngine = $this->getMailEngine();
         $mailEngine->sendMail($recipients, $subject, $content, $altContent, $allowReply);
+
+        $recipStr = implode(", ", $recipients);
+        (new Logging)->inst()->Info("Subject: $subject To $recipStr")->setLogType(LogType::mail());
     }
 
     /**
@@ -80,6 +86,7 @@ final class MailService extends AbstractService {
      * @return string
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function renderTemplate(string $template, array $share = []): string {
         $mailEngine = $this->getMailEngine();
@@ -97,6 +104,7 @@ final class MailService extends AbstractService {
      * @param bool $allowReply
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function sendMailTemplate(string|array $recipients, string $subject, string $template, array $share = [], string $altContent = "", bool $allowReply = false) {
         $res = $this->renderTemplate($template, $share);

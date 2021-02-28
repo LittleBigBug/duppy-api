@@ -12,6 +12,8 @@ use DI\NotFoundException;
 use Doctrine\Common\Collections\Criteria;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\DuppyException;
+use Duppy\DuppyServices\Logging;
 use Duppy\DuppyServices\Settings;
 use Duppy\DuppyServices\UserService;
 use Duppy\Entities\WebUserProviderAuth;
@@ -44,6 +46,7 @@ class Login extends AbstractEndpoint {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $postArgs = $request->getParsedBody();
@@ -112,12 +115,15 @@ class Login extends AbstractEndpoint {
 
         $userAuth = $dbo->getRepository(WebUserProviderAuth::class)->matching($cr)->first();
 
+        // No user matching the third party authentication, so "redirect" to register instead
         if ($userAuth === false) {
             $rg = new Register;
             return $rg($request, $response, $args);
         }
 
         $userObj = $userAuth->get("user");
+
+        (new Logging)->inst()->UserAction($userObj, "Authentication Provider Login with : $provider");
 
         if ($userObj == null) {
             return Util::responseError($response, "Cant find user associated to provider auth");

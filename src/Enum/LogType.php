@@ -15,6 +15,7 @@ use Spatie\Enum\Enum;
  * @method static self info()
  * @method static self error()
  * @method static self temp()
+ * @method static self mail()
  *
  * @package Duppy\Enum
  */
