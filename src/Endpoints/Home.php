@@ -18,6 +18,6 @@ class Home extends AbstractEndpoint {
      */
     public static ?array $uri = [ '/' ];
 
-    public static ?array $uriRedirect = [ ["%env:CLIENT_URL", 302] ];
+    public static ?array $uriRedirect = [ ["%setting:clientUrl", 302] ];
 
 }

@@ -11,6 +11,7 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\DuppyException;
 use Duppy\Entities\WebUser;
 use Duppy\Util;
 use Exception;
@@ -104,11 +105,16 @@ final class TokenManager extends AbstractService {
      *
      * @param array $payload
      * @return string
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws DuppyException
      */
     public function createTokenFill(array $payload): string {
+        $clientUrl = (new Settings)->inst()->getSetting("clientUrl");
+
         $defaults = [
             "iss" => DUPPY_URI,
-            "aud" => getenv("CLIENT_URL"),
+            "aud" => $clientUrl,
             "iat" => time(),
         ];
 
@@ -123,6 +129,9 @@ final class TokenManager extends AbstractService {
      *
      * @param WebUser $user
      * @return string
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      */
     public function createTokenFromUser(WebUser $user): string {
         $data = [
@@ -140,6 +149,7 @@ final class TokenManager extends AbstractService {
      * @param int $userId
      * @return string
      * @throws DependencyException
+     * @throws DuppyException
      * @throws NotFoundException
      */
     public function createTokenFromUserId(int $userId): string {
@@ -152,6 +162,9 @@ final class TokenManager extends AbstractService {
      *
      * @param string $token
      * @return array|null
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      */
     public function loadToken(string $token): ?array {
         $isEncrypted = $this->isEncryptionEnabled();
@@ -179,6 +192,8 @@ final class TokenManager extends AbstractService {
         $jwsVerifier = Bootstrapper::getJWSVerifier();
         $jwsKey = Bootstrapper::getJWSKey();
 
+        $clientUrl = (new Settings)->inst()->getSetting("clientUrl");
+
         // Check signed token
         $signedSerializer = new JWSSerializerManager([ new SigCompactSerializer(), ]);
         $headerCheckerSig = new HeaderCheckerManager([
@@ -197,7 +212,7 @@ final class TokenManager extends AbstractService {
                 new IssuedAtChecker(),
                 new NotBeforeChecker(),
                 new ExpirationTimeChecker(),
-                new AudienceChecker(getenv("CLIENT_URL")),
+                new AudienceChecker($clientUrl),
             ]);
 
             $claimChecker->check($pl, ["iss", "aud"]);
@@ -212,6 +227,9 @@ final class TokenManager extends AbstractService {
      * Gets the auth token array from the submitted JWT, also caches it
      *
      * @return array|null
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      */
     public function getAuthToken(): ?array {
         $request = Bootstrapper::getCurrentRequest();
@@ -249,7 +267,7 @@ final class TokenManager extends AbstractService {
      */
     #[Pure]
     public function isEncryptionEnabled(): bool {
-        return $this->encryptionEnabled != null ? $this->encryptionEnabled : getenv("JWT_ENCRYPT") !== "false";
+        return $this->encryptionEnabled != null ? $this->encryptionEnabled : Env::G("JWT_ENCRYPT") !== "false";
     }
 
 }

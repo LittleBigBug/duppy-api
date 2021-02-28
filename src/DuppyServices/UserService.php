@@ -125,6 +125,7 @@ final class UserService extends AbstractService {
      * @param bool $redirect
      * @return Response
      * @throws DependencyException
+     * @throws DuppyException
      * @throws NotFoundException
      */
     public function loginUser(Response $response, WebUser $user, bool $redirect = false): Response {
@@ -155,7 +156,8 @@ final class UserService extends AbstractService {
         (new Logging)->inst()->UserAction($user, "Login");
 
         if ($redirect) {
-            $redirect = Env::G("CLIENT_URL") . "#/login/success/" . $token . "/" . $crumb . "/" . $data["id"];
+            $clientUrl = (new Settings)->inst()->getSetting("clientUrl");
+            $redirect = $clientUrl . "#/login/success/" . $token . "/" . $crumb . "/" . $data["id"];
             return $response->withHeader("Location", $redirect)->withStatus(302);
         } else {
             return Util::responseJSON($response, [

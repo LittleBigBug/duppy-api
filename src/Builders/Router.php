@@ -7,11 +7,15 @@
 
 namespace Duppy\Builders;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Abstracts\AbstractEndpointGroup;
 use Duppy\Abstracts\AbstractFileBuilder;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\DuppyException;
 use Duppy\DuppyServices\Env;
+use Duppy\DuppyServices\Settings;
 use Duppy\Util;
 use JetBrains\PhpStorm\Pure;
 use Slim\App;
@@ -274,6 +278,9 @@ final class Router extends AbstractFileBuilder {
      *
      * @param array $endpoints
      * @param App|RouteCollectorProxy|null $app
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws DuppyException
      */
     private function buildRouteEndpoints(array $endpoints, App|RouteCollectorProxy $app = null) {
         if ($app == null) {
@@ -315,10 +322,16 @@ final class Router extends AbstractFileBuilder {
 
                     // If we need more of these other places we should make a system for them
                     $envVar = "%env:";
+                    $stgVar = "%stg:";
 
                     if (str_contains($redirectTo, $envVar)) {
                         $arg = substr($redirectTo, strlen($envVar));
                         $redirectTo = Env::G($arg);
+                    }
+
+                    if (str_contains($redirectTo, $stgVar)) {
+                        $arg = substr($redirectTo, strlen($stgVar));
+                        $redirectTo = (new Settings)->inst()->getSetting($arg);
                     }
 
                     $app->redirect($uri, $redirectTo, $responseCode);

@@ -140,9 +140,12 @@ class Register extends AbstractEndpoint {
                     return Util::responseError($response, "There was an error generating a verification code");
                 }
 
-                $url = Env::G("CLIENT_URL") . "#/login/verification";
+                $s = $settingsMngr->getSettings(["clientUrl", "title"]);
 
-                $title = $settingsMngr->getSetting("title");
+                $clientUrl = $s["clientUrl"];
+                $title = $s["title"];
+
+                $url = "$clientUrl#/login/verification";
                 $subject = "Verify Your New $title Account";
 
                 (new MailService)->inst()->sendMailTemplate($email, $subject, "verifyAccount", [
@@ -218,7 +221,8 @@ class Register extends AbstractEndpoint {
         // Login Immediately
         $token = (new TokenManager)->inst()->createTokenFill($data);
 
-        $redirect = Env::G("CLIENT_URL") . "#/login/success/" . $token  . "/" . $data["id"];
+        $clientUrl = $settingsMngr->getSetting("clientUrl");
+        $redirect = $clientUrl . "#/login/success/" . $token  . "/" . $data["id"];
         return $response->withHeader("Location", $redirect)->withStatus(302);
     }
 

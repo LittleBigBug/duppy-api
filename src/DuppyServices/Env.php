@@ -52,7 +52,6 @@ class Env extends AbstractService {
 
         $this->dotEnv->required([
             'JWT_SECRET',
-            'CLIENT_URL',
         ]);
 
         $this->dotEnv->load();
