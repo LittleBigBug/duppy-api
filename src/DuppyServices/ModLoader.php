@@ -31,6 +31,7 @@ final class ModLoader extends AbstractService {
      *
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function build() {
         $iterator = new DirectoryIterator(Util::combinePaths([DUPPY_PATH, "src", "Mods"], true));

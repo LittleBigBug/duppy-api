@@ -48,6 +48,7 @@ use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\DBAL\Types\Type;
+use RKA\Middleware\IpAddress;
 use Slim\Factory\AppFactory;
 use Dotenv\Dotenv;
 use DI\Container;
@@ -195,6 +196,7 @@ final class Bootstrapper {
         $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
 
         // Default Duppy global middlewares
+        $app->add(new IpAddress);
         $app->add(new RateLimitMiddleware);
         $app->add(new DuppyServiceMiddleware);
         $app->add(new CORSMiddleware);
