@@ -27,6 +27,7 @@ class Env extends AbstractService {
      * @param string $key
      * @return mixed
      */
+    #[Pure]
     public static function G(string $key): mixed {
         return (new Env)->inst()->realGet($key);
     }
@@ -37,6 +38,7 @@ class Env extends AbstractService {
      * @param string $key
      * @return mixed
      */
+    #[Pure]
     public function Get(string $key): mixed {
         return $this->inst()->realGet($key);
     }
