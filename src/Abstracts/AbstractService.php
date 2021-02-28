@@ -72,30 +72,24 @@ class AbstractService {
     }
 
     /**
-     * @param string|null $name
+     * Cleanup function called on all services in the middleware to clean up variables or do other things on exit
+     */
+    public function clean() { }
+
+    /**
+     * Shorter function
+     *
      * @return AbstractService
      */
-    public static function StaticSingleton(?string $name = null): AbstractService {
-        if (empty($name)) {
-            $name = get_called_class();
-        }
-
-        $ret = new $name;
-        $ret->Singleton();
-
-        // Create a new service if the singleton doesn't exist
-        if (!array_key_exists($name, AbstractService::$singletons) || AbstractService::$singletons[$name] == null) {
-            AbstractService::SetSingleton($ret);
-        }
-
-        return $ret;
+    public final function inst(): AbstractService {
+        return $this->Singleton($this::class);
     }
 
     /**
      * @param bool $useNew = false  If 'false' and the singleton is missing, the current object will become the singleton
      * @return $this
      */
-    public function Singleton(bool $useNew = false): AbstractService {
+    public final function Singleton(bool $useNew = false): AbstractService {
         $name = $this::class;
 
         // Create a new service if the singleton doesn't exist
@@ -114,12 +108,32 @@ class AbstractService {
     }
 
     /**
-     * Shorter function
-     *
+     * Cleans all services registered as a singleton
+     */
+    public static function CleanServices() {
+        foreach (AbstractService::$singletons as $singleton) {
+            $singleton->clean();
+        }
+    }
+
+    /**
+     * @param string|null $name
      * @return AbstractService
      */
-    public function inst(): AbstractService {
-        return $this->Singleton($this::class);
+    public static function StaticSingleton(?string $name = null): AbstractService {
+        if (empty($name)) {
+            $name = get_called_class();
+        }
+
+        $ret = new $name;
+        $ret->Singleton();
+
+        // Create a new service if the singleton doesn't exist
+        if (!array_key_exists($name, AbstractService::$singletons) || AbstractService::$singletons[$name] == null) {
+            AbstractService::SetSingleton($ret);
+        }
+
+        return $ret;
     }
 
     /**
