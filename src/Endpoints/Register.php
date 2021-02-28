@@ -12,6 +12,7 @@ use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\DuppyException;
 use Duppy\DuppyServices\MailService;
 use Duppy\DuppyServices\Settings;
 use Duppy\DuppyServices\TokenManager;
@@ -40,6 +41,13 @@ class Register extends AbstractEndpoint {
     public static array $types = [ 'post' ];
 
     /**
+     * Any registrations require captcha (even hybridauth providers - upon pressing a provider button )
+     *
+     * @var array
+     */
+    public static array $middleware = [ "Duppy\Middleware\CaptchaMiddleware" ];
+
+    /**
      * Handles Registers with passwords or third-party (HybridAuth)
      *
      * @param Request $request
@@ -48,6 +56,7 @@ class Register extends AbstractEndpoint {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $provider = Util::indArrayNull($args, "provider");
