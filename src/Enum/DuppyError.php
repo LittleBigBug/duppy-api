@@ -17,6 +17,7 @@ use Spatie\Enum\Enum;
  * @method static self alreadyExists()
  * @method static self incorrectType()
  * @method static self httpError()
+ * @method static self missingSetting()
  *
  * @package Duppy\Enum
  */
