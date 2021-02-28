@@ -20,9 +20,13 @@ use Duppy\DuppyServices\ModLoader;
 use Duppy\DuppyServices\Settings;
 use Duppy\DuppyServices\TokenManager;
 use Duppy\Middleware\CORSMiddleware;
+use Duppy\Middleware\DuppyServiceMiddleware;
+use Duppy\Middleware\EnvironmentMiddleware;
+use Duppy\Middleware\RateLimitMiddleware;
 use eftec\bladeone\BladeOne;
 use Hybridauth\Exception\InvalidArgumentException;
 use Hybridauth\Hybridauth;
+use JetBrains\PhpStorm\Pure;
 use Jose\Component\Core\AlgorithmManager;
 use Jose\Component\Core\JWK;
 use Jose\Component\Encryption\Algorithm\ContentEncryption\A128CBCHS256;
@@ -35,9 +39,11 @@ use Jose\Component\KeyManagement\JWKFactory;
 use Jose\Component\Signature\Algorithm\HS256;
 use Jose\Component\Signature\JWSBuilder;
 use Jose\Component\Signature\JWSVerifier;
+use PalePurple\RateLimit\Adapter;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
+use Psr\Http\Message\ServerRequestInterface;
 use Ramsey\Uuid\Doctrine\UuidType;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
@@ -113,9 +119,18 @@ final class Bootstrapper {
     public static ?Router $router;
 
     /**
+     * Current request
+     *
+     * @var ServerRequestInterface
+     */
+    public static ServerRequestInterface $currentRequest;
+
+    /**
      * Boots the application and loads any global dependencies
      *
      * @return void
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function boot() {
         // Load .env file for config
@@ -135,6 +150,8 @@ final class Bootstrapper {
      * Boots smaller app for Doctrine CLI
      *
      * @return EntityManager
+     * @throws DBALException
+     * @throws ORMException
      */
     public static function cli(): EntityManager {
         // Load .env file for config
@@ -148,6 +165,8 @@ final class Bootstrapper {
      * Slim Testing Application
      *
      * @return App
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public static function test(): App {
         // Create Container using PHP-DI
@@ -175,7 +194,11 @@ final class Bootstrapper {
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(getenv('DUPPY_DEVELOPMENT'), true, true);
 
+        // Default Duppy global middlewares
+        $app->add(new RateLimitMiddleware);
+        $app->add(new DuppyServiceMiddleware);
         $app->add(new CORSMiddleware);
+        $app->add(new EnvironmentMiddleware);
 
         if (!$skipDi) {
             Bootstrapper::buildDependencies();
@@ -215,6 +238,10 @@ final class Bootstrapper {
         // OneBlade Templating
         $templateHandler = null;
         $container->set("templateHandler", fn () => $templateHandler ?? $templateHandler = Bootstrapper::configureTemplates());
+
+        // Rate Limit Adapter
+        $rateLimitAdapter = null;
+        $container->set("rateLimitAdapter", fn () => $rateLimitAdapter ?? $rateLimitAdapter = Bootstrapper::configureRateLimiterAdapter());
     }
 
     /**
@@ -404,6 +431,14 @@ final class Bootstrapper {
     }
 
     /**
+     * @return Adapter
+     */
+    #[Pure]
+    public static function configureRateLimiterAdapter(): Adapter {
+        return new Adapter\APC;
+    }
+
+    /**
      * Build routes within Slim and run the app
      */
     public static function buildRoutes() {
@@ -483,6 +518,23 @@ final class Bootstrapper {
      */
     public static function getJWEDecrypter(): JWEDecrypter {
         return Bootstrapper::$jweDecrypter;
+    }
+
+    /**
+     * Current request fetched from DuppyServiceMiddleware
+     * This should not be used when possible but is there if needed
+     *
+     * @return ServerRequestInterface
+     */
+    public static function getCurrentRequest(): ServerRequestInterface {
+        return Bootstrapper::$currentRequest;
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     */
+    public static function setCurrentRequest(ServerRequestInterface $request) {
+        Bootstrapper::$currentRequest = $request;
     }
 
 }
