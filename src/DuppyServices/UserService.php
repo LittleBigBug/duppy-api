@@ -15,7 +15,6 @@ use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyException;
-use Duppy\Entities\Ban;
 use Duppy\Entities\Environment;
 use Duppy\Entities\PasswordResetRequest;
 use Duppy\Entities\PermissionAssignment;
@@ -46,7 +45,7 @@ final class UserService extends AbstractService {
      */
     public function getUser($id = null): ?WebUser {
         if ($id == "me" || $id == null) {
-            return (new UserService)->inst()->getLoggedInUser();
+            return $this->inst()->getLoggedInUser();
         }
 
         $container = Bootstrapper::getContainer();
@@ -153,6 +152,8 @@ final class UserService extends AbstractService {
         $dbo->persist($user);
         $dbo->flush();
 
+        (new Logging)->inst()->UserAction($user, "Login");
+
         if ($redirect) {
             $redirect = getenv("CLIENT_URL") . "#/login/success/" . $token . "/" . $crumb . "/" . $data["id"];
             return $response->withHeader("Location", $redirect)->withStatus(302);
@@ -224,6 +225,7 @@ final class UserService extends AbstractService {
      * @return ?string
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public static function getEmailWhitelist(): ?string {
         $whitelistClass = (new Settings)->inst()->getSetting("auth.emailWhitelist");
@@ -238,6 +240,7 @@ final class UserService extends AbstractService {
      * @return bool
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function emailWhitelisted(string $email): bool {
         $whitelistClass = $this->getEmailWhitelist();
@@ -257,6 +260,7 @@ final class UserService extends AbstractService {
      * @return boolean
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function enabledProvider(string &$provider): bool {
         if (!isset($provider) || empty($provider)) {

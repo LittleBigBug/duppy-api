@@ -12,6 +12,7 @@ use DI\NotFoundException;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Entities\WebUser;
+use Duppy\Util;
 use Exception;
 use JetBrains\PhpStorm\Pure;
 use Jose\Component\Checker\AlgorithmChecker;
@@ -44,6 +45,13 @@ final class TokenManager extends AbstractService {
      * @var bool|null
      */
     public ?bool $encryptionEnabled = null;
+
+    /**
+     * Clean up cached stuff for user
+     */
+    public function clean() {
+        $this->authToken = [];
+    }
 
     /**
      * Creates a new signed and encrypted token with the payload
@@ -206,8 +214,24 @@ final class TokenManager extends AbstractService {
      * @return array|null
      */
     public function getAuthToken(): ?array {
-        if (!array_key_exists("authToken", $_POST)) {
+        $request = Bootstrapper::getCurrentRequest();
+        $authHeader = $request->getHeader("Authorization");
+
+        if (count($authHeader) > 1) {
             return null;
+        }
+
+        $token = Util::indArrayNull($authHeader, 0);
+
+        if ($token == null || empty($token)) {
+            $postArgs = $request->getParsedBody();
+
+            // Old token support via POST
+            $token = Util::indArrayNull($postArgs, "authToken");
+
+            if ($token == null || empty($token)) {
+                return null;
+            }
         }
 
         if (!empty($this->authToken)) {
