@@ -9,61 +9,32 @@ namespace Duppy\Middleware;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use GuzzleHttp\Exception\GuzzleException;
 use Duppy\Abstracts\AbstractRouteMiddleware;
 use Duppy\DuppyException;
-use Duppy\DuppyServices\Settings;
+use Duppy\DuppyServices\Captcha;
 use Duppy\Util;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 
-class captchaMiddleware extends AbstractRouteMiddleware {
+class CaptchaMiddleware extends AbstractRouteMiddleware {
 
     /**
-     * hCaptcha verify
-     */
-    const siteVerifyUrl = "https://hcaptcha.com/siteverify";
-
-    /**
-     * Reject any using this middleware who isn't logged into a valid user
+     * Captcha handling (general)
+     *
+     * @param callable $next
      * @return ?bool
-     * @throws NotFoundException
-     * @throws GuzzleException
      * @throws DependencyException
      * @throws DuppyException errType noneFound (setting function)
+     * @throws GuzzleException
+     * @throws NotFoundException
      */
-    final public function handle(): ?bool {
-        // Only process this middleware if the setting is enabled
-        $settingsMngr = (new Settings)->inst();
-
-        $stgs = $settingsMngr->getSettings([
-            "hCaptcha.enabled", "hCaptcha.private",
-        ]);
-
-        if (!Util::indArrayNull($stgs, "hCaptcha.enabled")) {
-            return true;
-        }
-
+    final public function handle(callable $next): ?bool {
+        $captchaSrv = (new Captcha)->inst();
         $captchaResponse = static::$request->getHeader("X-Captcha-Response");
-        $private = Util::indArrayNull($stgs, "hCaptcha.private");
 
-        $client = new Client;
-        $res = $client->request("POST", self::siteVerifyUrl, [
-            "form_params" => [
-                "secret" => "my-secret $private",
-                "response" => $captchaResponse,
-            ],
-        ]);
+        $success = $captchaSrv->verify($captchaResponse[0]);
 
-        $body = $res->getBody()->getContents();
-        $json = json_decode($body);
-
-        if (!$json->success) {
-            static::$response = Util::responseJSON(static::$response, [
-                "success" => false,
-                "data" => [ ],
-                "err" => "Captcha failed",
-            ], 401);
-
+        if ($success) {
+            static::$response = Util::responseError(static::$response, "Captcha failed", 401);
             return false;
         }
 
