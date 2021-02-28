@@ -15,15 +15,20 @@ use Duppy\DuppyServices\EnvironmentService;
 class EnvironmentMiddleware extends AbstractRouteMiddleware {
 
     /**
+     * Handle environments in requests
+     *
+     * @param callable $next
      * @return bool|null
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public function handle(): ?bool {
+    public function handle(callable $next): ?bool {
         $environmentService = (new EnvironmentService)->inst();
         $environmentStrs = static::$request->getHeader("X-Environment");
 
-        if (count($environmentStrs) > 1) {
+        if (count($environmentStrs) < 1) {
+            return true; // No environment specified
+        } elseif (count($environmentStrs) > 1) {
             static::$response = static::$response->withStatus(400);
             return false;
         }

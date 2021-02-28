@@ -16,10 +16,12 @@ class AdminAccessMiddleware extends AbstractRouteMiddleware {
 
     /**
      * Reject any using this middleware who does not have admin permissions
+     * @param callable $next
+     * @return bool|null
      * @throws DependencyException
      * @throws NotFoundException
      */
-    final public function handle(): ?bool {
+    final public function handle(callable $next): ?bool {
         $user = (new UserService)->inst()->getLoggedInUser();
 
         if ($user == null) {
