@@ -113,7 +113,7 @@ final class TokenManager extends AbstractService {
         $clientUrl = (new Settings)->inst()->getSetting("clientUrl");
 
         $defaults = [
-            "iss" => DUPPY_URI,
+            "iss" => Env::G("API_URL"),
             "aud" => $clientUrl,
             "iat" => time(),
         ];

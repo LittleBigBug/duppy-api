@@ -18,28 +18,25 @@
  *  Client mods will be completely owned solely by clients but the main Duppy software will only be under a limited license.
  */
 
+use Duppy\DuppyServices\Env;
+use Workerman\Connection\ConnectionInterface;
+use Workerman\Protocols\Http;
+use Workerman\Psr7\Response;
+use Workerman\Psr7\ServerRequest;
+use Workerman\Worker;
 use Duppy\Bootstrapper\Bootstrapper;
 
 /**
  * Duppy - API for the Dreamin.gg website
+ * Server based on Workerman
  *
  * @package Duppy
  */
 
-Bootstrapper::$duppy_req_start = microtime(true);
 
-$protocol = ((isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") ? 'https://' : 'http://');
-$prHost = $protocol . $_SERVER["HTTP_HOST"];
-
-$dirName = dirname($_SERVER['SCRIPT_NAME']);
-
-if ($dirName == "/") {
-    $dirName = "";
-}
-
+define("DUPPY_APP_START", microtime(true));
 define("DUPPY_PATH", __DIR__);
-define("DUPPY_URI_PATH", $dirName);
-define("DUPPY_FULL_URL", $prHost . $_SERVER["REQUEST_URI"]);
+define("DUPPY_URI_PATH", "");
 
 /**
  * Register auto loader.
@@ -52,3 +49,30 @@ require DUPPY_PATH . '/vendor/autoload.php';
  */
 
 Bootstrapper::boot();
+
+/**
+ * Workerman server
+ */
+
+$workers = Env::G("WORKERMAN_WORKERS") ?? 4;
+$port = Env::G("WORKERMAN_PORT") ?? 8900;
+
+$worker = new Worker("http://0.0.0.0:$port");
+$worker->count = $workers;
+
+// PSR-7 Support
+Http::requestClass(ServerRequest::class);
+
+$worker->onMessage = function(ConnectionInterface $connection, ServerRequest $request) {
+    Bootstrapper::$duppy_req_start = microtime(true);
+
+    // Handle slim application
+    $app = Bootstrapper::getApp();
+    $response = $app->handle($request);
+
+    // Convert up to workerman response
+    $wmResponse = new Response($response->getStatusCode(), $response->getHeaders(), $response->getBody(), $response->getProtocolVersion(), $response->getReasonPhrase());
+    $connection->send($wmResponse);
+};
+
+Worker::runAll();

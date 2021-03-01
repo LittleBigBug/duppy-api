@@ -126,6 +126,12 @@ final class Bootstrapper {
     public static ServerRequestInterface $currentRequest;
 
     /**
+     * Request start
+     * @var float
+     */
+    public static float $duppy_req_start;
+
+    /**
      * Boots the application and loads any global dependencies
      *
      * @return void
@@ -225,28 +231,30 @@ final class Bootstrapper {
         $container = Bootstrapper::getContainer();
 
         // Doctrine setup
-        $manager = null;
-        $container->set("database", fn () => $manager ?? $manager = Bootstrapper::configureDatabase());
+        $db = new Dependency(fn () => Bootstrapper::configureDatabase());
+        $db->inject($container, "database");
 
         // JSON Web Token (JWS/JWE)
         // todo; please use DI container
         Bootstrapper::configureJWT();
 
         // Hybridauth external login helper
-        $hybridauth = null;
-        $container->set("authHandler", fn () => $hybridauth ?? $hybridauth = Bootstrapper::configureHybridAuth());
+        $hybridauth = new Dependency(fn () => Bootstrapper::configureHybridAuth());
+        $hybridauth->setPerRequestConfig();
+        $hybridauth->inject($container, "authHandler");
 
         // PHPMailer
-        $mailer = null;
-        $container->set("mailer", fn () => $mailer ?? $mailer = Bootstrapper::configureMailer());
+        $mailer = new Dependency(fn () => Bootstrapper::configureMailer());
+        $mailer->setPerRequestConfig();
+        $mailer->inject($container, "mailer");
 
         // OneBlade Templating
-        $templateHandler = null;
-        $container->set("templateHandler", fn () => $templateHandler ?? $templateHandler = Bootstrapper::configureTemplates());
+        $templateHandler = new Dependency(fn () => Bootstrapper::configureTemplates());
+        $templateHandler->inject($container, "templateHandler");
 
         // Rate Limit Adapter
-        $rateLimitAdapter = null;
-        $container->set("rateLimitAdapter", fn () => $rateLimitAdapter ?? $rateLimitAdapter = Bootstrapper::configureRateLimiterAdapter());
+        $rateLimitAdapter = new Dependency(fn () => Bootstrapper::configureRateLimiterAdapter());
+        $rateLimitAdapter->inject($container, "rateLimitAdapter");
     }
 
     /**
@@ -270,7 +278,7 @@ final class Bootstrapper {
         // Connection array
         $conn = [
             'dbname' => Env::G('DB_DATABASE'),
-            'user' => Env::G('DB_USER'),
+            'user' => Env::G('DB_USERNAME'),
             'password' => Env::G('DB_PASSWORD'),
             'host' => Env::G('DB_HOST'),
             'driver' => 'pdo_mysql'
@@ -338,7 +346,8 @@ final class Bootstrapper {
             "auth.google.enable", "auth.google.id", "auth.google.secret",
         ]);
 
-        $url = strtok(DUPPY_FULL_URL, "?");
+        $req = Bootstrapper::getCurrentRequest();
+        $url = strtok($req->getUri(), "?");
 
         $config = [
             'callback' => $url,

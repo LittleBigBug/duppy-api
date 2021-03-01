@@ -7,6 +7,7 @@
 
 namespace Duppy;
 
+use Duppy\Bootstrapper\Bootstrapper;
 use JetBrains\PhpStorm\Pure;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Psr7\Response;
@@ -84,7 +85,7 @@ class Util {
      */
     public static function responseJSON(ResponseInterface &$resp, array $table, int $status = 200): ResponseInterface {
         $now = microtime(true);
-        $table["runtime"] = $now - DUPPY_START;
+        $table["runtime"] = $now - (Bootstrapper::$duppy_req_start ?? $now + 1);
 
         $pl = json_encode($table);
         $resp->getBody()->write($pl);

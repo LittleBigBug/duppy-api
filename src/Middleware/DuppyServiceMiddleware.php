@@ -10,6 +10,7 @@ namespace Duppy\Middleware;
 use Duppy\Abstracts\AbstractRouteMiddleware;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\Bootstrapper\Dependency;
 
 class DuppyServiceMiddleware extends AbstractRouteMiddleware {
 
@@ -23,6 +24,7 @@ class DuppyServiceMiddleware extends AbstractRouteMiddleware {
         $next();
 
         AbstractService::CleanServices();
+        Dependency::refreshInjected();
         return null;
     }
 
