@@ -68,35 +68,39 @@ Groups or permissions can also be assigned globally.
 
 ### Backend and other stuff
 
-The Boostrapper for duppy loads all the services and builders for the application.
-It handles dependency injection so its easy to know where to get objects and makes it easier to test.
+The Bootstrapper for duppy loads all the services and builders for the application.
+It handles lazy dependency injection, so it's easy to know where to get objects and makes it easier to test.
 
 Services are an abstract class that allow creation of helper functions that can be mocked in testing easily if needed.
+On top of that they serve temporary values per-request like user authentication.
 To create a service create a class that extends *AbstractService* and services' singletons are created and managed when needed.
+
+Duppy utilizes [Doctrine ORM](https://www.doctrine-project.org/projects/doctrine-orm/en/2.8/index.html) to manage data storage and database stuff.
+It makes it extremely easy to get data from databases that PHP can understand.
 
 File Builders allow the functionality to iterate any folder in the duppy `src/` directory to build a list of class names.
 It allows filters and stuff and is used for the Router builder to allow easy Endpoint creation and Settings/SettingType creation
 
 Many things in the application are lazy-loaded or optimized so that each request loads the least amount possible (only what is needed).
-Along with PHP 8.0 and [OpenLiteSpeed](https://openlitespeed.org/) it's blazing fast
+This is currently being used with Slim Framework 4.0 Along with PHP 8.0 and [OpenLiteSpeed](https://openlitespeed.org/) it's pretty fast.
 
-Duppy utilizes [Doctrine ORM](https://www.doctrine-project.org/projects/doctrine-orm/en/2.8/index.html) to manage data storage and database stuff.
-It makes it extremely easy to get data from databases that PHP can understand. 
+This is being developed in mind for use with [Workerman](https://github.com/walkor/Workerman) (see server.php) which proves [very impressive benchmarks](https://github.com/the-benchmarker/web-frameworks).
+It can still run within a webserver like apache.
 
-
+Slim Framework uses [FastRoute](https://github.com/nikic/FastRoute) but using something like [TreeRoute](https://github.com/baryshev/TreeRoute) or even [Siler](https://siler.leocavalcante.dev/) may be more beneficial for performance.
 
 ## Installing
 
 ### Requirements
 
-- PHP 8.0
-- And the following PHP 8.0 extensions:
+- \>= PHP 8.0
+- And the following PHP extensions:
   - mysql extension 
   - cURL extension
   - MBString extension
   - GMP extension
   - XML Extension
-- [Phive](https://phar.io/) (/scripts/install-phive.sh)
+- Suggested: [Phive](https://phar.io/) (/scripts/install-phive.sh) To get these PHP tools:
   - PHPUnit
   - PHPLOC
   - PHPMD
@@ -122,13 +126,11 @@ Use `.env.example` as a template for your own environment configuration:
 
 Most of it should be pretty self-explanatory, however here's some useful clarifications:
 
-`APP_ROOT_PATH` should only be used if your API installation is in a different folder.
-
-`JWT_SECRET` is needed to sign and encrypt JWTs, its like a password and is best practice changing this every few weeks for the best security.
+`JWT_SECRET` is needed to sign JWTs, its like a password and is best practice changing this every few weeks for the best security.
 
 `JWT_ENCRYPT` is a boolean if the tokens should also be encrypted (after being signed).
 
-`CLIENT_URL` is the url of the 'official' Duppy client for this API, the root of the api redirects to this.
+`API_URL` is the url of this API, and authoritative over signing tokens
 
 Some mods might have extra env configurations.
 
