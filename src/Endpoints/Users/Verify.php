@@ -5,12 +5,13 @@
  *                               -= * =-
  */
 
-namespace Duppy\Endpoints\User;
+namespace Duppy\Endpoints\Users;
 
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\DuppyException;
 use Duppy\DuppyServices\UserService;
 use Duppy\Entities\WebUserVerification;
 use Duppy\Util;
@@ -20,11 +21,11 @@ use Slim\Psr7\Response;
 class Verify extends AbstractEndpoint {
 
     /**
-     * Set the URI to /user/email-check/{username} to check availability for}
+     * Set the URI to /users/verify
      *
      * @var ?array
      */
-    public static ?array $uri = [ '/user/verify' ];
+    public static ?array $uri = [ '/verify' ];
 
     /**
      * Allow post
@@ -41,6 +42,13 @@ class Verify extends AbstractEndpoint {
     public static array|bool $uriMapTypes = false;
 
     /**
+     * Set the parent group classname to 'GroupUser'
+     *
+     * @var ?string
+     */
+    public static ?string $parentGroup = "Duppy\Endpoints\Users\GroupUsers";
+
+    /**
      * Checks if a username is taken or not
      *
      * @param Request $request
@@ -49,6 +57,7 @@ class Verify extends AbstractEndpoint {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $postArgs = $request->getParsedBody();

@@ -5,7 +5,7 @@
  *                               -= * =-
  */
 
-namespace Duppy\Endpoints\User;
+namespace Duppy\Endpoints\Users;
 
 use DI\DependencyException;
 use DI\NotFoundException;
@@ -18,11 +18,11 @@ use Slim\Psr7\Response;
 class EmailCheck extends AbstractEndpoint {
 
     /**
-     * Set the URI to /user/email-check/{username} to check availability for}
+     * Set the URI to /users/email-check/{username} to check availability for}
      *
      * @var ?array
      */
-    public static ?array $uri = [ '/user/email-check[/{email}]' ];
+    public static ?array $uri = [ '/email-check[/{email}]' ];
 
     /**
      * Allow get and post
@@ -37,6 +37,13 @@ class EmailCheck extends AbstractEndpoint {
      * @var array|boolean
      */
     public static array|bool $uriMapTypes = false;
+
+    /**
+     * Set the parent group classname to 'GroupUser'
+     *
+     * @var ?string
+     */
+    public static ?string $parentGroup = "Duppy\Endpoints\Users\GroupUsers";
 
     /**
      * Checks if a username is taken or not
