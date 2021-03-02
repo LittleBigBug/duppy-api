@@ -100,6 +100,7 @@ Slim Framework uses [FastRoute](https://github.com/nikic/FastRoute) but using so
   - MBString extension
   - GMP extension
   - XML Extension
+  - Memcached (Rate Limiting)
 - Suggested: [Phive](https://phar.io/) (/scripts/install-phive.sh) To get these PHP tools:
   - PHPUnit
   - PHPLOC
@@ -111,13 +112,14 @@ Slim Framework uses [FastRoute](https://github.com/nikic/FastRoute) but using so
   - Composer
 - [URL Rewriting](https://gist.github.com/bramus/5332525) (Webserver Configuration)
 
-Install php dependencies on a debian based OS:
+Install dependencies on a debian based OS:
 
 ```shell script
-apt install -y php8.0 php8.0-mysql php8.0-curl php8.0-mbstring php8.0-gmp php8.0-xml 
+sudo apt install -y php8.0 php8.0-mysql php8.0-curl php8.0-mbstring php8.0-gmp php8.0-xml php8.0-memcached memcached libmemcached-dev
 ```
 
 If you use windows an easy way to set up a development server is to use [ApacheFriends XAMPP](https://www.apachefriends.org/download.html) which is also compatible with linux systems.
+This can also run as a standalone PHP application by running `server.php`
 
 ### Configuring
 

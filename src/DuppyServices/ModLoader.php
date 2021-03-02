@@ -93,6 +93,7 @@ final class ModLoader extends AbstractService {
                 $settingsMngr->createSetting($enabledName, [
                     "category" => "system.mods",
                     "defaultValue" => true,
+                    "required" => "boolean|notnull"
                 ]);
             } catch (DuppyException) {
                 error_log("Setting conflict when trying to create $enabledName", 0);

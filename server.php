@@ -39,7 +39,7 @@ define("DUPPY_PATH", __DIR__);
 define("DUPPY_URI_PATH", "");
 
 /**
- * Register auto loader.
+ * Composer autoload
  */
 
 require DUPPY_PATH . '/vendor/autoload.php';
@@ -64,7 +64,7 @@ $worker->count = $workers;
 Http::requestClass(ServerRequest::class);
 
 $worker->onMessage = function(ConnectionInterface $connection, ServerRequest $request) {
-    Bootstrapper::$duppy_req_start = microtime(true);
+    Bootstrapper::setRequestStart(microtime(true));
 
     // Handle slim application
     $app = Bootstrapper::getApp();

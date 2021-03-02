@@ -78,7 +78,9 @@ abstract class AbstractMod {
             $rootAppUri = static::$rootAppUri;
         }
 
-        (new SettingsBuilder("/" . $rootAppUri))->build();
+        $rootAppUri = Util::combinePath($rootAppUri, "Settings");
+
+        (new SettingsBuilder($rootAppUri))->build();
     }
 
 }

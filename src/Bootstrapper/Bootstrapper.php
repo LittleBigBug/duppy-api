@@ -8,8 +8,12 @@
 
 namespace Duppy\Bootstrapper;
 
-use DI\DependencyException;
+use Memcached;
+use Slim\App;
+use Slim\Factory\AppFactory;
+use DI\Container;
 use DI\NotFoundException;
+use DI\DependencyException;
 use Doctrine\DBAL\Exception as DBALException;
 use Doctrine\ORM\ORMException;
 use Duppy\Builders\Router;
@@ -24,36 +28,33 @@ use Duppy\Middleware\DuppyServiceMiddleware;
 use Duppy\Middleware\EnvironmentMiddleware;
 use Duppy\Middleware\RateLimitMiddleware;
 use eftec\bladeone\BladeOne;
-use Hybridauth\Exception\InvalidArgumentException;
-use Hybridauth\Hybridauth;
+use PalePurple\RateLimit\Adapter;
 use JetBrains\PhpStorm\Pure;
-use Jose\Component\Core\AlgorithmManager;
+use Hybridauth\Hybridauth;
+use Hybridauth\Exception\InvalidArgumentException;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception as PHPMailerException;
+use Doctrine\ORM\Tools\Setup;
+use Doctrine\ORM\EntityManager;
+use Doctrine\DBAL\Types\Type;
+use RKA\Middleware\IpAddress;
+use Ramsey\Uuid\Doctrine\UuidType;
+use Psr\Http\Message\ServerRequestInterface;
 use Jose\Component\Core\JWK;
-use Jose\Component\Encryption\Algorithm\ContentEncryption\A128CBCHS256;
-use Jose\Component\Encryption\Algorithm\KeyEncryption\A256KW;
-use Jose\Component\Encryption\Compression\CompressionMethodManager;
-use Jose\Component\Encryption\Compression\Deflate;
+use Jose\Component\Signature\JWSBuilder;
+use Jose\Component\Signature\JWSVerifier;
 use Jose\Component\Encryption\JWEBuilder;
 use Jose\Component\Encryption\JWEDecrypter;
 use Jose\Component\KeyManagement\JWKFactory;
+use Jose\Component\Core\AlgorithmManager;
 use Jose\Component\Signature\Algorithm\HS256;
-use Jose\Component\Signature\JWSBuilder;
-use Jose\Component\Signature\JWSVerifier;
-use PalePurple\RateLimit\Adapter;
-use PHPMailer\PHPMailer\Exception as PHPMailerException;
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use Psr\Http\Message\ServerRequestInterface;
-use Ramsey\Uuid\Doctrine\UuidType;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Tools\Setup;
-use Doctrine\DBAL\Types\Type;
-use RKA\Middleware\IpAddress;
-use Slim\Factory\AppFactory;
-use DI\Container;
-use Slim\App;
+use Jose\Component\Encryption\Compression\Deflate;
+use Jose\Component\Encryption\Algorithm\KeyEncryption\A256KW;
+use Jose\Component\Encryption\Compression\CompressionMethodManager;
+use Jose\Component\Encryption\Algorithm\ContentEncryption\A128CBCHS256;
 
-final class Bootstrapper {
+class Bootstrapper {
 
     /**
      * Slim instance
@@ -457,7 +458,7 @@ final class Bootstrapper {
      */
     #[Pure]
     public static function configureRateLimiterAdapter(): Adapter {
-        return new Adapter\APC;
+        return new Adapter\Memcached(new Memcached);
     }
 
     /**
@@ -557,6 +558,20 @@ final class Bootstrapper {
      */
     public static function setCurrentRequest(ServerRequestInterface $request) {
         Bootstrapper::$currentRequest = $request;
+    }
+
+    /**
+     * @return float
+     */
+    public static function getRequestStart(): float {
+        return Bootstrapper::$duppy_req_start;
+    }
+
+    /**
+     * @param float $start
+     */
+    public static function setRequestStart(float $start) {
+        Bootstrapper::$duppy_req_start = $start;
     }
 
 }

@@ -50,10 +50,6 @@ class Env extends AbstractService {
     public function start(): Dotenv {
         $this->dotEnv = Dotenv::createMutable(DUPPY_PATH);
 
-        $this->dotEnv->required([
-            'JWT_SECRET',
-        ]);
-
         $this->dotEnv->load();
         return $this->dotEnv;
     }

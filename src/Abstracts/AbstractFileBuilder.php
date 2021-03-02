@@ -73,6 +73,10 @@ abstract class AbstractFileBuilder {
 
         $iterator = null;
 
+        if (!file_exists($srcFullPath)) {
+            return null;
+        }
+
         // Create iterators based on if recursive is defined
         if ($recursive) {
             $dirIterator = new RecursiveDirectoryIterator($srcFullPath);

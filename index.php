@@ -26,7 +26,7 @@ use Duppy\Bootstrapper\Bootstrapper;
  * @package Duppy
  */
 
-Bootstrapper::$duppy_req_start = microtime(true);
+$start = microtime(true);
 
 $protocol = ((isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") ? 'https://' : 'http://');
 $prHost = $protocol . $_SERVER["HTTP_HOST"];
@@ -42,7 +42,7 @@ define("DUPPY_URI_PATH", $dirName);
 define("DUPPY_FULL_URL", $prHost . $_SERVER["REQUEST_URI"]);
 
 /**
- * Register auto loader.
+ * Composer autoload
  */
 
 require DUPPY_PATH . '/vendor/autoload.php';
@@ -51,4 +51,5 @@ require DUPPY_PATH . '/vendor/autoload.php';
  * Bootstrap application
  */
 
+Bootstrapper::setRequestStart($start);
 Bootstrapper::boot();

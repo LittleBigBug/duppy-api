@@ -26,8 +26,7 @@ class CORSMiddleware extends AbstractRouteMiddleware {
             ->withHeader("Access-Control-Allow-Origin", "*")
             ->withHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
             ->withHeader("Access-Control-Allow-Headers",
-                "Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, X-Captcha-Response, X-Client-Id,
-                Authorization, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+                "Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, X-Captcha-Response, X-Client-ID, Authorization, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
 
         return null;
     }

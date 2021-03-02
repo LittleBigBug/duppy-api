@@ -140,9 +140,9 @@ final class Settings extends AbstractService {
 
     /**
      * @param string $key
-     * @param AbstractSetting $setting
+     * @param string $setting AbstractSetting Class
      */
-    public function addSetting(string $key, AbstractSetting $setting) {
+    public function addSetting(string $key, string $setting) {
         $this->settings[$key] = $setting;
     }
 
@@ -160,6 +160,7 @@ final class Settings extends AbstractService {
      * @return array
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function getAppSettings(): array {
         return $this->getSettings($this->appSettings);
@@ -169,11 +170,11 @@ final class Settings extends AbstractService {
      * Gets a setting's definition
      *
      * @param string $key
-     * @return AbstractSetting
+     * @return string|array string of AbstractSetting definition or manually created setting array
      * @throws DuppyException ErrType noneFound if the key is nonexistent
      */
     #[Pure]
-    public function getSettingDefinition(string $key): AbstractSetting {
+    public function getSettingDefinition(string $key): string|array {
         if (!array_key_exists($key, $this->settings)) {
             throw new DuppyException(DuppyError::noneFound(), "Setting definition missing");
         }
