@@ -37,7 +37,7 @@ final class SettingsBuilder extends AbstractFileBuilder {
         parent::__construct($settingsSrc);
 
         // Assumes settingsSrc is "Settings" -> "SettingTypes"
-        $backupTypeSrc = substr($settingsSrc, 0, strlen($settingsSrc - 1)) . "Types";
+        $backupTypeSrc = substr($settingsSrc, 0, strlen($settingsSrc) - 1) . "Types";
         $this->settingTypesSrc = $settingTypesSrc ?? $backupTypeSrc;
     }
 
@@ -104,7 +104,7 @@ final class SettingsBuilder extends AbstractFileBuilder {
             return is_subclass_of($className, AbstractSettingType::class);
         };
 
-        $this->directoryIterator(true, $callback, $filter);
+        $this->directoryIterator(true, $callback, $filter, $this->settingTypesSrc);
     }
 
 }
