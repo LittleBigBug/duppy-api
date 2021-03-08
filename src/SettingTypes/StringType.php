@@ -21,10 +21,10 @@ class StringType extends AbstractSettingType {
      * Cast value to string
      *
      * @param mixed $value
-     * @return int
+     * @return string
      */
     #[Pure]
-    public function parse(mixed $value): int {
+    public function parse(mixed $value): string {
         return (string) $value;
     }
 
