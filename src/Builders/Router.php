@@ -368,6 +368,7 @@ final class Router extends AbstractFileBuilder {
                     }
 
                     $theseTypesMapped = false;
+                    $route = null;
 
                     if ($shouldMap) {
                         $route = $app->map($types, $uri, $funcName);
@@ -376,8 +377,10 @@ final class Router extends AbstractFileBuilder {
                         $route = $app->$typeLower($uri, $funcName);
                     }
 
-                    foreach ($epMiddleware as $ware) {
-                        $route->add(new $ware);
+                    if ($route != null) {
+                        foreach ($epMiddleware as $ware) {
+                            $route->add(new $ware);
+                        }
                     }
 
                     if ($theseTypesMapped) {
