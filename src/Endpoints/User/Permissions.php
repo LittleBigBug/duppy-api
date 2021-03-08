@@ -8,6 +8,8 @@
 namespace Duppy\Endpoints\User;
 
 use DI\DependencyException;
+use DI\NotFoundException;
+use Duppy\DuppyServices\UserService;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
@@ -16,14 +18,13 @@ use Duppy\Abstracts\AbstractEndpoint;
 class Permissions extends AbstractEndpoint {
 
     /**
-     * Catch /permissions /all and /basic-info
-     *
      * GET /user/0/permissions returns the user's set permissions
      * GET /user/0/permissions/inherited returns ALL the user's permissions
+     * Permissions based on environment
      *
      * @var string[]
      */
-    public static ?array $uri = [ '/', '/all', '/basic' ];
+    public static ?array $uri = [ '/permissions', '/permissions/inherited', ];
 
     /**
      * Allow get and post
@@ -45,7 +46,7 @@ class Permissions extends AbstractEndpoint {
      *
      * @var string[]
      */
-    public static ?array $uriFuncNames = [ 2 => 'basicInfo' ];
+    public static ?array $uriFuncNames = [ 1 => 'inherited' ];
 
     /**
      * Set the parent group classname to 'GroupUser'
@@ -91,9 +92,15 @@ class Permissions extends AbstractEndpoint {
      * @param array $args
      * @return Response
      * @throws DependencyException
+     * @throws NotFoundException
      */
-    public function basicInfo(Request $request, Response $response, array $args = []): Response {
+    public function inherited(Request $request, Response $response, array $args = []): Response {
+        $userId = $args["id"];
+        $user = (new UserService)->inst()->getUser($userId);
 
+
+
+        return $response;
     }
 
 }
