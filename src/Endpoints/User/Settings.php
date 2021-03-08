@@ -10,6 +10,7 @@ namespace Duppy\Endpoints\User;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
+use Duppy\DuppyException;
 use Duppy\DuppyServices\UserService;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
@@ -23,7 +24,7 @@ class Settings extends AbstractEndpoint {
      *
      * @var string[]
      */
-    public static ?array $uri = [ '/settings', '/settings/get', '/set' ];
+    public static ?array $uri = [ '/settings', '/settings/get', '/settings/set' ];
 
     /**
      * Allow get and post
@@ -70,6 +71,7 @@ class Settings extends AbstractEndpoint {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function getSettings(Request $request, Response $response, array $args = []): Response {
         $userId = $args["id"];
@@ -94,6 +96,7 @@ class Settings extends AbstractEndpoint {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function setSettings(Request $request, Response $response, array $args = []): Response {
         $userId = $args["id"];
