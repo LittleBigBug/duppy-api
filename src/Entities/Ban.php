@@ -61,6 +61,11 @@ class Ban implements JsonSerializable {
     protected ?string $reason = null;
 
     /**
+     * @ORM\Column(type="bool", nullable=false)
+     */
+    protected bool $appealable = true;
+
+    /**
      * Returns if the ban is valid in this environment
      * @return bool
      */
@@ -139,6 +144,13 @@ class Ban implements JsonSerializable {
      */
     public function setReason(string $reason) {
         $this->reason = $reason;
+    }
+
+    /**
+     * @param bool $appealable
+     */
+    public function setAppealable(bool $appealable) {
+        $this->appealable = $appealable;
     }
 
     /**
