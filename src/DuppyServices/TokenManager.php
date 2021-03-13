@@ -7,14 +7,17 @@
 
 namespace Duppy\DuppyServices;
 
+use Exception;
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Util;
+use Duppy\DuppyException;
+use Duppy\Enum\DuppyError;
+use Duppy\Entities\WebUser;
+use Duppy\Entities\ApiClient;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\DuppyException;
-use Duppy\Entities\WebUser;
-use Duppy\Util;
-use Exception;
+use Duppy\Bootstrapper\DCache;
 use JetBrains\PhpStorm\Pure;
 use Jose\Component\Checker\AlgorithmChecker;
 use Jose\Component\Checker\AudienceChecker;
@@ -32,26 +35,55 @@ use Jose\Component\Signature\JWSTokenSupport;
 use Jose\Component\Signature\Serializer\CompactSerializer as SigCompactSerializer;
 use Jose\Component\Signature\Serializer\JWSSerializerManager;
 
+/**
+ * Handles JWT and APIClient Tokens
+ *
+ * Class TokenManager
+ * @package Duppy\DuppyServices
+ */
 final class TokenManager extends AbstractService {
 
     /**
      * Decrypted and verified auth token (from JWT)
      *
-     * @var array
+     * @var DCache
      */
-    public array $authToken = [];
+    public DCache $authToken;
+
+    /**
+     * Matching APIClient from authentication headers
+     *
+     * @var DCache
+     */
+    public DCache $apiClient;
+
+    /**
+     * Auth token string of the current request
+     * 
+     * @var DCache
+     */
+    public DCache $authTokenString;
 
     /**
      * Optional but allows overriding env
+     * 
      * @var bool|null
      */
     public ?bool $encryptionEnabled = null;
+
+    public function __construct() {
+        $this->authToken = new DCache;
+        $this->apiClient = new DCache;
+        $this->authTokenString = new DCache;       
+    }
 
     /**
      * Clean up cached stuff for user
      */
     public function clean() {
-        $this->authToken = [];
+        $this->authToken->clear();
+        $this->apiClient->clear();
+        $this->authTokenString->clear();
     }
 
     /**
@@ -154,6 +186,11 @@ final class TokenManager extends AbstractService {
      */
     public function createTokenFromUserId(int $userId): string {
         $userObj = (new UserService)->inst()->getUser($userId);
+
+        if (!$userObj->isWebUser()) {
+            throw new DuppyException(DuppyError::incorrectType());
+        }
+
         return $this->createTokenFromUser($userObj);
     }
 
@@ -166,7 +203,7 @@ final class TokenManager extends AbstractService {
      * @throws DuppyException
      * @throws NotFoundException
      */
-    public function loadToken(string $token): ?array {
+    public function loadJWToken(string $token): ?array {
         $isEncrypted = $this->isEncryptionEnabled();
 
         $jwsToken = $token;
@@ -175,6 +212,7 @@ final class TokenManager extends AbstractService {
         if ($isEncrypted) {
             $jweDecrypter = Bootstrapper::getJWEDecrypter();
             $jweKey = Bootstrapper::getJWEKey();
+
             $encryptedSerializer = new JWESerializerManager([new EncCompactSerializer(),]);
             $headerCheckerEnc = new HeaderCheckerManager([
                 new AlgorithmChecker(["A256KW"]),
@@ -226,12 +264,103 @@ final class TokenManager extends AbstractService {
     /**
      * Gets the auth token array from the submitted JWT, also caches it
      *
-     * @return array|null
+     * @return ?array
      * @throws DependencyException
      * @throws DuppyException
      * @throws NotFoundException
      */
-    public function getAuthToken(): ?array {
+    public function getJWToken(): ?array {
+        if (($authToken = $this->authToken->get()) != null) {
+            return $authToken;
+        }
+
+        $token = $this->getAuthTokenString();
+
+        // Ignore empty or API Tokens
+        if (empty($token) || str_starts_with($token, "apiToken ")) {
+            return null;
+        }
+
+        $jwt = $this->loadJWToken($token);
+        return $this->authToken->setObject($jwt);
+    }
+
+    /**
+     * Returns the ID of the APIClient specified by the request headers
+     * 
+     * @return ?int
+     */
+    public function getAPIClientID(): ?int {
+        $request = Bootstrapper::getCurrentRequest();
+        $clientIDHeaders = $request->getHeader("X-Client-ID");
+
+        if (count($clientIDHeaders) > 1) {
+            return null;
+        }
+
+        $clientID = intval($clientIDHeaders[0]);
+        
+        if ($clientID == 0) {
+            return null;
+        }
+
+        return $clientID;
+    }
+
+    /**
+     * Returns an authenticated ApiClient with the current request
+     * 
+     * @return ?ApiClient
+     */
+    public function getAPIClient(): ?ApiClient {
+        if (($apiClient = $this->apiClient->get()) != null) {
+            return $apiClient;
+        }
+
+        $clientID = $this->getAPIClientID();
+
+        if ($clientID == null) {
+            return null;
+        }
+
+        $authTokenStr = $this->getAuthTokenString();
+
+        if ($authTokenStr == null || empty($authTokenStr) == "" || !str_starts_with($authTokenStr, "apiToken ")) {
+            return null;
+        }
+
+        $authTokenStr = substr($authTokenStr, 9); // 9 is len of 'apiToken '
+
+        // Search for ApiClient matching ClientID
+        $container = Bootstrapper::getContainer();
+        $dbo = $container->get("database");
+        $apiClient = $dbo->find(ApiClient::class, $clientID);
+
+        if ($apiClient == null) {
+            return null;
+        }
+
+        // Check if the token is valid against the ApiClient (Password OK)
+        $result = $apiClient->checkToken($authTokenStr);
+
+        if ($result != true) {
+            return null;
+        }
+
+        return $this->apiClient->setObject($apiClient);
+    }
+
+    /**
+     * Gets the Bearer token from the request (JWT or APIClient Token)
+     * Null for invalid or no authorization
+     * 
+     * @return ?string
+     */
+    public function getAuthTokenString(): ?string {
+        if (($authTokenStr = $this->authTokenString->get()) != null) {
+            return $authTokenStr;
+        }
+
         $request = Bootstrapper::getCurrentRequest();
         $authHeader = $request->getHeader("Authorization");
 
@@ -241,23 +370,23 @@ final class TokenManager extends AbstractService {
 
         $token = Util::indArrayNull($authHeader, 0);
 
-        if ($token == null || empty($token)) {
-            $postArgs = $request->getParsedBody();
-
-            // Old token support via POST
-            $token = Util::indArrayNull($postArgs, "authToken");
-
-            if ($token == null || empty($token)) {
+        if ($token != null) {
+            if (!str_starts_with($token, "Bearer ")) {
                 return null;
             }
+
+            $token = substr($token, 7); // 7 is len of 'Bearer '
+        } else {
+            // Deprecated: POST authToken support
+            $postArgs = $request->getParsedBody();
+            $token = Util::indArrayNull($postArgs, "authToken");
         }
 
-        if (!empty($this->authToken)) {
-            return $this->authToken;
+        if ($token == null || empty($token)) {
+            return null;
         }
 
-        $token = $_POST["authToken"];
-        return $this->authToken = $this->loadToken($token) ?? [];
+        return $this->authTokenString->setObject($token);
     }
 
     /**
