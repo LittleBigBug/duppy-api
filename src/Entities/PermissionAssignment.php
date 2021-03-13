@@ -45,6 +45,11 @@ class PermissionAssignment {
     protected ?WebUser $user = null;
 
     /**
+     * @ORM\ManyToOne(targetEntity="ApiClient", inversedBy="permissions")
+     */
+    protected ?ApiClient $apiClient = null;
+
+    /**
      * @ORM\ManyToOne(targetEntity="UserGroup", inversedBy="permissions")
      */
     protected ?UserGroup $group = null;
@@ -94,6 +99,13 @@ class PermissionAssignment {
      */
     public function setUser(WebUser $user) {
         $this->user = $user;
+    }
+
+    /**
+     * @param ApiClient $apiClient
+     */
+    public function setApiClient(ApiClient $apiClient) {
+        $this->apiClient = $apiClient;
     }
 
     /**
