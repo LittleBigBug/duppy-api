@@ -129,6 +129,13 @@ class Util {
 
     /**
      * Validates a $permission against the given $permsDict
+     * This will check for wildcards against the dictionary
+     * 
+     * For Example:
+     * some.permission.here
+     * some.permission.*
+     * some.*
+     * *
      *
      * @param array $permsDict
      * @param string $permission
@@ -136,15 +143,43 @@ class Util {
      */
     #[Pure]
     public static function evaluatePermissionDict(array $permsDict, string $permission): bool {
+        // Optimization for tables with only the * perm (no full tree check)
+        if (count($permsDict) == 1 && static::indArrayNull($permsDict, "*") === true) {
+            return true;
+        }
+
         $eval = static::indArrayNull($permsDict, $permission);
 
-        $evalAll = static::indArrayNull($permsDict, "*") == true ||
-            static::indArrayNull($permsDict, "admin") == true;
+        // Check for explicit evaluations of this permission
+        if ($eval != null && gettype($eval) == "boolean") {
+            return $eval;
+        }
 
-        $permEval = $eval === false; // Specifically set to false
-        $allApplies = $evalAll && !$permEval;
+        // Check for wildcards
+        // Separate by dots
+        $permExplode = explode(".", $permission);
+        $segments = count($permExplode);
 
-        return $eval == true || $allApplies;
+        // First loop is to reverse thru the array length and $i is the amount that will be subtracted
+        // (From the top)
+        for ($sub = 1; $sub <= $segments; $sub++) {
+            $pCheck = "";
+
+            for ($i = 0; $i <= ($segments - $i); $i++) {
+                $str = $permExplode[$i];
+                $pCheck .= "$str.";
+            }
+
+            $pCheck .= "*";
+            $wildEval = static::indArrayNull($permsDict, $pCheck);
+
+            // If any boolean response, return it
+            if ($wildEval != null && gettype($wildEval) == "boolean") {
+                return $wildEval;
+            }
+        }
+
+        return false;
     }
 
     /**
