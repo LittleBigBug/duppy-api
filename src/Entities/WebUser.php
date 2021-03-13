@@ -8,16 +8,18 @@
 namespace Duppy\Entities;
 
 use DateTime;
+use JsonSerializable;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Duppy\Abstracts\DuppyUser;
 use Duppy\DuppyException;
-use Duppy\DuppyServices\Settings;
 use Duppy\DuppyServices\TokenManager;
 use Duppy\DuppyServices\UserService;
+use Duppy\Bootstrapper\DCache;
 use Duppy\Util;
-use JsonSerializable;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * WebUser Entity
@@ -25,7 +27,7 @@ use JsonSerializable;
  * @ORM\Entity
  * @ORM\Table(name="web_users")
  */
-class WebUser implements JsonSerializable {
+class WebUser extends DuppyUser implements JsonSerializable {
 
     /**
      * @ORM\Id
@@ -58,7 +60,7 @@ class WebUser implements JsonSerializable {
     /**
      * @ORM\OneToMany(targetEntity="WebUserProviderAuth", mappedBy="user")
      */
-    protected $providerAuths;
+    protected ArrayCollection $providerAuths;
 
     /**
      * @ORM\Column(type="string")
@@ -69,19 +71,19 @@ class WebUser implements JsonSerializable {
      * @ORM\ManyToMany(targetEntity="UserGroup", inversedBy="users")
      * @ORM\JoinTable(name="web_user_group_map")
      */
-    protected $groups;
+    protected ArrayCollection $groups;
 
     /**
      * @ORM\OneToMany(targetEntity="Ban", inversedBy="user")
      * @ORM\JoinColumn(name="ban_id", referencedColumnName="id")
      */
-    protected $bans;
+    protected ArrayCollection $bans;
 
     /**
      * @ORM\OneToMany(targetEntity="PermissionAssignment", mappedBy="user")
      * @ORM\JoinColumn(name="permission_id", referencedColumnName="id")
      */
-    protected $permissions;
+    protected ArrayCollection $permissions;
 
     /**
      * @ORM\Column(type="string")
@@ -96,15 +98,18 @@ class WebUser implements JsonSerializable {
     /**
      * Cached generated permissions with groups/inheritance
      *
-     * @var array
+     * @var DCache
      */
-    protected array $generatedPermissions;
+    protected DCache $generatedPermissions;
 
+    #[Pure]
     public function __construct() {
-        $this->providerAuths = new ArrayCollection();
-        $this->groups = new ArrayCollection();
-        $this->permissions = new ArrayCollection();
-        $this->bans = new ArrayCollection();
+        $this->providerAuths = new ArrayCollection;
+        $this->groups = new ArrayCollection;
+        $this->permissions = new ArrayCollection;
+        $this->bans = new ArrayCollection;
+
+        $this->generatedPermissions = new DCache;
     }
 
     /**
@@ -196,6 +201,7 @@ class WebUser implements JsonSerializable {
      *
      * @return integer
      */
+    #[Pure]
     public function getWeight(): int {
         $mx = 0;
 
@@ -211,24 +217,8 @@ class WebUser implements JsonSerializable {
     }
 
     /**
-     * Returns true if this user's weight is bigger than $otherUser
-     *
-     * @param WebUser $otherUser
-     * @return bool
-     * @throws DependencyException
-     * @throws NotFoundException
-     */
-    public function weightCheck(WebUser $otherUser): bool {
-        $oWeight = $otherUser->getWeight();
-        $myWeight = $this->getWeight();
-
-        $eq = (new Settings)->inst()->getSetting("equalWeightPasses") && ($myWeight >= $oWeight);
-        return $eq || $myWeight > $oWeight;
-    }
-
-    /**
      * Gets users permissions, in an array
-     * Specify it to return a dictionary with $dictionary
+     * Specify it to return a dictionary with $dictionary (default is true)
      *
      * This generates the full permissions array for this user based on their groups and their inheritance.
      * The array is cached to only run once per connection
@@ -236,14 +226,15 @@ class WebUser implements JsonSerializable {
      * @param bool $dictionary
      * @return array
      */
-    public function getPermissions(bool $dictionary = true): array{
+    #[Pure]
+    public function getPermissions(bool $dictionary = true): array {
         // Return generated permissions for this session if there are some to save processing power
-        if ($this->generatedPermissions != null && sizeof($this->generatedPermissions) > 0) {
+        if (($perms = $this->generatedPermissions->get()) != null) {
             if (!$dictionary) {
-                return Util::boolDictToNormal($this->generatedPermissions);
+                return Util::boolDictToNormal($perms);
             }
 
-            return $this->generatedPermissions;
+            return $perms;
         }
 
         $perms = [];
@@ -261,92 +252,61 @@ class WebUser implements JsonSerializable {
             $groupPerms = $group->getPermissions();
 
             foreach ($groupPerms as $perm) {
-                $ind = $perm->getPermission();
-                $eval = $perm->getPermissionEval();
-
                 if (!$perm->inThisEnvironment()) {
                     continue;
                 }
+
+                $ind = $perm->getPermission();
+                $eval = $perm->getPermissionEval();
 
                 $perms[$ind] = $eval;
             }
         }
 
         foreach ($this->permissions as $perm) {
-            $ind = $perm->getPermission();
-
             if (!$perm->inThisEnvironment()) {
                 continue;
             }
 
+            $ind = $perm->getPermission();
             $perms[$ind] = $perm->getPermissionEval();
         }
 
-        $this->generatedPermissions = $perms;
+        $this->generatedPermissions->setObject($perms);
 
         // Convert to regular table
         // Its faster to do this in the case of searching thru the table if the eval is false.
-        if ($dictionary) {
-            return Util::boolDictToNormal($this->generatedPermissions);
+        if (!$dictionary) {
+            return Util::boolDictToNormal($perms);
         }
 
         return $perms;
     }
 
     /**
+     * @return PermissionAssignment[]
+     */
+    #[Pure]
+    public function getExplicitPermissions(): array {
+        return $this->permissions->toArray();
+    }
+
+    /**
      * If the user has the permission or not
      *
-     * @param $perm
+     * @param string $permission
      * @return bool
      */
-    public function hasPermission($perm): bool {
+    #[Pure]
+    public function hasPermission(string $permission): bool {
         $perms = $this->getPermissions();
-        return $perms[$perm] == true;
-    }
-
-    /**
-     * If the user is the current logged in user
-     *
-     * @return bool
-     */
-    public function isMe(): bool {
-        $authToken = (new TokenManager)->inst()->getAuthToken();
-
-        if ($authToken == null || !array_key_exists("id", $authToken)) {
-            return false;
-        }
-
-        return $this->get("id") == $authToken["id"];
-    }
-
-    /**
-     * Check if the user has an active global ban (Uses UserService)
-     *
-     * @return bool
-     * @throws DependencyException
-     * @throws NotFoundException
-     * @throws DuppyException
-     */
-    public function globalBanned(): bool {
-        return (new UserService)->inst()->checkGlobalBan($this);
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasDirectGlobalBan(): bool {
-        foreach ($this->bans as $ban) {
-            if ($ban->isGlobal()) {
-                return true;
-            }
-        }
-
-        return false;
+        return Util::evaluatePermissionDict($perms, $permission);
     }
 
     /**
      * @return Ban[]
      */
+    #[Pure]
     public function getActiveBans(): array {
         $bans = [];
 
@@ -356,87 +316,6 @@ class WebUser implements JsonSerializable {
         }
 
         return $bans;
-    }
-
-    /**
-     * Check if the user has an active ban within the environment
-     *
-     * @return bool
-     */
-    public function environmentBanned(): bool {
-        foreach ($this->bans as $ban) {
-            if (!$ban->isActive() || !$ban->inThisEnvironment()) {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * If the user is banned at all (within the current environment or globally)
-     *
-     * @return bool
-     * @throws DependencyException
-     * @throws DuppyException
-     * @throws NotFoundException
-     */
-    public function banned(): bool {
-        return $this->environmentBanned() || $this->globalBanned();
-    }
-
-    /**
-     * If the user has any permanent bans.
-     *
-     * @return bool
-     */
-    public function permaBanned(): bool {
-        foreach ($this->getActiveBans() as $ban) {
-            if ($ban->isPermanent()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Gets the date when this user's ban will be lifted. (In this environment, not global)
-     * Will return null if the user is permanently banned (or has no ban)
-     *
-     * @return ?DateTime
-     */
-    public function unbanTime(): ?DateTime {
-        if ($this->permaBanned()) {
-            return null;
-        }
-
-        $date = null;
-        $bans = $this->getActiveBans();
-
-        foreach ($bans as $ban) {
-            $expiry = $ban->get("expiry");
-
-            // Use this ban's date if it is within the current environment (not global)
-            // and only use it if its bigger (or the first) than the stored $date (latest they can be unbanned)
-            if ($ban->inThisEnvironment() && !$ban->isGlobal() && ($date == null || $expiry > $date)) {
-                $date = $expiry;
-            }
-        }
-
-        return $date;
-    }
-
-    /**
-     * Gets the date when this user's ban will be lifted. (Globally)
-     * Will return null if the user is permanently banned (or has no ban)
-     *
-     * @return ?DateTime
-     */
-    public function globalUnbanTime(): ?DateTime {
-
     }
 
     /**
