@@ -9,6 +9,7 @@ namespace Duppy\Entities;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Duppy\Bootstrapper\DCache;
 use Duppy\Util;
 
 /**
@@ -64,12 +65,12 @@ class UserGroup {
     protected ArrayCollection $permissions;
 
     /**
-     * Cached Dictionary array of full generated settings.
+     * Cached generated permissions
      * Use getPermissions to generate it
      *
-     * @var array
+     * @var DCache
      */
-    protected array $generatedPermissions;
+    protected DCache $generatedPermissions;
 
     public function __construct() {
         $this->users = new ArrayCollection();
@@ -119,7 +120,7 @@ class UserGroup {
     /**
      * @param PermissionAssignment $perm
      */
-    public function addPermissionAssignment(PermissionAssignment $perm) {
+    public function addPermission(PermissionAssignment $perm) {
         $this->permissions->add($perm);
     }
 
@@ -173,13 +174,12 @@ class UserGroup {
      * @return array
      */
     public function getPermissions(bool $dictionary = true): array {
-        // Return generated permissions for this session if there are some to save processing power
-        if ($this->generatedPermissions != null && sizeof($this->generatedPermissions) > 0) {
+        if (($perms = $this->generatedPermissions->get()) != null) {
             if (!$dictionary) {
-                return Util::boolDictToNormal($this->generatedPermissions);
+                return Util::boolDictToNormal($perms);
             }
 
-            return $this->generatedPermissions;
+            return $perms;
         }
 
         $perms = [];
@@ -204,6 +204,12 @@ class UserGroup {
             }
         }
 
+        $this->generatedPermissions->setObject($perms);
+
+        if (!$dictionary) {
+            return Util::boolDictToNormal($perms);
+        }
+
         return $perms;
     }
 
@@ -212,9 +218,9 @@ class UserGroup {
      * @param string $perm
      * @return bool
      */
-    public function hasPermission(string $perm): bool {
+    public function hasPermission(string $permission): bool {
         $perms = $this->getPermissions();
-        return Util::evaluatePermissionDict($perms, $perm);
+        return Util::evaluatePermissionDict($perms, $permission);
     }
 
 }
