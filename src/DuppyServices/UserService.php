@@ -7,25 +7,27 @@
 
 namespace Duppy\DuppyServices;
 
-use DateInterval;
 use DateTime;
+use Exception;
+use DateInterval;
 use DI\DependencyException;
 use DI\NotFoundException;
+use Slim\Psr7\Response;
+use Hybridauth\User\Profile;
+use Duppy\Util;
+use Duppy\DuppyException;
+use Duppy\Enum\DuppyError;
+use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractService;
-use Duppy\Bootstrapper\Bootstrapper;
-use Duppy\DuppyException;
+use Duppy\Abstracts\DuppyUser;
+use Duppy\Entities\ApiClient;
 use Duppy\Entities\Environment;
 use Duppy\Entities\PasswordResetRequest;
 use Duppy\Entities\PermissionAssignment;
 use Duppy\Entities\UserGroup;
 use Duppy\Entities\WebUser;
 use Duppy\Entities\WebUserVerification;
-use Duppy\Enum\DuppyError;
-use Duppy\Util;
-use Exception;
-use Hybridauth\User\Profile;
-use Slim\Psr7\Response;
 
 /**
  * User helper and utility functions
@@ -39,18 +41,34 @@ final class UserService extends AbstractService {
      * Convenience function to get a user by their ID
      *
      * @param $id
-     * @return ?WebUser
+     * @param $apiClient = false 
+     * @return ?DuppyUser
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
-    public function getUser($id = null): ?WebUser {
+    public function getUser($id = null, $apiClient = false): ?DuppyUser {
         if ($id == "me" || $id == null) {
             return $this->inst()->getLoggedInUser();
         }
 
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        return $dbo->find(WebUser::class, $id);
+        return $dbo->find($apiClient ? ApiClient::class : WebUser::class, $id);
+    }
+
+    /**
+     * Convenience function to get an APIClient by its ID
+     *
+     * @param $id
+     * @param $apiClient = false 
+     * @return ?WebUser
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws DuppyException
+     */
+    public function getApiClient($id = null): ?ApiClient {
+        return $this->getUser($id, true);
     }
 
     /**
@@ -205,16 +223,27 @@ final class UserService extends AbstractService {
     }
 
     /**
-     * Convenience function to get the current logged in user
+     * Convenience function to get the current logged in user or API Client
      *
-     * @return WebUser|null
+     * @return ?DuppyUser
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
-    public function getLoggedInUser(): ?WebUser {
-        $authToken = (new TokenManager)->inst()->getAuthToken();
+    public function getLoggedInUser(): ?DuppyUser {
+        $tokenManager = (new TokenManager)->inst();
+
+        // Try JWT (WebUser) first
+        $authToken = $tokenManager->getJWToken();
 
         if ($authToken == null || !array_key_exists("id", $authToken)) {
+            // Try APIClient authentication
+            $apiClient = $tokenManager->getAPIClient();
+
+            if ($apiClient != null) {
+                return $apiClient;
+            }
+
             return null;
         }
 
@@ -444,7 +473,19 @@ final class UserService extends AbstractService {
             return false;
         }
 
-        if ($user->get("id") !== $loggedInUser->get("id")) {
+        $checkId = null;
+
+        if ($user->isAPIClient()) {
+            $owner = $user->getOwner();
+
+            if ($owner instanceof WebUser) {
+                $checkId = $owner->get("id");
+            }
+        } else {
+            $checkId = $user->get("id");
+        }
+
+        if ($checkId !== $loggedInUser->get("id")) {
             // Permission to check
             if (!$loggedInUser->hasPermission($overridePerm) || !$loggedInUser->weightCheck($user)) {
                 return false;
@@ -472,6 +513,8 @@ final class UserService extends AbstractService {
 
         if ($user == null) {
             throw new DuppyException(DuppyError::noneFound());
+        } elseif ($user->isAPIClient()) {
+            return false;
         }
 
         $container = Bootstrapper::getContainer();
@@ -517,30 +560,6 @@ final class UserService extends AbstractService {
         }
 
         return $foundValid;
-    }
-
-    /**
-     * Checks global ban status against a user and the app's settings
-     *
-     * @param WebUser $user
-     * @return bool
-     * @throws DependencyException
-     * @throws DuppyException
-     * @throws NotFoundException
-     */
-    function checkGlobalBan(WebUser $user): bool {
-        $anyGlobal = $user->hasDirectGlobalBan();
-
-        if ($anyGlobal) {
-            return true;
-        }
-
-        $activeBans = $user->getActiveBans();
-        $active = count($activeBans);
-
-        // If the amount of active bans (on this environment + others)
-        $max = (new Settings)->inst()->getSetting("autoGlobalBan", 2);
-        return $active >= $max;
     }
 
     /**
