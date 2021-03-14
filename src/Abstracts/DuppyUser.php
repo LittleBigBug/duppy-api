@@ -14,32 +14,10 @@ use Duppy\DuppyException;
 use Duppy\DuppyServices\Settings;
 use Duppy\DuppyServices\UserService;
 use Duppy\Entities\ApiClient;
-use Duppy\Entities\WebUser;
 use Duppy\Interfaces\IDuppyUser;
 use JetBrains\PhpStorm\Pure;
 
 abstract class DuppyUser implements IDuppyUser {
-
-
-    /**
-     * Returns if the User is an API Client
-     *
-     * @return bool
-     */
-    #[Pure]
-    public function isWebUser(): bool {
-        return get_class($this) instanceof WebUser;
-    }
-
-    /**
-     * Returns if the User is an API Client
-     *
-     * @return bool
-     */
-    #[Pure]
-    public function isAPIClient(): bool {
-        return get_class($this) instanceof ApiClient;
-    }
 
     /**
      * If the user is the current logged in user, or owns the logged in api client
@@ -53,11 +31,11 @@ abstract class DuppyUser implements IDuppyUser {
     public function isMe(): bool {
         $loggedInUser = (new UserService)->inst()->getLoggedInUser();
 
-        if ($this == $loggedInUser) {
+        if ($this === $loggedInUser) {
             return true;
         }
 
-        if ($loggedInUser->isAPIClient()) {
+        if ($loggedInUser instanceof ApiClient) {
             $owner = $loggedInUser->getOwner();
 
             if ($owner == $this) {
@@ -88,6 +66,9 @@ abstract class DuppyUser implements IDuppyUser {
      * If the user is banned at all (within the current environment or globally)
      *
      * @return bool
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      */
     #[Pure]
     public function banned(): bool {
@@ -221,6 +202,9 @@ abstract class DuppyUser implements IDuppyUser {
      * Returns null if no ban or false if permanent
      *
      * @return DateTime|null|false
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      */
     #[Pure]
     public function unbanTime(): DateTime|bool|null {
@@ -273,6 +257,9 @@ abstract class DuppyUser implements IDuppyUser {
      * Returns null if no ban or false if permanent
      *
      * @return DateTime|null|false
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      */
     #[Pure]
     public function globalUnbanTime(): DateTime|bool|null {

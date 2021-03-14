@@ -61,14 +61,19 @@ final class UserService extends AbstractService {
      * Convenience function to get an APIClient by its ID
      *
      * @param $id
-     * @param $apiClient = false 
-     * @return ?WebUser
+     * @return ?ApiClient
      * @throws DependencyException
      * @throws NotFoundException
      * @throws DuppyException
      */
     public function getApiClient($id = null): ?ApiClient {
-        return $this->getUser($id, true);
+        $user = $this->getUser($id, true);
+
+        if (!($user instanceof ApiClient)) {
+            return null;
+        }
+
+        return $user;
     }
 
     /**
@@ -389,6 +394,9 @@ final class UserService extends AbstractService {
      *
      * @param WebUser $user
      * @return array
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      */
     public function getBasicInfo(WebUser $user): array {
         $data = [
@@ -475,7 +483,7 @@ final class UserService extends AbstractService {
 
         $checkId = null;
 
-        if ($user->isAPIClient()) {
+        if ($user instanceof ApiClient) {
             $owner = $user->getOwner();
 
             if ($owner instanceof WebUser) {
