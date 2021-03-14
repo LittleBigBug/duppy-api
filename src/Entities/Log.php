@@ -129,4 +129,16 @@ class Log {
         $this->logNote = $logNote;
     }
 
+    // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
+    /**
+     * Return a property
+     *
+     * @param string $property
+     * @return mixed
+     */
+    #[Pure]
+    public function get(string $property): mixed {
+        return $this->$property;
+    }
+
 }

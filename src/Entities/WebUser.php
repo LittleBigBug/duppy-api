@@ -8,18 +8,17 @@
 namespace Duppy\Entities;
 
 use DateTime;
-use JsonSerializable;
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\DuppyException;
+use JetBrains\PhpStorm\Pure;
+use JsonSerializable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Abstracts\DuppyUser;
-use Duppy\DuppyException;
-use Duppy\DuppyServices\TokenManager;
 use Duppy\DuppyServices\UserService;
 use Duppy\Bootstrapper\DCache;
 use Duppy\Util;
-use JetBrains\PhpStorm\Pure;
 
 /**
  * WebUser Entity
@@ -182,7 +181,8 @@ class WebUser extends DuppyUser implements JsonSerializable {
      * @param string $property
      * @return mixed
      */
-    public function get(string $property) {
+    #[Pure]
+    public function get(string $property): mixed {
         return $this->$property;
     }
 
@@ -322,6 +322,9 @@ class WebUser extends DuppyUser implements JsonSerializable {
      * Serializes the user into a basic array of info
      *
      * @return array
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws DuppyException
      */
     public function jsonSerialize(): array {
         return (new UserService)->inst()->getBasicInfo($this);
