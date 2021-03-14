@@ -11,6 +11,7 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\DuppyException;
 use Duppy\DuppyServices\Settings;
+use Doctrine\ORM\Mapping as ORM;
 use geertw\IpAnonymizer\IpAnonymizer;
 use JetBrains\PhpStorm\Pure;
 
@@ -19,7 +20,7 @@ use JetBrains\PhpStorm\Pure;
  * Contains more information about a user associated with a log
  *
  * @ORM\Entity
- * @ORM\Table(name="logs")
+ * @ORM\Table(name="logs_user")
  */
 class UserLog {
 
@@ -33,7 +34,7 @@ class UserLog {
     /**
      * User associated, if any
      *
-     * @ORM\ManyToOne(targetEntity="WebUser", nullable=true)
+     * @ORM\ManyToOne(targetEntity="WebUser")
      */
     protected ?WebUser $user = null;
 

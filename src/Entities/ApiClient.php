@@ -11,6 +11,7 @@ use JsonSerializable;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
 use Duppy\Abstracts\AbstractApiClientCustomCheck;
 use Duppy\Abstracts\DuppyUser;
 use Duppy\Bootstrapper\DCache;
@@ -36,7 +37,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * @ORM\Id
      * @ORM\Column(type="string")
      */
-    protected string $clientId;
+    protected string $id;
 
     /**
      * Authentication Method
@@ -66,14 +67,14 @@ class ApiClient extends DuppyUser implements JsonSerializable {
     /**
      * If the APIClient has access to all permissions the associated user has
      * 
-     *  @ORM\Column(type="bool")
+     *  @ORM\Column(type="boolean")
      */
     protected bool $allPerms = false;
 
     /**
      * Associated user with the API Client. If null, owned by the system.
      *
-     * @ORM\ManyToOne(targetEntity="WebUser", nullable=true)
+     * @ORM\ManyToOne(targetEntity="WebUser")
      */
     protected ?WebUser $associatedUser = null;
 
@@ -87,7 +88,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
     /**
      * If the APIClient is a "Super" or doesn't really have an owner or associated user but acts as the system
      * 
-     * @ORM\Column(type="bool")
+     * @ORM\Column(type="boolean")
      */
     protected bool $isSuper = false;
 

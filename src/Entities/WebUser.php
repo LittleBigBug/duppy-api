@@ -73,7 +73,7 @@ class WebUser extends DuppyUser implements JsonSerializable {
     protected ArrayCollection $groups;
 
     /**
-     * @ORM\OneToMany(targetEntity="Ban", inversedBy="user")
+     * @ORM\OneToMany(targetEntity="Ban", mappedBy="user")
      * @ORM\JoinColumn(name="ban_id", referencedColumnName="id")
      */
     protected ArrayCollection $bans;

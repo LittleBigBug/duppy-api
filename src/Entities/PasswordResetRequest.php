@@ -8,6 +8,7 @@
 namespace Duppy\Entities;
 
 use DateTime;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * PasswordResetRequest Entity

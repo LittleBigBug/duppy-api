@@ -11,6 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Bootstrapper\DCache;
 use Duppy\Util;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * UserGroup Entity
@@ -216,7 +217,7 @@ class UserGroup {
 
     /**
      * Returns if the user has the permission or not
-     * @param string $perm
+     * @param string $permission
      * @return bool
      */
     public function hasPermission(string $permission): bool {

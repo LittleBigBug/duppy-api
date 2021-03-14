@@ -44,7 +44,7 @@ class Environment {
     protected string $name;
 
     /**
-     * @ORM\Column(type="bool")
+     * @ORM\Column(type="boolean")
      */
     protected bool $enabled = true;
 

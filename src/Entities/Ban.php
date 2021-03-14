@@ -40,7 +40,7 @@ class Ban implements JsonSerializable {
     protected WebUser $user;
 
     /**
-     * @ORM\ManyToOne(targetEntity="WebUser", nullable=true)
+     * @ORM\ManyToOne(targetEntity="WebUser")
      */
     protected ?WebUser $banningUser = null;
 
@@ -61,7 +61,7 @@ class Ban implements JsonSerializable {
     protected ?string $reason = null;
 
     /**
-     * @ORM\Column(type="bool", nullable=false)
+     * @ORM\Column(type="boolean", nullable=false)
      */
     protected bool $appealable = true;
 

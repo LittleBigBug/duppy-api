@@ -10,6 +10,7 @@ namespace Duppy\Entities;
 use DateInterval;
 use DateTime;
 use Duppy\Enum\LogType;
+use Doctrine\ORM\Mapping as ORM;
 use JetBrains\PhpStorm\Pure;
 
 /**
@@ -43,7 +44,7 @@ class Log {
     /**
      * User associated, if any
      *
-     * @ORM\ManyToOne(targetEntity="WebUser", nullable=true)
+     * @ORM\ManyToOne(targetEntity="WebUser")
      */
     protected ?WebUser $user = null;
 
