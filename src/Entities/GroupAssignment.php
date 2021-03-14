@@ -72,7 +72,8 @@ class GroupAssignment {
      * @param string $property
      * @return mixed
      */
-    public function get(string $property) {
+    #[Pure]
+    public function get(string $property): mixed {
         return $this->$property;
     }
 

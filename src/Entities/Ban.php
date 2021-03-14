@@ -168,6 +168,7 @@ class Ban implements JsonSerializable {
      *
      * @return bool
      */
+    #[Pure]
     public function isGlobal(): bool {
         return $this->environment == null;
     }
@@ -175,6 +176,7 @@ class Ban implements JsonSerializable {
     /**
      * @return bool
      */
+    #[Pure]
     public function isPermanent(): bool {
         return $this->expiry == null;
     }
@@ -186,7 +188,8 @@ class Ban implements JsonSerializable {
      * @param string $property
      * @return mixed
      */
-    public function get(string $property) {
+    #[Pure]
+    public function get(string $property): mixed {
         return $this->$property;
     }
 

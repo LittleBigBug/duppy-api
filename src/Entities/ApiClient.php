@@ -7,14 +7,17 @@
 
 namespace Duppy\Entities;
 
+use JsonSerializable;
+use DI\DependencyException;
+use DI\NotFoundException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Duppy\Abstracts\AbstractApiClientCustomCheck;
 use Duppy\Abstracts\DuppyUser;
 use Duppy\Bootstrapper\DCache;
+use Duppy\DuppyException;
 use Duppy\DuppyServices\UserService;
-use Duppy\Util;
 use JetBrains\PhpStorm\Pure;
-use JsonSerializable;
+use Duppy\Util;
 
 /**
  * ApiClient Entity
@@ -100,7 +103,8 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * @param string $property
      * @return mixed
      */
-    public function get(string $property) {
+    #[Pure]
+    public function get(string $property): mixed {
         return $this->$property;
     }
 
@@ -208,6 +212,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * 
      * @return WebUser|bool|null
      */
+    #[Pure]
     public function getOwner(): WebUser|bool|null {
         $user = $this->get("associatedUser");
 
@@ -226,6 +231,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * @param string $permission
      * @return bool
      */
+    #[Pure]
     public function hasPermission(string $permission): bool {
         $perms = $this->getPermissions();
         return Util::evaluatePermissionDict($perms, $permission);
@@ -237,6 +243,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * @param bool $dictionary = true
      * @return array
      */
+    #[Pure]
     public function getPermissions(bool $dictionary = true): array {
         if (($perms = $this->generatedPerms->get()) != null) {
             if (!$dictionary) {
@@ -307,24 +314,27 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * 
      * @return array
      */
+    #[Pure]
     public function getExplicitPermissions(): array {
         return $this->permissions->toArray();
     }
 
     /**
      * Returns true if the logged in APIClient is the same or the user owns this APIClient
-     * 
+     *
      * @return bool
+     * @throws DependencyException
+     * @throws NotFoundException
+     * @throws DuppyException
      */
+    #[Pure]
     public function isMe(): bool {
         $loggedInUser = (new UserService)->inst()->getLoggedInUser();
 
-        if ($this->isAPIClient()) {
-            $owner = $this->getOwner();
+        $owner = $this->getOwner();
 
-            if ($owner == $loggedInUser) {
-                return true;
-            }
+        if ($owner == $loggedInUser) {
+            return true;
         }
 
         return parent::isMe();
@@ -335,6 +345,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * 
      * @return int
      */
+    #[Pure]
     public function getWeight(): int {
         $owner = $this->getOwner();
 
@@ -352,6 +363,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * 
      * @return array
      */
+    #[Pure]
     public function getActiveBans(): array {
         $owner = $this->getOwner();
 
@@ -364,9 +376,13 @@ class ApiClient extends DuppyUser implements JsonSerializable {
 
     /**
      * Returns if the associated user is global banned
-     * 
+     *
      * @return bool
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      */
+    #[Pure]
     public function globalBanned(): bool {
         $owner = $this->getOwner();
 
@@ -382,6 +398,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * 
      * @return bool
      */
+    #[Pure]
     public function hasDirectGlobalBan(): bool {
         $owner = $this->getOwner();
 

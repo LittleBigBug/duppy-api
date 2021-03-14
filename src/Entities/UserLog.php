@@ -12,6 +12,7 @@ use DI\NotFoundException;
 use Duppy\DuppyException;
 use Duppy\DuppyServices\Settings;
 use geertw\IpAnonymizer\IpAnonymizer;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * UserLog Entity
@@ -79,6 +80,18 @@ class UserLog {
         }
 
         $this->ip = $ip;
+    }
+
+    // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading
+    /**
+     * Return a property
+     *
+     * @param string $property
+     * @return mixed
+     */
+    #[Pure]
+    public function get(string $property): mixed {
+        return $this->$property;
     }
 
 }
