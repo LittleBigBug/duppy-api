@@ -29,9 +29,15 @@ class CaptchaMiddleware extends AbstractRouteMiddleware {
      */
     final public function handle(callable $next): ?bool {
         $captchaSrv = (new Captcha)->inst();
-        $captchaResponse = static::$request->getHeader("X-Captcha-Response");
 
-        $success = $captchaSrv->verify($captchaResponse[0]);
+        if (!$captchaSrv->isEnabled()) {
+            return true;
+        }
+
+        $captchaResponseTab = static::$request->getHeader("X-Captcha-Response");
+        $captchaResponse = Util::indArrayNull($captchaResponseTab, 0);
+
+        $success = $captchaSrv->verify($captchaResponse);
 
         if ($success) {
             static::$response = Util::responseError(static::$response, "Captcha failed", 401);
