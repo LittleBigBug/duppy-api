@@ -13,6 +13,7 @@ use DI\NotFoundException;
 use Duppy\DuppyException;
 use JetBrains\PhpStorm\Pure;
 use JsonSerializable;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Duppy\Abstracts\DuppyUser;
@@ -59,7 +60,7 @@ class WebUser extends DuppyUser implements JsonSerializable {
     /**
      * @ORM\OneToMany(targetEntity="WebUserProviderAuth", mappedBy="user")
      */
-    protected ArrayCollection $providerAuths;
+    protected Collection $providerAuths;
 
     /**
      * @ORM\Column(type="string")
@@ -70,19 +71,19 @@ class WebUser extends DuppyUser implements JsonSerializable {
      * @ORM\ManyToMany(targetEntity="UserGroup", inversedBy="users")
      * @ORM\JoinTable(name="web_user_group_map")
      */
-    protected ArrayCollection $groups;
+    protected Collection $groups;
 
     /**
      * @ORM\OneToMany(targetEntity="Ban", mappedBy="user")
      * @ORM\JoinColumn(name="ban_id", referencedColumnName="id")
      */
-    protected ArrayCollection $bans;
+    protected Collection $bans;
 
     /**
      * @ORM\OneToMany(targetEntity="PermissionAssignment", mappedBy="user")
      * @ORM\JoinColumn(name="permission_id", referencedColumnName="id")
      */
-    protected ArrayCollection $permissions;
+    protected Collection $permissions;
 
     /**
      * @ORM\Column(type="string")

@@ -7,11 +7,12 @@
 
 namespace Duppy\Entities;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
-use Duppy\Bootstrapper\DCache;
 use Duppy\Util;
+use Duppy\Bootstrapper\DCache;
 use JetBrains\PhpStorm\Pure;
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * UserGroup Entity
@@ -46,12 +47,12 @@ class UserGroup {
     /**
      * @ORM\ManyToMany(targetEntity="WebUser", mappedBy="groups")
      */
-    protected ArrayCollection $users;
+    protected Collection $users;
 
     /**
      * @ORM\OneToMany(targetEntity="UserGroup", mappedBy="parent")
      */
-    protected ArrayCollection $children;
+    protected Collection $children;
 
     /**
      * @ORM\ManyToOne(targetEntity="UserGroup", inversedBy="children")
@@ -63,7 +64,7 @@ class UserGroup {
      * @ORM\OneToMany(targetEntity="PermissionAssignment", mappedBy="groups")
      * @ORM\JoinColumn(name="permission_id", referencedColumnName="id")
      */
-    protected ArrayCollection $permissions;
+    protected Collection $permissions;
 
     /**
      * Cached generated permissions
@@ -73,10 +74,11 @@ class UserGroup {
      */
     protected DCache $generatedPermissions;
 
+    #[Pure]
     public function __construct() {
-        $this->users = new ArrayCollection();
-        $this->children = new ArrayCollection();
-        $this->permissions = new ArrayCollection();
+        $this->users = new ArrayCollection;
+        $this->children = new ArrayCollection;
+        $this->permissions = new ArrayCollection;
     }
 
     // Each entity class needs their own version of this function so that doctrine knows to use it for lazy-loading

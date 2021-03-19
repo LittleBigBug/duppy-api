@@ -10,8 +10,9 @@ namespace Duppy\Entities;
 use JsonSerializable;
 use DI\DependencyException;
 use DI\NotFoundException;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 use Duppy\Abstracts\AbstractApiClientCustomCheck;
 use Duppy\Abstracts\DuppyUser;
 use Duppy\Bootstrapper\DCache;
@@ -35,6 +36,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
 
     /**
      * @ORM\Id
+     * @ORM\GeneratedValue
      * @ORM\Column(type="string")
      */
     protected string $id;
@@ -62,7 +64,7 @@ class ApiClient extends DuppyUser implements JsonSerializable {
      * @ORM\OneToMany(targetEntity="PermissionAssignment", mappedBy="user")
      * @ORM\JoinColumn(name="permission_id", referencedColumnName="id")
      */
-    protected ArrayCollection $permissions;
+    protected Collection $permissions;
 
     /**
      * If the APIClient has access to all permissions the associated user has
@@ -107,13 +109,6 @@ class ApiClient extends DuppyUser implements JsonSerializable {
     #[Pure]
     public function get(string $property): mixed {
         return $this->$property;
-    }
-
-    /**
-     * @param string $clientId
-     */
-    public function setClientId(string $clientId) {
-        $this->clientId = $clientId;
     }
 
     /**
