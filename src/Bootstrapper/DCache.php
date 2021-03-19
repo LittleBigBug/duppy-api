@@ -12,7 +12,7 @@ class DCache {
     /**
      * @var mixed
      */
-    protected mixed $object;
+    protected mixed $object = null;
 
     /**
      * Optional creator callable to automatically create when the get function is called
@@ -36,7 +36,7 @@ class DCache {
      * @param mixed $object
      * @return mixed $object
      */
-    public function setObject(mixed $object) {
+    public function setObject(mixed $object): mixed {
         $this->object = $object;
         return $object;
     }
