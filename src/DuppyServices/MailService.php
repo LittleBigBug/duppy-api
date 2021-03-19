@@ -11,6 +11,7 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractMailEngine;
 use Duppy\Abstracts\AbstractService;
+use Duppy\Bootstrapper\DCache;
 use Duppy\Builders\MailEngineBuilder;
 use Duppy\DuppyException;
 use Duppy\Enum\LogType;
@@ -20,9 +21,10 @@ final class MailService extends AbstractService {
 
     /**
      * Current mail engine (cache)
-     * @var ?AbstractMailEngine
+     *
+     * @var DCache
      */
-    protected ?AbstractMailEngine $mailEngine = null;
+    protected DCache $mailEngine;
 
     /**
      * Dictionary of AbstractMailEngine (string) by their ::$name
@@ -31,14 +33,36 @@ final class MailService extends AbstractService {
     protected array $mailEngines = [];
 
     /**
-     * @return AbstractMailEngine
+     * MailService constructor.
+     * @param bool $singleton
+     */
+    public function __construct(bool $singleton = false) {
+        $this->mailEngine = new DCache;
+        parent::__construct($singleton);
+    }
+
+    /**
+     * Clear cache
+     * @param bool $force
+     */
+    public function clean(bool $force = false) {
+        // Don't clear in production
+        if (Env::G('DUPPY_DEVELOPMENT') || $force) {
+            $this->mailEngine->clear();
+        }
+    }
+
+    /**
+     * Returns the (cached) mail Engine (or null if none)
+     *
+     * @return ?AbstractMailEngine
      * @throws DependencyException
      * @throws NotFoundException
      * @throws DuppyException
      */
-    public function getMailEngine(): AbstractMailEngine {
-        if ($this->mailEngine != null) {
-            return $this->mailEngine;
+    public function getMailEngine(): ?AbstractMailEngine {
+        if (($engine = $this->mailEngine->get()) != null) {
+            return $engine;
         }
 
         (new MailEngineBuilder)->buildOnce();
@@ -46,8 +70,12 @@ final class MailService extends AbstractService {
         $useEngine = (new Settings)->inst()->getSetting("email.engine", "smtp");
         $val = Util::indArrayNull($this->mailEngines, $useEngine);
 
+        if ($val == null) {
+            return null;
+        }
+
         $engine = new $val;
-        return $this->mailEngine = $engine;
+        return $this->mailEngine->setObject($engine);
     }
 
     /**
@@ -66,16 +94,24 @@ final class MailService extends AbstractService {
      * @param string $content
      * @param string $altContent
      * @param bool $allowReply
+     * @return bool
      * @throws DependencyException
      * @throws NotFoundException
      * @throws DuppyException
      */
-    public function sendMail(string|array $recipients, string $subject, string $content, string $altContent = "", bool $allowReply = false) {
+    public function sendMail(string|array $recipients, string $subject, string $content, string $altContent = "", bool $allowReply = false): bool {
         $mailEngine = $this->getMailEngine();
+
+        if ($mailEngine == null) {
+            return false;
+        }
+
         $mailEngine->sendMail($recipients, $subject, $content, $altContent, $allowReply);
 
         $recipStr = implode(", ", $recipients);
         (new Logging)->inst()->Info("Subject: $subject To $recipStr")->setLogType(LogType::mail());
+
+        return true;
     }
 
     /**
@@ -90,6 +126,11 @@ final class MailService extends AbstractService {
      */
     public function renderTemplate(string $template, array $share = []): string {
         $mailEngine = $this->getMailEngine();
+
+        if ($mailEngine == null) {
+            return "";
+        }
+
         return $mailEngine->renderTemplate($template, $share);
     }
 
@@ -107,8 +148,13 @@ final class MailService extends AbstractService {
      * @throws DuppyException
      */
     public function sendMailTemplate(string|array $recipients, string $subject, string $template, array $share = [], string $altContent = "", bool $allowReply = false) {
-        $res = $this->renderTemplate($template, $share);
-        $this->sendMail($recipients, $subject, $res, $altContent, $allowReply);
+        $mailEngine = $this->getMailEngine();
+
+        if ($mailEngine == null) {
+            $res = $this->renderTemplate($template, $share);
+            $this->sendMail($recipients, $subject, $res, $altContent, $allowReply);
+            return;
+        }
     }
 
 }
