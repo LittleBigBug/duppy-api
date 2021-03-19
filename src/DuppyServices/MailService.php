@@ -49,6 +49,7 @@ final class MailService extends AbstractService {
         // Don't clear in production
         if (Env::G('DUPPY_DEVELOPMENT') || $force) {
             $this->mailEngine->clear();
+            $this->mailEngines = [];
         }
     }
 

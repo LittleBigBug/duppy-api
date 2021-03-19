@@ -17,6 +17,10 @@ final class EnvironmentService extends AbstractService {
 
     protected ?Environment $currentEnvironment = null;
 
+    public function clean(bool $force = false) {
+        $this->currentEnvironment = null;
+    }
+
     /**
      * @param Environment|null $environment
      */

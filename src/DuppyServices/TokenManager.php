@@ -71,16 +71,20 @@ final class TokenManager extends AbstractService {
      */
     public ?bool $encryptionEnabled = null;
 
-    public function __construct() {
+    public function __construct(bool $singleton = false) {
         $this->authToken = new DCache;
         $this->apiClient = new DCache;
-        $this->authTokenString = new DCache;       
+        $this->authTokenString = new DCache;
+
+        parent::__construct($singleton);
     }
 
     /**
-     * Clean up cached stuff for user
+     * Clean up cached stuff for user every request
+     *
+     * @param bool $force
      */
-    public function clean() {
+    public function clean(bool $force = false) {
         $this->authToken->clear();
         $this->apiClient->clear();
         $this->authTokenString->clear();
@@ -187,7 +191,7 @@ final class TokenManager extends AbstractService {
     public function createTokenFromUserId(int $userId): string {
         $userObj = (new UserService)->inst()->getUser($userId);
 
-        if (!$userObj->isWebUser()) {
+        if (!($userObj instanceof WebUser)) {
             throw new DuppyException(DuppyError::incorrectType());
         }
 
@@ -309,8 +313,10 @@ final class TokenManager extends AbstractService {
 
     /**
      * Returns an authenticated ApiClient with the current request
-     * 
+     *
      * @return ?ApiClient
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function getAPIClient(): ?ApiClient {
         if (($apiClient = $this->apiClient->get()) != null) {

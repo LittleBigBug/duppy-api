@@ -73,8 +73,10 @@ class AbstractService {
 
     /**
      * Cleanup function called on all services in the middleware to clean up variables or do other things on exit
+     *
+     * @param bool $force
      */
-    public function clean() { }
+    public function clean(bool $force = false) { }
 
     /**
      * Shorter function
@@ -109,10 +111,11 @@ class AbstractService {
 
     /**
      * Cleans all services registered as a singleton
+     * @param bool $force
      */
-    public static function CleanServices() {
+    public static function CleanServices(bool $force = false) {
         foreach (AbstractService::$singletons as $singleton) {
-            $singleton->clean();
+            $singleton->clean($force);
         }
     }
 

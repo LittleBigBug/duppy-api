@@ -521,7 +521,7 @@ final class UserService extends AbstractService {
 
         if ($user == null) {
             throw new DuppyException(DuppyError::noneFound());
-        } elseif ($user->isAPIClient()) {
+        } elseif ($user instanceof ApiClient) {
             return false;
         }
 

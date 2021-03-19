@@ -10,6 +10,7 @@ namespace Duppy\DuppyServices;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractService;
+use Duppy\Bootstrapper\DCache;
 use Duppy\DuppyException;
 use Duppy\Enum\DuppyError;
 use GuzzleHttp\Client;
@@ -33,6 +34,45 @@ class Captcha extends AbstractService {
     const hCaptchaVerifyUrl = "https://hcaptcha.com/siteverify";
 
     /**
+     * @var DCache
+     */
+    protected DCache $settingsCache;
+
+    /**
+     * Captcha constructor.
+     * @param bool $singleton
+     */
+    public function __construct(bool $singleton = false) {
+        $this->settingsCache = new DCache;
+        parent::__construct($singleton);
+    }
+
+    /**
+     * Returns if any captcha service is enabled
+     *
+     * @return bool
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
+     */
+    public function getSettings(): bool {
+        if (($settings = $this->settingsCache->get()) != null) {
+            return $settings;
+        }
+
+        $settingsMngr = (new Settings)->inst();
+        $settings = $settingsMngr->getSettings([
+            "captcha",
+            "hCaptcha.private",
+        ]);
+
+        $anyEnabled = !empty($settings["captchaEnabled"]);
+        $settings["captchaEnabled"] = $anyEnabled;
+
+        return $this->settingsCache->setObject($settings);
+    }
+
+    /**
      * Verify the currently enabled captcha (if any) and returns its success
      *
      * @param string $response
@@ -44,14 +84,13 @@ class Captcha extends AbstractService {
      */
     public function verify(string $response): bool {
         // Only process this middleware if the setting is enabled
-        $settingsMngr = (new Settings)->inst();
-        $captcha = $settingsMngr->getSetting("Captcha");
+        $settings = $this->getSettings();
 
-        if (empty($captcha)) {
+        if (!$settings["captchaEnabled"]) {
             return true;
         }
 
-        return match (strtolower($captcha)) {
+        return match (strtolower($settings["captcha"])) {
             "hcaptcha" => $this->hCaptcha($response),
             default => false,
         };
@@ -68,15 +107,15 @@ class Captcha extends AbstractService {
      * @throws NotFoundException
      */
     public function hCaptcha(string $captchaResp): bool {
-        $settingsMngr = (new Settings)->inst();
-        $privateKey = $settingsMngr->getSetting("hCaptcha.private");
+        $settings = $this->getSettings();
+        $privateKey = $settings["hCaptcha.private"];
 
         if (empty($privateKey)) {
             throw new DuppyException(DuppyError::missingSetting());
         }
 
         $client = new Client;
-        $res = $client->request("POST", self::hCaptchaVerifyUrl, [
+        $res = $client->post(self::hCaptchaVerifyUrl, [
             "form_params" => [
                 "secret" => "my-secret $privateKey",
                 "response" => $captchaResp,
@@ -86,8 +125,8 @@ class Captcha extends AbstractService {
         $body = $res->getBody()->getContents();
         $json = json_decode($body);
 
-        if (isset($json->success)) {
-            return $json->success;
+        if (isset($json["success"])) {
+            return $json["success"];
         }
 
         return false;

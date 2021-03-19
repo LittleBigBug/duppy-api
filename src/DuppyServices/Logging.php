@@ -36,10 +36,11 @@ class Logging extends AbstractService {
     /**
      * Flush the queue if anything
      *
+     * @param bool $force
      * @throws DependencyException
      * @throws NotFoundException
      */
-    public function clean() {
+    public function clean(bool $force = false) {
         if (empty($queue)) {
             return;
         }
