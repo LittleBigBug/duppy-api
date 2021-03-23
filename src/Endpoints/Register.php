@@ -13,7 +13,7 @@ use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyException;
-use Duppy\DuppyServices\Env;
+use Duppy\DuppyServices\Logging;
 use Duppy\DuppyServices\MailService;
 use Duppy\DuppyServices\Settings;
 use Duppy\DuppyServices\TokenManager;
@@ -84,22 +84,23 @@ class Register extends AbstractEndpoint {
             $email = Util::indArrayNull($postArgs, "email");
             $pass = Util::indArrayNull($postArgs, "pass");
 
-            $err = "";
-
             if (empty($email)) {
-                $err = "Email is empty";
+                return Util::responseError($response, "Email is empty");
             } elseif ($userService->emailTaken($email)) {
-                $err = "Email is taken";
+                return Util::responseError($response, "Email is taken");
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $err = "Invalid email";
+                return Util::responseError($response, "Invalid Email");
             }
 
             if (empty($pass)) {
-                $err = "Pass is empty";
+                return Util::responseError($response, "Password is empty");
             }
 
-            if (!empty($err)) {
-                return Util::responseError($response, $err);
+            $passError = "";
+            $securePassword = $userService->securePassword($pass, $passError);
+
+            if (!$securePassword) {
+                return Util::responseError($response, $passError);
             }
 
             $whitelist = $userService->getEmailWhitelist();
@@ -148,13 +149,17 @@ class Register extends AbstractEndpoint {
                 $url = "$clientUrl#/login/verification";
                 $subject = "Verify Your New $title Account";
 
-                (new MailService)->inst()->sendMailTemplate($email, $subject, "verifyAccount", [
+                $result = (new MailService)->inst()->sendMailTemplate($email, $subject, "verifyAccount", [
                     "url" => $url,
                     "code" => $code,
                     "title" => $subject,
                 ],
                     // todo - replace with localization system
                     "Your account is almost ready! Verify it by following this link $url/$code or by inputting this code: $code");
+
+                if (!$result) {
+                    return Util::responseError($response, "There was an error sending an email. Please try again later");
+                }
 
                 $dbo->persist($uVerify);
                 $dbo->flush();
@@ -171,13 +176,26 @@ class Register extends AbstractEndpoint {
 
         $profile = $userService->authenticateHybridAuth($provider, $postArgs);
 
+        // Todo; improve how these errors are handled/sent to the client (codes..)
+        // Below is assumed to be direct access because of hybridauth
         // Error
         if (is_string($profile)) {
-            return Util::responseError($response, $profile);
+            $log = (new Logging)->inst()->Error("Hybridauth error: $profile");
+            $log->setLogNote("auth");
+
+            return Util::responseRedirectClient($response, "login/error/$profile", [
+                "error" => $profile,
+            ]);
         }
 
         if ($profile::class == "HybridAuth\User\Profile") {
-            return Util::responseError($response, "HybridAuth authentication error");
+            $log = (new Logging)->inst()->Error("Hybridauth error (profile not returned)");
+            $log->setLogNote("auth");
+
+            $error = "HybridAuth authentication error";
+            return Util::responseRedirectClient($response, "login/error/$error", [
+                "error" => $error,
+            ]);
         }
 
         $providerId = $profile->identifier;
@@ -186,7 +204,8 @@ class Register extends AbstractEndpoint {
         $avatar = $profile->photoURL ?? "";
 
         if ((new UserService)->inst()->emailTaken($email)) {
-            return Util::responseError($response, "That email is being used already!");
+            $error = "The email associated to this account is already in use";
+            return Util::responseRedirectClient($response, "login/error/$error");
         }
 
         $dbo = Bootstrapper::getContainer()->get("database");
@@ -221,9 +240,8 @@ class Register extends AbstractEndpoint {
         // Login Immediately
         $token = (new TokenManager)->inst()->createTokenFill($data);
 
-        $clientUrl = $settingsMngr->getSetting("clientUrl");
-        $redirect = $clientUrl . "#/login/success/" . $token  . "/" . $data["id"];
-        return $response->withHeader("Location", $redirect)->withStatus(302);
+        $redirect = "login/success/" . $token  . "/" . $data["id"];
+        return Util::responseRedirectClient($response, $redirect);
     }
 
 }
