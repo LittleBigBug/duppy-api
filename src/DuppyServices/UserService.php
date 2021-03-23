@@ -153,7 +153,10 @@ final class UserService extends AbstractService {
      */
     public function loginUser(Response $response, WebUser $user, bool $redirect = false): Response {
         if ($user == null) {
-            return Util::responseError($response, "No matching user");
+            $error = "No matching user";
+            $url = "login/error/$error";
+
+            return Util::responseRedirectClient($response, $url, dontRedirect: !$redirect, error: $error);
         }
 
         $userId = $user->get("id");
@@ -178,20 +181,12 @@ final class UserService extends AbstractService {
 
         (new Logging)->inst()->UserAction($user, "Login");
 
-        if ($redirect) {
-            $clientUrl = (new Settings)->inst()->getSetting("clientUrl");
-            $redirect = $clientUrl . "#/login/success/" . $token . "/" . $crumb . "/" . $data["id"];
-            return $response->withHeader("Location", $redirect)->withStatus(302);
-        } else {
-            return Util::responseJSON($response, [
-                "success" => true,
-                "data" => [
-                    "token" => $token,
-                    "crumb" => $crumb,
-                    "user" => $data,
-                ],
-            ]);
-        }
+        $url = "login/success/$token/$crumb/$userId";
+        return Util::responseRedirectClient($response, $url, [
+            "token" => $token,
+            "crumb" => $crumb,
+            "user" => $data,
+        ], dontRedirect: !$redirect);
     }
 
     /**
