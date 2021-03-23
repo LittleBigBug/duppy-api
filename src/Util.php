@@ -7,7 +7,10 @@
 
 namespace Duppy;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Duppy\Bootstrapper\Bootstrapper;
+use Duppy\DuppyServices\Settings;
 use JetBrains\PhpStorm\Pure;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Psr7\Response;
@@ -104,6 +107,61 @@ class Util {
      */
     public static function responseError(ResponseInterface &$resp, string $error, int $status = 200): ResponseInterface {
         return static::responseJSON($resp, ["success" => false, "err" => $error], $status);
+    }
+
+    /**
+     * Redirect helper function handling header opt out
+     *
+     * @param ResponseInterface $resp
+     * @param string $url
+     * @param array $jsonData
+     * @param int $status
+     * @param bool $dontRedirect
+     * @param string $error
+     * @return Response
+     */
+    public static function responseRedirect(ResponseInterface &$resp, string $url, array $jsonData = [], int $status = 302, bool $dontRedirect = false, string $error = ""): ResponseInterface {
+        if ($dontRedirect || !Bootstrapper::currentAllowsRedirect()) {
+            $redirectData = [
+                "redirectUrl" => $url,
+                "httpCode" => $status,
+            ];
+
+            $data = array_merge($redirectData, $jsonData);
+            $errored = !empty($error);
+
+            return static::responseJSON($resp, [
+                "success" => !$errored,
+                "message" => "Redirect",
+                "data" => $data,
+                "err" => $error,
+            ]);
+        }
+
+        $resp = $resp->withHeader("Location", $url)->withStatus($status);
+        return $resp;
+    }
+
+    /**
+     * Automatically prepend the client url to the redirect
+     *
+     * @param ResponseInterface $resp
+     * @param string $url
+     * @param array $jsonData
+     * @param int $status
+     * @param bool $dontRedirect
+     * @param string $error
+     * @return Response
+     * @throws DuppyException
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function responseRedirectClient(ResponseInterface &$resp, string $url, array $jsonData = [], int $status = 302, bool $dontRedirect = false, string $error = ""): ResponseInterface {
+        $clientUrl = (new Settings)->inst()->getSetting("clientUrl");
+        $url = "$clientUrl#/$url";
+
+        $resp = static::responseRedirect($resp, $url, $jsonData, $status, $dontRedirect, $error);
+        return $resp;
     }
 
     /**
