@@ -66,6 +66,13 @@ abstract class AbstractEndpoint {
     public static array $middleware = [];
 
     /**
+     * Mapped route middleware (index matches each route)
+     *
+     * @var array
+     */
+    public static array $mappedMiddleware = [];
+
+    /**
      * Endpoint's group parent
      * All $uri s will be relative to parent(s)
      * Classname of a class that inherits the abstract class AbstractEndpointGroup
@@ -73,6 +80,11 @@ abstract class AbstractEndpoint {
      * @var string|null
      */
     public static ?string $parentGroup = null;
+
+    /**
+     * @param bool $force
+     */
+    public static function clear(bool $force = false) { }
 
     /**
      * Handles the response
@@ -151,6 +163,15 @@ abstract class AbstractEndpoint {
      */
     final public static function getMiddleware(): array {
         return static::$middleware;
+    }
+
+    /**
+     * Returns endpoint mapped middleware
+     *
+     * @return array
+     */
+    final public static function getMappedMiddleware(): array {
+        return static::$mappedMiddleware;
     }
 
     /**

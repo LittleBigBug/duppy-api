@@ -76,7 +76,11 @@ final class Router extends AbstractFileBuilder {
     }
 
     /**
-     * Build slim routes
+     * Build routes
+     *
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
      */
     public function build() {
         $endPoints = [];
@@ -295,6 +299,7 @@ final class Router extends AbstractFileBuilder {
             $types = $epClass::getTypes();
             $uris = $epClass::getUri();
             $epMiddleware = $epClass::getMiddleware();
+            $epMappedMiddleware = $epClass::getMappedMiddleware();
             $epUriFuncMap = $epClass::getUriFuncMap();
             $epUriRedirects = $epClass::getUriRedirectMap();
             $epUriMapTypes = $epClass::getUriMapTypes();
@@ -341,6 +346,9 @@ final class Router extends AbstractFileBuilder {
                 $singleType = count($types) == 1;
                 $shouldMap = !$singleType && (is_array($epUriMapTypes) && !empty($epUriMapTypes) && $epUriMapTypes[$k]) || $epUriMapTypes === true;
 
+                $cMappedMiddleware = Util::indArrayNull($epMappedMiddleware, $k) ?? [];
+                $allWares = array_merge($epMiddleware, $cMappedMiddleware);
+
                 foreach ($types as $type) {
                     $suffix = '';
                     $typeLower = strtolower($type);
@@ -378,7 +386,7 @@ final class Router extends AbstractFileBuilder {
                     }
 
                     if ($route != null) {
-                        foreach ($epMiddleware as $ware) {
+                        foreach ($allWares as $ware) {
                             $route->add(new $ware);
                         }
                     }
