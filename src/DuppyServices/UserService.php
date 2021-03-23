@@ -568,34 +568,28 @@ final class UserService extends AbstractService {
      * @throws DuppyException ErrType noneFound if the userId doesnt belong to anyone, or incorrectType if the setting somehow returns something other than a DateInterval
      */
     public function checkPasswordResetCode(string $code, string|int $userId = null): bool {
-        $user = $this->inst()->getUser($userId);
+        $requests = $this->getActivePasswordRequests($userId);
 
-        if ($user == null) {
-            throw new DuppyException(DuppyError::noneFound());
-        } elseif ($user instanceof ApiClient) {
+        if (!is_array($requests)) {
             return false;
         }
 
         $container = Bootstrapper::getContainer();
         $dbo = $container->get("database");
-        $repo = $dbo->getRepository(PasswordResetRequest::class);
-
-        $requests = $repo->findBy([ "user" => $user, "code" => $code, ]);
-
-        if (count($requests) < 1) {
-            return false;
-        }
 
         $expireTime = (new Settings)->inst()->getSetting("auth.password.expire", "2H");
 
-        if (!Util::is($expireTime, DateInterval::class)) {
-            throw new DuppyException(DuppyError::incorrectType());
-        }
-
         $foundValid = false;
+        $now = new DateTime;
 
         foreach ($requests as $request) {
             if (!Util::is($request, PasswordResetRequest::class)) {
+                continue;
+            }
+
+            $reqCode = $request->get("code");
+            
+            if (!password_verify($code, $reqCode)) {
                 continue;
             }
 
@@ -608,7 +602,6 @@ final class UserService extends AbstractService {
                 continue;
             }
 
-            $now = new DateTime;
             $expire = $time->add($expireTime);
 
             if ($now > $expire) {
@@ -619,6 +612,88 @@ final class UserService extends AbstractService {
         }
 
         return $foundValid;
+    }
+
+    /**
+     * Get all pending password requests for a user (even expired)
+     * Returns false on api user or no requests
+     *
+     * @param string|int $userId
+     * @return array|bool
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
+     */
+    public function getUserPasswordRequests(string|int $userId): array|bool {
+        $user = $this->inst()->getUser($userId);
+
+        if ($user == null) {
+            throw new DuppyException(DuppyError::noneFound());
+        } elseif ($user instanceof ApiClient) {
+            return false;
+        }
+
+        $container = Bootstrapper::getContainer();
+        $dbo = $container->get("database");
+        $repo = $dbo->getRepository(PasswordResetRequest::class);
+
+        $requests = $repo->findBy([ "user" => $user, ]);
+
+        if (count($requests) < 1) {
+            return false;
+        }
+
+        $expireTime = (new Settings)->inst()->getSetting("auth.password.expire", "2H");
+
+        if (!Util::is($expireTime, DateInterval::class)) {
+            throw new DuppyException(DuppyError::incorrectType());
+        }
+
+        return $requests;
+    }
+
+    /**
+     * @param string|int $userId
+     * @return int
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
+     */
+    public function getActivePasswordRequests(string|int $userId): int {
+        $requests = $this->getActivePasswordRequests($userId);
+
+        if (!is_array($requests)) {
+            return false;
+        }
+
+        $container = Bootstrapper::getContainer();
+        $dbo = $container->get("database");
+
+        $expireTime = (new Settings)->inst()->getSetting("auth.password.expire", "2H");
+
+        $now = new DateTime;
+        $amtActive = 0;
+
+        foreach ($requests as $request) {
+            $time = $request->get("time");
+
+            if (!Util::is($time, DateInterval::class)) {
+                continue;
+            }
+
+            $expire = $time->add($expireTime);
+
+            if ($now <= $expire) {
+                $amtActive++;
+                continue;
+            }
+
+            // Remove expired while we are here
+            $dbo->remove($request);
+        }
+
+        $dbo->flush();
+        return $amtActive;
     }
 
     /**
