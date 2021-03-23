@@ -20,11 +20,18 @@ use Duppy\Util;
 final class MailService extends AbstractService {
 
     /**
-     * Current mail engine (cache)
+     * Current mail engine cache
      *
      * @var DCache
      */
     protected DCache $mailEngine;
+
+    /**
+     * Settings cache
+     *
+     * @var DCache
+     */
+    protected DCache $settings;
 
     /**
      * Dictionary of AbstractMailEngine (string) by their ::$name
@@ -38,6 +45,8 @@ final class MailService extends AbstractService {
      */
     public function __construct(bool $singleton = false) {
         $this->mailEngine = new DCache;
+        $this->settings = new DCache;
+
         parent::__construct($singleton);
     }
 
@@ -49,6 +58,7 @@ final class MailService extends AbstractService {
         // Don't clear in production
         if (Env::G('DUPPY_DEVELOPMENT') || $force) {
             $this->mailEngine->clear();
+            $this->settings->clear();
             $this->mailEngines = [];
         }
     }
@@ -77,6 +87,26 @@ final class MailService extends AbstractService {
 
         $engine = new $val;
         return $this->mailEngine->setObject($engine);
+    }
+
+    /**
+     * Template override settings
+     *
+     * @return array
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
+     */
+    public function getSettings(): array {
+        if (($settings = $this->settings->get()) != null) {
+            return $settings;
+        }
+
+        $settings = (new Settings)->inst()->getSettings([
+            "email.verificationTemplate", "email.forgotPasswordTemplate",
+        ]);
+
+        return $this->settings->setObject($settings);
     }
 
     /**
@@ -137,6 +167,7 @@ final class MailService extends AbstractService {
 
     /**
      * Convenience function to render a template for an email
+     * Returns success
      *
      * @param string|array $recipients
      * @param string $subject
@@ -144,18 +175,24 @@ final class MailService extends AbstractService {
      * @param array $share
      * @param string $altContent
      * @param bool $allowReply
+     * @return bool
      * @throws DependencyException
      * @throws NotFoundException
      * @throws DuppyException
      */
-    public function sendMailTemplate(string|array $recipients, string $subject, string $template, array $share = [], string $altContent = "", bool $allowReply = false) {
+    public function sendMailTemplate(string|array $recipients, string $subject, string $template, array $share = [], string $altContent = "", bool $allowReply = false): bool {
         $mailEngine = $this->getMailEngine();
+
+        $settings = $this->getSettings();
+        $override = Util::indArrayNull($settings, "email." . $template . "Template");
+        $template = $override ?? $template;
 
         if ($mailEngine == null) {
             $res = $this->renderTemplate($template, $share);
-            $this->sendMail($recipients, $subject, $res, $altContent, $allowReply);
-            return;
+            return $this->sendMail($recipients, $subject, $res, $altContent, $allowReply);
         }
+
+        return $mailEngine->sendMailTemplate($recipients, $subject, $template, $share, $altContent, $allowReply);
     }
 
 }
