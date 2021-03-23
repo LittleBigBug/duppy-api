@@ -501,6 +501,62 @@ final class UserService extends AbstractService {
     }
 
     /**
+     * Returns if the password provided passes password requirements
+     *
+     * @param string $password
+     * @param string &$error Set to an error explaining whats wrong with the password
+     * @return bool
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
+     */
+    public function securePassword(string $password, string &$error = ""): bool {
+        $settings = (new Settings)->inst()->getSettings([
+            "auth.password.minLength", "auth.password.minSpecial",
+            "auth.password.minUppercase", "auth.password.minLowercase",
+        ]);
+
+        $min = $settings["auth.password.minLength"];
+        $minSpecial = $settings["auth.password.minSpecial"];
+        $minUpper = $settings["auth.password.minUppercase"];
+        $minLower = $settings["auth.password.minLowercase"];
+
+        if ($minSpecial > 0) {
+            $specialCt = preg_match_all("/[^\w\s]/g", $password);
+
+            if ($specialCt < $minSpecial) {
+                $error = "$minSpecial minimum special characters required.";
+                return false;
+            }
+        }
+
+        if ($minUpper > 0) {
+            $upperCt = preg_match_all("/[A-Z]/g", $password);
+
+            if ($upperCt < $minUpper) {
+                $error = "$minUpper minimum uppercase characters required.";
+                return false;
+            }
+        }
+
+        if ($minLower > 0) {
+            $lowerCt = preg_match_all("/[a-z]/g", $password);
+
+            if ($lowerCt < $minLower) {
+                $error = "$minLower minimum lowercase characters required.";
+                return false;
+            }
+        }
+
+        if (strlen($password) < $min) {
+            $error = "$min password length required.";
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Checks all matching password requests.
      * This deletes any matching request and returns if any request was valid
      *
