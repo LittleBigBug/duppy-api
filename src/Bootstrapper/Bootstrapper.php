@@ -472,6 +472,23 @@ class Bootstrapper {
     }
 
     /**
+     * Returns if the API is allowed to redirect requests to the webclient
+     * 
+     * @return bool
+     */
+    public static function currentAllowsRedirect(): bool {
+        $currentRequest = Bootstrapper::getCurrentRequest();
+
+        if ($currentRequest == null) {
+            return false;
+        }
+
+        // Allow redirects unless the request specifically asks
+        $noRedirect = $currentRequest->hasHeader("X-No-Redirect");
+        return !$noRedirect;
+    }
+
+    /**
      * App getter
      *
      * @return App
