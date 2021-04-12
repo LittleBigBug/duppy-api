@@ -127,7 +127,14 @@ class Register extends AbstractEndpoint {
             $hash = password_hash($pass, PASSWORD_DEFAULT);
             $dbo = Bootstrapper::getContainer()->get('database');
 
-            $canBypass = $emailWhitelisted && $bypassVerify;
+            $verifySt = $settingsMngr->getSettings([
+                "email.enable", "auth.registerRequireEmailVerify",
+            ]);
+
+            $requireVerify = $verifySt["email.enable"] === true
+                && $verifySt["auth.registerRequireEmailVerify"] === true;
+
+            $canBypass = !$requireVerify || ($emailWhitelisted && $bypassVerify);
 
             if (!$canBypass) {
                 $uVerify = new WebUserVerification;
@@ -171,6 +178,7 @@ class Register extends AbstractEndpoint {
             }
 
             $user = $userService->createUser($email, $hash);
+            $user->setVerifiedEmail(false); // They bypassed email verification requirements, but still didn't do it
             return $userService->loginUser($response, $user);
         }
 

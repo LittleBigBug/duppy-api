@@ -103,7 +103,7 @@ final class MailService extends AbstractService {
         }
 
         $settings = (new Settings)->inst()->getSettings([
-            "email.verificationTemplate", "email.forgotPasswordTemplate",
+            "email.verifyAccountTemplate", "email.forgotPasswordTemplate",
         ]);
 
         return $this->settings->setObject($settings);

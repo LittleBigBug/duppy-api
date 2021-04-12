@@ -176,7 +176,7 @@ final class Settings extends AbstractService {
     #[Pure]
     public function getSettingDefinition(string $key): string|array {
         if (!array_key_exists($key, $this->settings)) {
-            throw new DuppyException(DuppyError::noneFound(), "Setting definition missing");
+            throw new DuppyException(DuppyError::noneFound(), "Setting definition missing ($key)");
         }
 
         return $this->settings[$key];
