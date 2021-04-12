@@ -38,6 +38,13 @@ class Login extends AbstractEndpoint {
     public static array $types = [ 'get', 'post' ];
 
     /**
+     * Any logins require captcha (even hybridauth providers - upon pressing a provider button)
+     *
+     * @var array
+     */
+    public static array $middleware = [ "Duppy\Middleware\CaptchaMiddleware" ];
+
+    /**
      * Handles logins with passwords or third-party (HybridAuth)
      *
      * @param Request $request
@@ -49,10 +56,9 @@ class Login extends AbstractEndpoint {
      * @throws DuppyException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
-        $postArgs = $request->getParsedBody();
-        $provider = $args["provider"];
+        $provider = Util::indArrayNull($args, "provider") ?? "provider";
 
-        if (!isset($provider) || empty($provider)) {
+        if (empty($provider)) {
             $provider = "password";
         }
 
@@ -68,6 +74,8 @@ class Login extends AbstractEndpoint {
             if ($request->getMethod() !== "POST") {
                 return Util::responseError($response, "POST Required for password auth", 405);
             }
+
+            $postArgs = $request->getParsedBody();
 
             if ($postArgs == null || empty($postArgs)) {
                 return Util::responseError($response, "No POST arguments using pwd auth");
@@ -93,6 +101,7 @@ class Login extends AbstractEndpoint {
             return $userService->loginUser($response, $userObj);
         }
 
+        $postArgs = $request->getParsedBody();
         $profile = $userService->authenticateHybridAuth($provider, $postArgs);
 
         // Error
