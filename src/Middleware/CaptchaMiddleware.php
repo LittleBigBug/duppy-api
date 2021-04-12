@@ -9,6 +9,7 @@ namespace Duppy\Middleware;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Duppy\Bootstrapper\Bootstrapper;
 use GuzzleHttp\Exception\GuzzleException;
 use Duppy\Abstracts\AbstractRouteMiddleware;
 use Duppy\DuppyException;
@@ -37,9 +38,14 @@ class CaptchaMiddleware extends AbstractRouteMiddleware {
         $captchaResponseTab = static::$request->getHeader("X-Captcha-Response");
         $captchaResponse = Util::indArrayNull($captchaResponseTab, 0);
 
-        $success = $captchaSrv->verify($captchaResponse);
+        if ($captchaResponse == null) {
+            $params = static::$request->getQueryParams();
+            $captchaResponse = Util::indArrayNull($params, "captcha");
+        }
 
-        if ($success) {
+        $success = $captchaSrv->verify($captchaResponse ?? "");
+
+        if (!$success) {
             static::$response = Util::responseError(static::$response, "Captcha failed", 401);
             return false;
         }

@@ -50,12 +50,12 @@ class Captcha extends AbstractService {
     /**
      * Returns if any captcha service is enabled
      *
-     * @return bool
+     * @return array
      * @throws DependencyException
      * @throws DuppyException
      * @throws NotFoundException
      */
-    public function getSettings(): bool {
+    public function getSettings(): array {
         if (($settings = $this->settingsCache->get()) != null) {
             return $settings;
         }
@@ -66,31 +66,49 @@ class Captcha extends AbstractService {
             "hCaptcha.private",
         ]);
 
-        $anyEnabled = !empty($settings["captchaEnabled"]);
+        $anyEnabled = !empty($settings["captcha"]);
         $settings["captchaEnabled"] = $anyEnabled;
 
         return $this->settingsCache->setObject($settings);
     }
 
     /**
+     * if any captcha is enabled
+     *
+     * @return bool
+     * @throws DependencyException
+     * @throws DuppyException
+     * @throws NotFoundException
+     */
+    public function isEnabled(): bool {
+        $settings = $this->getSettings();
+        return $settings["captchaEnabled"] == true;
+    }
+
+    /**
      * Verify the currently enabled captcha (if any) and returns its success
      *
-     * @param string $response
+     * @param string $response = ""
      * @return bool
      * @throws DependencyException
      * @throws DuppyException
      * @throws GuzzleException
      * @throws NotFoundException
      */
-    public function verify(string $response): bool {
+    public function verify(string $response = ""): bool {
         // Only process this middleware if the setting is enabled
-        $settings = $this->getSettings();
-
-        if (!$settings["captchaEnabled"]) {
+        if (!$this->isEnabled()) {
             return true;
         }
 
-        return match (strtolower($settings["captcha"])) {
+        if (empty($response)) {
+            return false;
+        }
+
+        $settings = $this->getSettings();
+        $use = strtolower($settings["captcha"]);
+
+        return match ($use) {
             "hcaptcha" => $this->hCaptcha($response),
             default => false,
         };
@@ -117,7 +135,7 @@ class Captcha extends AbstractService {
         $client = new Client;
         $res = $client->post(self::hCaptchaVerifyUrl, [
             "form_params" => [
-                "secret" => "my-secret $privateKey",
+                "secret" => $privateKey,
                 "response" => $captchaResp,
             ],
         ]);
@@ -125,8 +143,8 @@ class Captcha extends AbstractService {
         $body = $res->getBody()->getContents();
         $json = json_decode($body);
 
-        if (isset($json["success"])) {
-            return $json["success"];
+        if (isset($json->success)) {
+            return $json->success;
         }
 
         return false;
