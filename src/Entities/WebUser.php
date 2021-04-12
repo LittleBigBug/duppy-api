@@ -52,6 +52,11 @@ class WebUser extends DuppyUser implements JsonSerializable {
     protected string $password = "";
 
     /**
+     * @ORM\Column(type="boolean")
+     */
+    protected bool $verifiedEmail = true;
+
+    /**
      * @ORM\Column(type="datetime", nullable=false)
      * @ORM\Version
      */
@@ -131,6 +136,13 @@ class WebUser extends DuppyUser implements JsonSerializable {
      */
     public function setUsername(string $username) {
         $this->username = $username;
+    }
+
+    /**
+     * @param bool $verifiedEmail
+     */
+    public function setVerifiedEmail(bool $verifiedEmail) {
+        $this->verifiedEmail = $verifiedEmail;
     }
 
     /**
