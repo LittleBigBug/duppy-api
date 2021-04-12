@@ -8,6 +8,7 @@
 
 namespace Duppy\Bootstrapper;
 
+use Duppy\Middleware\RouteRateLimitMiddleware;
 use Memcached;
 use Slim\App;
 use Slim\Factory\AppFactory;
@@ -202,15 +203,29 @@ class Bootstrapper {
     public static function configure(bool $skipDi = false) {
         $app = Bootstrapper::getApp();
 
-        $app->addRoutingMiddleware();
-        $app->addErrorMiddleware(Env::G('DUPPY_DEVELOPMENT'), true, true);
+        /*
+           Default global Middlewares
+           Middleware ordering: https://www.slimframework.com/docs/v4/images/middleware.png
+         */
 
-        // Default Duppy global middlewares
-        $app->add(new IpAddress);
-        $app->add(new RateLimitMiddleware);
-        $app->add(new DuppyServiceMiddleware);
-        $app->add(new CORSMiddleware);
         $app->add(new EnvironmentMiddleware);
+
+        // Going out, this middleware clears services and dependency per-request cache.
+        $app->add(new DuppyServiceMiddleware);
+
+        // Route Rate Limiting (check limiting per route after routing)
+        $app->add(new RouteRateLimitMiddleware);
+
+        // Slim routing
+        $app->addRoutingMiddleware();
+
+        // Global Rate Limiting
+        $app->add(new RateLimitMiddleware);
+        $app->add(new IpAddress);
+
+        // Error handling (always last before CORS)
+        $app->addErrorMiddleware(Env::G('DUPPY_DEVELOPMENT'), true, true);
+        $app->add(new CORSMiddleware); // CORS access headers (should always be outermost, first in last out)
 
         if (!$skipDi) {
             Bootstrapper::buildDependencies();
