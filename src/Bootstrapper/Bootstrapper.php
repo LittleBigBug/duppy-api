@@ -28,6 +28,7 @@ use Duppy\Middleware\CORSMiddleware;
 use Duppy\Middleware\DuppyServiceMiddleware;
 use Duppy\Middleware\EnvironmentMiddleware;
 use Duppy\Middleware\RateLimitMiddleware;
+use Middlewares\Whoops;
 use eftec\bladeone\BladeOne;
 use PalePurple\RateLimit\Adapter;
 use JetBrains\PhpStorm\Pure;
@@ -224,7 +225,13 @@ class Bootstrapper {
         $app->add(new IpAddress);
 
         // Error handling (always last before CORS)
-        $app->addErrorMiddleware(Env::G('DUPPY_DEVELOPMENT'), true, true);
+        if (Env::G('DUPPY_DEVELOPMENT')) {
+            // Use Whoops error handling in development
+            $app->add(new Whoops);
+        } else {
+            $app->addErrorMiddleware(false, true, true);
+        }
+
         $app->add(new CORSMiddleware); // CORS access headers (should always be outermost, first in last out)
 
         if (!$skipDi) {
