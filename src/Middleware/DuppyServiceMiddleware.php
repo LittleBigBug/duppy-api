@@ -7,6 +7,8 @@
 
 namespace Duppy\Middleware;
 
+use DI\DependencyException;
+use DI\NotFoundException;
 use Duppy\Util;
 use Duppy\Abstracts\AbstractRouteMiddleware;
 use Duppy\Abstracts\AbstractService;
@@ -25,6 +27,8 @@ class DuppyServiceMiddleware extends AbstractRouteMiddleware {
     /**
      * @param callable $next
      * @return bool|null
+     * @throws DependencyException
+     * @throws NotFoundException
      */
     public function handle(callable $next): ?bool {
         Bootstrapper::setCurrentRequest(static::$request);

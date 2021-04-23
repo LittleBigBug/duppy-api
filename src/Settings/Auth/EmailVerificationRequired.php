@@ -11,7 +11,7 @@ use Duppy\Abstracts\AbstractSetting;
 
 class EmailVerificationRequired extends AbstractSetting {
 
-    public static string $key = "auth.emailVerificationReq";
+    public static string $key = "auth.emailVerificationRequired";
 
     public static string $description = "When signing up with an email, is it required to verify it? (recommended, requires email.useEmail) (required for allowing users to add emails)";
 

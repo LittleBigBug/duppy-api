@@ -10,6 +10,7 @@ namespace Duppy\Endpoints;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractEndpoint;
+use Duppy\DuppyException;
 use Duppy\DuppyServices\Settings;
 use Duppy\Util;
 use Slim\Psr7\Request;
@@ -33,6 +34,7 @@ class Info extends AbstractEndpoint {
      * @return Response
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $settings = (new Settings)->inst()->getAppSettings();

@@ -92,7 +92,7 @@ class ElasticEmailEngine extends AbstractMailEngine {
     public function sendElasticEmail(string|array $to, array $params, bool $allowReplyTo = false): bool {
         $apiKey = Env::G("ELASTICEMAIL_APIKEY");
 
-        if ($apiKey == null) {
+        if (empty($apiKey)) {
             return false;
         }
 

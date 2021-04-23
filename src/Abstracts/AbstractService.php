@@ -40,7 +40,7 @@ class AbstractService {
     public array $dynFunctionsMap = [];
 
     /**
-     * @var array
+     * @var AbstractService[]
      */
     public static array $singletons = [];
 

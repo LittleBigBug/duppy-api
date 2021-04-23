@@ -10,6 +10,7 @@ namespace Duppy\Middleware;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Duppy\Abstracts\AbstractRouteMiddleware;
+use Duppy\DuppyException;
 use Duppy\DuppyServices\UserService;
 
 class AdminAccessMiddleware extends AbstractRouteMiddleware {
@@ -20,6 +21,7 @@ class AdminAccessMiddleware extends AbstractRouteMiddleware {
      * @return bool|null
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws DuppyException
      */
     final public function handle(callable $next): ?bool {
         $user = (new UserService)->inst()->getLoggedInUser();

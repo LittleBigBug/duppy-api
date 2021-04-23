@@ -32,7 +32,6 @@ class BanMiddleware extends AbstractRouteMiddleware {
         }
 
         if ($user->banned()) {
-            // TODO set up some caching system for this
             $bans = $user->getActiveBans();
             $unbanTime = $user->unbanTime();
 

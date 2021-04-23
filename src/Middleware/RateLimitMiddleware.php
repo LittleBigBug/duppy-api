@@ -28,6 +28,7 @@ class RateLimitMiddleware extends AbstractRouteMiddleware {
     public function handle(callable $next): ?bool {
         $adapter = Bootstrapper::getContainer()->get("rateLimitAdapter");
 
+        // Todo please cache
         $rateLimitStgs = (new Settings)->inst()->getSettings([
             "rateLimit.perSecond", "rateLimit.perMinute",
             "rateLimit.perHour", "rateLimit.secondViolation",

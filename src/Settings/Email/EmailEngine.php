@@ -17,6 +17,6 @@ class EmailEngine extends AbstractSetting {
 
     public static string $required = "boolean";
 
-    public static $defaultValue = false;
+    public static $defaultValue = 'smtp';
 
 }
