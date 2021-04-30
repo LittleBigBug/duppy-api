@@ -1,93 +1,44 @@
 ## Duppy API
 
-API for the duppy client.
+Modular REST API / 'Headless CMS' for developers in PHP 8
 
-This is a modular web app API server for the [Duppy Client](https://git.yasfu.net/duppy/client). 
-It can support enabling and disabling different **Mods** to extend and maintain custom functionality separately and easily.
+It can support **Mods** to extend and add your own business logic separately and easily.
 
-### License Info
-
-More information on individual licensing can be found [here](https://dup.drm.gg).
-
-This software is private and copyright 2021 (c) LittleBigBug (Ethan Jones)
-The state of the software's license may change at any time, and may be sub-licensed out to clients.
-For more information on each client's license please visit the above link
-
-'Mods' are extensions of Duppy API created with tools provided by the software.
-They are located in the Mods/ directory and each should have author and copyright information in the info.toml file or the top of the main PHP file
-Mods developed for the Duppy API are owned by the owner and are allowed to be sold and licensed separately.
-
-
-For example, the duppy base API and software can be licensed out but the Mod could be owned or separately licensed.
-Client mods will be completely owned solely by clients but the main Duppy software will only be under a limited license.
-
-### About
-
-This API is designed to be stateless and to be adaptable to many other scenarios.
-Originally this was created for [Dreamin.gg](https://dreamin.gg)'s website and backend API.
-It was built in a modular way so that the code could be as reusable as possible.
-
-The plan was that if the project were to fail the code wouldn't go to waste, and even if it didn't I could use it as a base for client projects.
-It's already being used as a client project for [GoAirheads](https://goairheads.com).
+Visit https://dup.drm.gg for some more info
 
 ## Features
 
 There are many tools within the API to help create new API endpoints and persist and process data easily.
 
-**Advanced routing and endpoints.**
-All you need to do to create a new Endpoint is just to create a new class that inherits `Duppy\Abstracts\AbstractEndpoint` in the main `Endpoints/` folder or any mod's endpoint folder and set variables.
-You can have multiple paths in one class to one function or multiple, define what HTTP requests to accept and what functions to delegate them to.
-It's straightforward and easy to do but is flexible where it needs to be.
+### Advanced routing and endpoints.
 
-**Settings System.**
-Built in settings system to allow system settings (admin settings), and individual user settings assigned to each WebUser.
-Settings can be easily created similarly to Endpoints (above), instead within the `Settings/` folder and extending `AbstractSetting`.
+It's easy to create new endpoints in code, while staying efficient and organized.
+REST Endpoints for Entities are automatically created
 
-**Mod System.**
-Extensibility was obviously a big goal, so the ability to create *Mods* was made.
-Mods are usually in their own repository and define some things like author, version, etc in a `.toml` config file.
-Mods can just be dragged and dropped into the `Mods/` folder.
+### Settings System
 
-**User and Authentication System.**
-User system that editable with Settings. There's a regular email/password system with optional email whitelist checks, or email verification.
-Authentication with third-party providers like Google and Steam are implemented with [HybridAuth](https://github.com/hybridauth/hybridauth/).
-Users can have multiple login methods, and are authenticated with a JWT (Javascript Web Token).
-Authorative API Clients like those server-sided on Dreamin.gg can use the API on behalf of users who connect.
-Users (if allowed) can also create API Tokens to authorize as themselves from an API token instead of requesting a JWT.
+User and System-wide settings system
 
-**Group and Permissions System.**
-Users can be assigned to *Groups* which can be inherited to other groups.
-Users or groups can be assigned permissions as well as inherit permissions from groups they are in.
-Groups can be assigned *weight* so if a user tries to do an action against a user with a group with higher weight it won't let them.
+### Mod System
 
-**Environments.**
-Environments are a concept I made for Dreamin.gg in mind for multiple game servers that can allow the API to run separate configurations and permissions on the same API.
-For example, the same user can be registered to this API but if their client specifies a certain environment, different data will be accessed or given.
-The same user can have a group in one environment, but a different group in another.
-Groups or permissions can also be assigned globally.
+Powerful developer extensibility capabilities with easy drop-in functionality
 
-### Backend and other stuff
+### Flexible User and Authentication System
 
-The Bootstrapper for duppy loads all the services and builders for the application.
-It handles lazy dependency injection, so it's easy to know where to get objects and makes it easier to test.
+Secure user authentication with hashed passwords or numerous third-party bindings using HybridAuth
 
-Services are an abstract class that allow creation of helper functions that can be mocked in testing easily if needed.
-On top of that they serve temporary values per-request like user authentication.
-To create a service create a class that extends *AbstractService* and services' singletons are created and managed when needed.
+### Group and Permissions System
 
-Duppy utilizes [Doctrine ORM](https://www.doctrine-project.org/projects/doctrine-orm/en/2.8/index.html) to manage data storage and database stuff.
-It makes it extremely easy to get data from databases that PHP can understand.
+Easily assign users to multiple inheritable groups with permissions or other attributes, or apply special permissions directly to users.
+Leverage an advanced permissions system with wildcards (like minecraft!)
 
-File Builders allow the functionality to iterate any folder in the duppy `src/` directory to build a list of class names.
-It allows filters and stuff and is used for the Router builder to allow easy Endpoint creation and Settings/SettingType creation
+### Separate Environments
 
-Many things in the application are lazy-loaded or optimized so that each request loads the least amount possible (only what is needed).
-This is currently being used with Slim Framework 4.0 Along with PHP 8.0 and [OpenLiteSpeed](https://openlitespeed.org/) it's pretty fast.
+Allow the same api server instance to have different settings, groups, permissions and more.
 
-This is being developed in mind for use with [Workerman](https://github.com/walkor/Workerman) (see server.php) which proves [very impressive benchmarks](https://github.com/the-benchmarker/web-frameworks).
-It can still run within a webserver like apache.
+### Entity System
 
-Slim Framework uses [FastRoute](https://github.com/nikic/FastRoute) but using something like [TreeRoute](https://github.com/baryshev/TreeRoute) or even [Siler](https://siler.leocavalcante.dev/) may be more beneficial for performance.
+Automatic REST/OpenAPI/Swagger API generation for Entities, with support for [GraphQL](https://graphql.org/)
 
 ## Installing
 
@@ -101,7 +52,9 @@ Slim Framework uses [FastRoute](https://github.com/nikic/FastRoute) but using so
   - GMP extension
   - XML Extension
   - Memcached (Rate Limiting)
-- Suggested: [Phive](https://phar.io/) (/scripts/install-phive.sh) To get these PHP tools:
+- Suggested: [Phive](https://phar.io/) (/scripts/install-phive.sh) to install tools below
+- Used PHP tools:
+  - Composer
   - PHPUnit
   - PHPLOC
   - PHPMD
@@ -109,7 +62,6 @@ Slim Framework uses [FastRoute](https://github.com/nikic/FastRoute) but using so
   - PHPDox
   - PHPCS
   - PHPCBF
-  - Composer
 - [URL Rewriting](https://gist.github.com/bramus/5332525) (Webserver Configuration)
 
 Install dependencies on a debian based OS:
@@ -118,8 +70,11 @@ Install dependencies on a debian based OS:
 sudo apt install -y php8.0 php8.0-mysql php8.0-curl php8.0-mbstring php8.0-gmp php8.0-xml php8.0-memcached memcached libmemcached-dev
 ```
 
-If you use windows an easy way to set up a development server is to use [ApacheFriends XAMPP](https://www.apachefriends.org/download.html) which is also compatible with linux systems.
-This can also run as a standalone PHP application by running `server.php`
+Windows with [Chocolatey](https://chocolatey.org):
+
+```batch
+choco install php
+```
 
 ### Configuring
 
@@ -160,11 +115,37 @@ You can still use the old bash or bat scripts in `scripts/`
 
 #### ORM Note
 
-On Linux It is recommended that you set `/tmp` folder permissions so that its less likely ORM proxies will be messed with.
+On Linux It is recommended that you set `/tmp` folder permissions properly so that its less likely ORM proxies will be messed with.
 
 ```shell script
 sudo chmod 1777 /tmp
 ```
+
+On linux, whatever web service running Duppy may not have access to the tmp files if `PrivateTmp=true` within the `/lib/systemd/system/___.service` file
+
+## Contributing
+
+The best ways you can contribute to Duppy's development is by donating or actually contributing back to the codebase!
+
+Anyone is welcome to send pull requests, or fork!
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+### Modding
+
+You can create **Mods** on the api to extend Duppy for custom business logic or Entities/Settings/etc.
+
+Duppy API is licensed under GNU LGPL v3, which means any modifications must use the same license, *but* you can create mods under any license you like.
+
+The [contributing file](CONTRIBUTING.md) contains some useful info to help to get you familiar with the code base.
+
+### Extra Technical Notes
+
+Most things in the application are lazy-loaded or optimized so that each request loads the least amount possible (only what is needed).
+This is currently being used with Slim Framework 4.0 Along with PHP 8.0 and being tested with [OpenLiteSpeed](https://openlitespeed.org/), it's pretty fast.
+
+This is being developed in mind for use with [Workerman](https://github.com/walkor/Workerman) (as standalone, see server.php) which proves [very](https://www.techempower.com/benchmarks/#section=data-r20&hw=ph&test=plaintext&l=zik073-1r) impressive [benchmarks](https://github.com/the-benchmarker/web-frameworks).
+It can still run within a webserver like apache.
 
 ### Debugging
 
