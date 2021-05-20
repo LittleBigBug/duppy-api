@@ -222,6 +222,11 @@ class ForgotPassword extends AbstractEndpoint {
         ],
             // todo - replace with localization system
             "A password reset was requested for your account and your password was changed. If you did not request this your account may be compromised, and you should change your passwords immediately. If you did this no further action is required");
+
+        return Util::responseJSON($response, [
+            "success" => true,
+            "message" => "Password changed successfully.",
+        ]);
     }
 
 }
