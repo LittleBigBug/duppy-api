@@ -45,7 +45,7 @@ class Logging extends AbstractService {
      * @throws OptimisticLockException
      */
     public function clean(bool $force = false) {
-        if (empty($queue)) {
+        if (sizeof($this->queue) < 1) {
             return;
         }
 
