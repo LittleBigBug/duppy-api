@@ -19,6 +19,9 @@ use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Bootstrapper\DCache;
 use JetBrains\PhpStorm\Pure;
+use Doctrine\ORM\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\TransactionRequiredException;
 use Jose\Component\Checker\AlgorithmChecker;
 use Jose\Component\Checker\AudienceChecker;
 use Jose\Component\Checker\ClaimCheckerManager;
@@ -317,6 +320,9 @@ final class TokenManager extends AbstractService {
      * @return ?ApiClient
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws TransactionRequiredException
      */
     public function getAPIClient(): ?ApiClient {
         if (($apiClient = $this->apiClient->get()) != null) {
@@ -338,8 +344,7 @@ final class TokenManager extends AbstractService {
         $authTokenStr = substr($authTokenStr, 9); // 9 is len of 'apiToken '
 
         // Search for ApiClient matching ClientID
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
         $apiClient = $dbo->find(ApiClient::class, $clientID);
 
         if ($apiClient == null) {

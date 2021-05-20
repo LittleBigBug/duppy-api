@@ -10,6 +10,7 @@ namespace Duppy\Endpoints;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\ORMException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyException;
@@ -52,8 +53,9 @@ class Login extends AbstractEndpoint {
      * @param array $args
      * @return Response
      * @throws DependencyException
-     * @throws NotFoundException
      * @throws DuppyException
+     * @throws NotFoundException
+     * @throws ORMException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $provider = Util::indArrayNull($args, "provider") ?? "provider";
@@ -115,10 +117,10 @@ class Login extends AbstractEndpoint {
 
         $providerId = $profile->identifier;
 
-        $dbo = Bootstrapper::getContainer()->get('database');
+        $dbo = Bootstrapper::getDatabase();
         $expr = Criteria::expr();
 
-        $cr = new Criteria();
+        $cr = new Criteria;
         $cr->where($expr->eq("providername", $provider));
         $cr->andWhere($expr->eq("providerid", $providerId));
 

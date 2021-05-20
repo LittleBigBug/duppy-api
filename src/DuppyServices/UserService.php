@@ -14,6 +14,9 @@ use DI\DependencyException;
 use DI\NotFoundException;
 use Slim\Psr7\Response;
 use Hybridauth\User\Profile;
+use Doctrine\ORM\ORMException;
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\TransactionRequiredException;
 use Duppy\Util;
 use Duppy\DuppyException;
 use Duppy\Enum\DuppyError;
@@ -40,20 +43,22 @@ final class UserService extends AbstractService {
     /**
      * Convenience function to get a user by their ID
      *
-     * @param $id
-     * @param $apiClient = false 
+     * @param null $id
+     * @param bool $apiClient = false
      * @return ?DuppyUser
      * @throws DependencyException
-     * @throws NotFoundException
      * @throws DuppyException
+     * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws TransactionRequiredException
      */
     public function getUser($id = null, $apiClient = false): ?DuppyUser {
         if ($id == "me" || $id == null) {
             return $this->inst()->getLoggedInUser();
         }
 
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
         return $dbo->find($apiClient ? ApiClient::class : WebUser::class, $id);
     }
 
@@ -85,9 +90,8 @@ final class UserService extends AbstractService {
      * @throws NotFoundException
      */
     public function getUserByName(string $username): ?WebUser {
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
-        return $dbo->getRepository(WebUser::class)->findBy([ "username" => $username ])->first();
+        $dbo = Bootstrapper::getDatabase();
+        return $dbo->getRepository(WebUser::class)->findOneBy([ "username" => $username ]);
     }
 
     /**
@@ -99,9 +103,8 @@ final class UserService extends AbstractService {
      * @throws NotFoundException
      */
     public function getUserByEmail(string $email): ?WebUser {
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
-        return $dbo->getRepository(WebUser::class)->findBy([ "email" => $email ])[0];
+        $dbo = Bootstrapper::getDatabase();
+        return $dbo->getRepository(WebUser::class)->findOneBy([ "email" => $email ]);
     }
 
     /**
@@ -114,6 +117,7 @@ final class UserService extends AbstractService {
      * @return ?WebUser
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws ORMException
      */
     public function createUser(string $email, string $password, bool $persist = true): ?WebUser {
         $user = new WebUser;
@@ -130,9 +134,7 @@ final class UserService extends AbstractService {
         $user->setCrumb("");
 
         if ($persist) {
-            $container = Bootstrapper::getContainer();
-            $dbo = $container->get("database");
-
+            $dbo = Bootstrapper::getDatabase();
             $dbo->persist($user);
             $dbo->flush();
         }
@@ -150,6 +152,7 @@ final class UserService extends AbstractService {
      * @throws DependencyException
      * @throws DuppyException
      * @throws NotFoundException
+     * @throws ORMException
      */
     public function loginUser(Response $response, WebUser $user, bool $redirect = false): Response {
         if ($user == null) {
@@ -174,8 +177,7 @@ final class UserService extends AbstractService {
 
         $user->setCrumb($crumb);
 
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
         $dbo->persist($user);
         $dbo->flush();
 
@@ -198,8 +200,7 @@ final class UserService extends AbstractService {
      * @throws NotFoundException
      */
     public function emailTaken(string $email): bool {
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
         $ct = $dbo->getRepository(WebUser::class)->count([ 'email' => $email, ]);
         $ct += (new UserService)->inst()->emailNeedsVerification($email);
 
@@ -215,8 +216,7 @@ final class UserService extends AbstractService {
      * @throws NotFoundException
      */
     public function emailNeedsVerification(string $email): bool {
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
         $vCt = $dbo->getRepository(WebUserVerification::class)->count([ 'email' => $email, ]);
 
         return $vCt > 0;
@@ -420,6 +420,7 @@ final class UserService extends AbstractService {
      * @param bool $persistNow
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws ORMException
      */
     public function givePermission(WebUser|UserGroup $userOrGroup, string $permission, ?Environment $environment = null, bool $persistNow = true) {
         $permissionA = new PermissionAssignment;
@@ -439,7 +440,7 @@ final class UserService extends AbstractService {
         $userOrGroup->addPermission($permissionA);
 
         if ($persistNow) {
-            $dbo = Bootstrapper::getContainer()->get("database");
+            $dbo = Bootstrapper::getDatabase();
 
             $dbo->persist($permissionA);
             $dbo->flush();
@@ -566,6 +567,7 @@ final class UserService extends AbstractService {
      * @throws DependencyException
      * @throws NotFoundException
      * @throws DuppyException ErrType noneFound if the userId doesnt belong to anyone, or incorrectType if the setting somehow returns something other than a DateInterval
+     * @throws ORMException
      */
     public function checkPasswordResetCode(string $code, string|int $userId = null): bool {
         $requests = $this->getActivePasswordRequests($userId);
@@ -574,8 +576,7 @@ final class UserService extends AbstractService {
             return false;
         }
 
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
 
         $expireTime = (new Settings)->inst()->getSetting("auth.password.expire", "2H");
 
@@ -633,8 +634,7 @@ final class UserService extends AbstractService {
             return false;
         }
 
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
         $repo = $dbo->getRepository(PasswordResetRequest::class);
 
         $requests = $repo->findBy([ "user" => $user, ]);
@@ -658,6 +658,8 @@ final class UserService extends AbstractService {
      * @throws DependencyException
      * @throws DuppyException
      * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function getActivePasswordRequests(string|int $userId): int {
         $requests = $this->getActivePasswordRequests($userId);
@@ -666,8 +668,7 @@ final class UserService extends AbstractService {
             return false;
         }
 
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
 
         $expireTime = (new Settings)->inst()->getSetting("auth.password.expire", "2H");
 

@@ -9,6 +9,7 @@ namespace Duppy\Endpoints\Users;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Doctrine\ORM\ORMException;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyException;
@@ -56,8 +57,9 @@ class Verify extends AbstractEndpoint {
      * @param array $args
      * @return Response
      * @throws DependencyException
-     * @throws NotFoundException
      * @throws DuppyException
+     * @throws NotFoundException
+     * @throws ORMException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $postArgs = $request->getParsedBody();
@@ -67,9 +69,8 @@ class Verify extends AbstractEndpoint {
             return Util::responseError($response, "No code was given");
         }
 
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
-        $userVerify = $dbo->getRepository(WebUserVerification::class)->findBy([ "code" => $code ])->first();
+        $dbo = Bootstrapper::getDatabase();
+        $userVerify = $dbo->getRepository(WebUserVerification::class)->findOneBy([ "code" => $code ]);
 
         if ($userVerify == null) {
             return Util::responseError($response, "That code has either expired or is invalid");

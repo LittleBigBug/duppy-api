@@ -44,7 +44,7 @@ final class EnvironmentService extends AbstractService {
      * @throws NotFoundException
      */
     public function checkEnvironment(string $environment): Environment|bool {
-        $dbo = Bootstrapper::getContainer()->get("database");
+        $dbo = Bootstrapper::getDatabase();
         $repo = $dbo->getRepository(Environment::class);
 
         $environment = $repo->findOneBy([ "name" => $environment, "enabled" => true, ]);

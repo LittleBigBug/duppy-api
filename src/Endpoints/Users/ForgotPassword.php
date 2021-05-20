@@ -9,6 +9,7 @@ namespace Duppy\Endpoints\Users;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Doctrine\ORM\ORMException;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\DuppyException;
 use Duppy\DuppyServices\UserService;
@@ -80,6 +81,7 @@ class ForgotPassword extends AbstractEndpoint {
      * @throws DependencyException
      * @throws NotFoundException
      * @throws DuppyException
+     * @throws ORMException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $email = Util::indArrayNull($args, "email");
@@ -103,8 +105,7 @@ class ForgotPassword extends AbstractEndpoint {
             return $defaultResponse();
         }
 
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
         
         $activeRequests = $userService->getActivePasswordRequests($userId);
 
@@ -160,6 +161,7 @@ class ForgotPassword extends AbstractEndpoint {
      * @throws DependencyException
      * @throws DuppyException
      * @throws NotFoundException
+     * @throws ORMException
      */
     public function verify(Request $request, Response $response, array $args = []): Response {
         $codeStr = Util::indArrayNull($args, "code");
@@ -205,8 +207,7 @@ class ForgotPassword extends AbstractEndpoint {
             return Util::responseError($response, "No user found (malformed code..?)");
         }
 
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
 
         $user->setPassword($newPassword);
 

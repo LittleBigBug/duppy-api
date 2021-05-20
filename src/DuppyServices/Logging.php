@@ -12,6 +12,8 @@ use DateTime;
 use DI\DependencyException;
 use DI\NotFoundException;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\ORMException;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Bootstrapper\Bootstrapper;
 use Duppy\Entities\Log;
@@ -39,6 +41,8 @@ class Logging extends AbstractService {
      * @param bool $force
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function clean(bool $force = false) {
         if (empty($queue)) {
@@ -121,9 +125,11 @@ class Logging extends AbstractService {
      *
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function Flush() {
-        $dbo = Bootstrapper::getContainer()->get("database");
+        $dbo = Bootstrapper::getDatabase();
 
         foreach ($this->queue as $log) {
             $dbo->persist($log);
@@ -138,9 +144,11 @@ class Logging extends AbstractService {
      *
      * @throws DependencyException
      * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function CleanLogs() {
-        $dbo = Bootstrapper::getContainer()->get("database");
+        $dbo = Bootstrapper::getDatabase();
         $logRepo = $dbo->getRepository(Log::class);
 
         $now = new DateTime;

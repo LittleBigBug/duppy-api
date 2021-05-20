@@ -58,6 +58,7 @@ class Register extends AbstractEndpoint {
      * @throws DependencyException
      * @throws NotFoundException
      * @throws DuppyException
+     * @throws ORMException
      */
     public function __invoke(Request $request, Response $response, array $args = []): Response {
         $provider = Util::indArrayNull($args, "provider");
@@ -125,7 +126,7 @@ class Register extends AbstractEndpoint {
             }
 
             $hash = password_hash($pass, PASSWORD_DEFAULT);
-            $dbo = Bootstrapper::getContainer()->get('database');
+            $dbo = Bootstrapper::getDatabase();
 
             $verifySt = $settingsMngr->getSettings([
                 "email.enable", "auth.registerRequireEmailVerify",
@@ -216,7 +217,7 @@ class Register extends AbstractEndpoint {
             return Util::responseRedirectClient($response, "login/error/$error");
         }
 
-        $dbo = Bootstrapper::getContainer()->get("database");
+        $dbo = Bootstrapper::getDatabase();
 
         // Create new account from provider info
         $userObj = new WebUser;

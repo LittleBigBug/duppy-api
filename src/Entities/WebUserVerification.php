@@ -85,8 +85,7 @@ class WebUserVerification {
      * @throws NotFoundException
      */
     public function genCode(): int|bool {
-        $container = Bootstrapper::getContainer();
-        $dbo = $container->get("database");
+        $dbo = Bootstrapper::getDatabase();
         $repo = $dbo->getRepository(WebUserVerification::class);
 
         $checker = function($int) use($repo) {

@@ -9,6 +9,8 @@ namespace Duppy\DuppyServices;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\ORMException;
 use Duppy\Abstracts\AbstractService;
 use Duppy\Abstracts\AbstractSetting;
 use Duppy\Abstracts\AbstractSettingType;
@@ -204,8 +206,8 @@ final class Settings extends AbstractService {
      * @throws DuppyException ErrType nonefound if a setting's type is missing
      */
     public function getSettings(array $keys, array $defaults = []): array {
-        $manager = Bootstrapper::getContainer()->get("database");
-        $settings = $manager->getRepository(Setting::class)->findBy(["settingKey" => $keys,]);
+        $dbo = Bootstrapper::getDatabase();
+        $settings = $dbo->getRepository(Setting::class)->findBy(["settingKey" => $keys,]);
 
         $ret = [];
 
@@ -363,12 +365,14 @@ final class Settings extends AbstractService {
      * @throws DependencyException
      * @throws DuppyException ErrType notFound if setting def/type is missing or incorrectType if the value isnt compatible
      * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function changeSetting(string $key, mixed $value, bool $persistNow = false, bool $flushNow = false): Setting {
         $getType = $this->getSettingType($key);
         $storeVal = $getType->store($value);
 
-        $dbo = Bootstrapper::getContainer()->get("database");
+        $dbo = Bootstrapper::getDatabase();
         $setting = $dbo->getRepository(Setting::class)->findOneBy(["settingKey" => $key,]);
 
         if ($setting == null) {
