@@ -523,6 +523,15 @@ class Bootstrapper {
     }
 
     /**
+     * @return EntityManager
+     * @throws DependencyException
+     * @throws NotFoundException
+     */
+    public static function getDatabase(): EntityManager {
+        return self::getContainer()->get("database");
+    }
+
+    /**
      * JWSKey getter
      *
      * @return JWK
