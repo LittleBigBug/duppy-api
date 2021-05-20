@@ -217,6 +217,8 @@ class Bootstrapper {
         // Route Rate Limiting (check limiting per route after routing)
         $app->add(new RouteRateLimitMiddleware);
 
+        $app->add(new CORSMiddleware);
+
         // Slim routing
         $app->addRoutingMiddleware();
 
@@ -224,15 +226,7 @@ class Bootstrapper {
         $app->add(new RateLimitMiddleware);
         $app->add(new IpAddress);
 
-        // Error handling (always last before CORS)
-        if (Env::G('DUPPY_DEVELOPMENT')) {
-            // Use Whoops error handling in development
-            $app->add(new Whoops);
-        } else {
-            $app->addErrorMiddleware(false, true, true);
-        }
-
-        $app->add(new CORSMiddleware); // CORS access headers (should always be outermost, first in last out)
+        $app->addErrorMiddleware(false, true, true);
 
         if (!$skipDi) {
             Bootstrapper::buildDependencies();
