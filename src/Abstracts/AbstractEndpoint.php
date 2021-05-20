@@ -7,10 +7,12 @@
 
 namespace Duppy\Abstracts;
 
+use Duppy\Interfaces\IEndpoint;
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
 
-abstract class AbstractEndpoint {
+abstract class AbstractEndpoint implements IEndpoint {
+
     /**
      * Type(s) of requests accepted
      *
