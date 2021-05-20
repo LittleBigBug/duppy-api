@@ -36,6 +36,14 @@ interface IDuppyUser {
     public function getPermissions(bool $dictionary = true): array;
 
     /**
+     * Quick function to check if the user has admin permissions or "*"
+     *
+     * @return bool
+     */
+    #[Pure]
+    public function isAdmin(): bool;
+
+    /**
      * Returns only permissions explicitly set/given to this user.
      *
      * @return PermissionAssignment[]
