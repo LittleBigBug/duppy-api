@@ -63,6 +63,14 @@ abstract class DuppyUser implements IDuppyUser {
     }
 
     /**
+     * @return bool
+     */
+    #[Pure]
+    public function isAdmin(): bool {
+        return $this->hasPermission("*") || $this->hasPermission("admin");
+    }
+
+    /**
      * If the user is banned at all (within the current environment or globally)
      *
      * @return bool
