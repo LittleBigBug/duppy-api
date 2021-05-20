@@ -19,6 +19,13 @@ use Duppy\DuppyServices\Settings;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
+/**
+ * Elastic Email is a marketing/transactional email service
+ *
+ * Class ElasticEmailEngine
+ * @package Duppy\MailEngines
+ */
+
 class ElasticEmailEngine extends AbstractMailEngine {
 
     /**

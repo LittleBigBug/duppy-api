@@ -43,7 +43,7 @@ final class UserService extends AbstractService {
     /**
      * Convenience function to get a user by their ID
      *
-     * @param null $id
+     * @param ?int $id
      * @param bool $apiClient = false
      * @return ?DuppyUser
      * @throws DependencyException
@@ -53,7 +53,7 @@ final class UserService extends AbstractService {
      * @throws OptimisticLockException
      * @throws TransactionRequiredException
      */
-    public function getUser($id = null, $apiClient = false): ?DuppyUser {
+    public function getUser(?int $id = null, bool $apiClient = false): ?DuppyUser {
         if ($id == "me" || $id == null) {
             return $this->inst()->getLoggedInUser();
         }
@@ -65,13 +65,16 @@ final class UserService extends AbstractService {
     /**
      * Convenience function to get an APIClient by its ID
      *
-     * @param $id
+     * @param ?int $id
      * @return ?ApiClient
      * @throws DependencyException
-     * @throws NotFoundException
      * @throws DuppyException
+     * @throws NotFoundException
+     * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws TransactionRequiredException
      */
-    public function getApiClient($id = null): ?ApiClient {
+    public function getApiClient(?int $id = null): ?ApiClient {
         $user = $this->getUser($id, true);
 
         if (!($user instanceof ApiClient)) {
@@ -527,16 +530,16 @@ final class UserService extends AbstractService {
         $minLower = $settings["auth.password.minLowercase"];
 
         if ($minSpecial > 0) {
-            $specialCt = preg_match_all("/[^\w\s]/g", $password);
+            $specialCt = preg_match_all("/[^\w\s]/", $password);
 
             if ($specialCt < $minSpecial) {
-                $error = "$minSpecial minimum special characters required.";
+                $error = "$minSpecial minimum special characters required. ($specialCt)";
                 return false;
             }
         }
 
         if ($minUpper > 0) {
-            $upperCt = preg_match_all("/[A-Z]/g", $password);
+            $upperCt = preg_match_all("/[A-Z]/", $password);
 
             if ($upperCt < $minUpper) {
                 $error = "$minUpper minimum uppercase characters required.";
@@ -545,7 +548,7 @@ final class UserService extends AbstractService {
         }
 
         if ($minLower > 0) {
-            $lowerCt = preg_match_all("/[a-z]/g", $password);
+            $lowerCt = preg_match_all("/[a-z]/", $password);
 
             if ($lowerCt < $minLower) {
                 $error = "$minLower minimum lowercase characters required.";
