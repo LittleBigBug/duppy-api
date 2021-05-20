@@ -9,6 +9,7 @@ namespace Duppy\Endpoints;
 
 use DI\DependencyException;
 use DI\NotFoundException;
+use Doctrine\ORM\ORMException;
 use Duppy\Abstracts\AbstractEmailWhitelist;
 use Duppy\Abstracts\AbstractEndpoint;
 use Duppy\Bootstrapper\Bootstrapper;
@@ -109,7 +110,7 @@ class Register extends AbstractEndpoint {
             $emailWhitelisted = false;
             $bypassVerify = false;
 
-            if (is_subclass_of($whitelist, AbstractEmailWhitelist::class)) {
+            if ($whitelist != null && is_subclass_of($whitelist, AbstractEmailWhitelist::class)) {
                 $emailWhitelisted = $userService->emailWhitelisted($email);
                 $emailWlSettings = $settingsMngr->getSettings([
                     "auth.emailWhitelist.requiredRegister",
@@ -129,15 +130,16 @@ class Register extends AbstractEndpoint {
             $dbo = Bootstrapper::getDatabase();
 
             $verifySt = $settingsMngr->getSettings([
-                "email.enable", "auth.registerRequireEmailVerify",
+                "email.enable", "auth.emailVerificationRequired",
             ]);
 
-            $requireVerify = $verifySt["email.enable"] === true
-                && $verifySt["auth.registerRequireEmailVerify"] === true;
+            $requireVerify = $verifySt["email.enable"] == true
+                && $verifySt["auth.emailVerificationRequired"] == true;
 
-            $canBypass = !$requireVerify || ($emailWhitelisted && $bypassVerify);
+            $whitelistBypass = $emailWhitelisted && $bypassVerify;
+            $needsToVerify = $requireVerify && !$whitelistBypass;
 
-            if (!$canBypass) {
+            if ($needsToVerify) {
                 $uVerify = new WebUserVerification;
 
                 $uVerify->setEmail($email);
