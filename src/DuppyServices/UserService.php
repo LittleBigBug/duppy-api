@@ -260,8 +260,12 @@ final class UserService extends AbstractService {
      */
     public static function getEmailWhitelist(): ?string {
         $whitelistClass = (new Settings)->inst()->getSetting("auth.emailWhitelist");
-        $subclass = is_subclass_of($whitelistClass, AbstractEmailWhitelist::class);
 
+        if (empty($whitelistClass)) {
+            return null;
+        }
+
+        $subclass = is_subclass_of($whitelistClass, AbstractEmailWhitelist::class);
         return $subclass ? $whitelistClass : null;
     }
 
