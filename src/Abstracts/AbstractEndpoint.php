@@ -9,8 +9,6 @@ namespace Duppy\Abstracts;
 
 use Slim\Psr7\Request;
 use Slim\Psr7\Response;
-use Duppy\Bootstrapper\Bootstrapper;
-use DI\Container;
 
 abstract class AbstractEndpoint {
     /**
@@ -183,12 +181,4 @@ abstract class AbstractEndpoint {
         return static::$parentGroup;
     }
 
-    /**
-     * Returns dependency container instance
-     *
-     * @return Container
-     */
-    final public static function getContainer(): Container {
-        return Bootstrapper::getContainer();
-    }
 }
