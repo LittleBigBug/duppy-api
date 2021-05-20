@@ -241,6 +241,41 @@ class Util {
     }
 
     /**
+     * Parses a key value string separated by semicolons
+     *
+     * Ex:
+     * Key=Value;Foo=Bar;Something=else;a=3;b=a*2
+     *
+     * Returns:
+     * [
+     *   "Key" => "Value",
+     *   "Foo" => "Bar",
+     *   "Something" => "else",
+     *   "a" => 3,
+     *   "b" => "a*2",
+     * ]
+     *
+     * Soon maybe an optional param that evaluates expressions like b=a*2
+     *
+     * @param string $parseStr
+     * @return string[]
+     */
+    public static function parseSeparatedKeyValueString(string $parseStr): array {
+        preg_match_all("/(\w+)\s*=((?:\w+[-\/+*%])*?\w+)(?:;|$)/mg", $parseStr, $matches, PREG_SET_ORDER);
+
+        $built = [];
+
+        foreach ($matches as $match) {
+            $key = $match[1];
+            $value = $match[2];
+
+            $built[$key] = $value;
+        }
+
+        return $built;
+    }
+
+    /**
      * Convenience function to get a value out of an array without the PHP warning if the index is null
      * .-.
      * @param ?array $array
