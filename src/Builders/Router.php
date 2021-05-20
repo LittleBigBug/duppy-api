@@ -357,7 +357,7 @@ final class Router extends AbstractFileBuilder {
                         $suffix .= strtolower($typeLower);
                     }
 
-                    if (!empty($epUriFuncMap) && !empty($epUriFuncMap[$k])) {
+                    if (is_array($epUriFuncMap) && !empty($epUriFuncMap) && !empty($epUriFuncMap[$k])) {
                         $suffix .= $epUriFuncMap[$k];
                     }
 
